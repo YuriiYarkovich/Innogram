@@ -38,11 +38,17 @@ export class ProfileFollow {
   updated_by: string;
 
   // Relations
-  @ManyToOne(() => Profile, (profile) => profile.following)
+  @ManyToOne(() => Profile, (profile) => profile.following, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
   @JoinColumn({ name: 'follower_profile_id' })
   followerProfile: Profile;
 
-  @ManyToOne(() => Profile, (profile) => profile.followers)
+  @ManyToOne(() => Profile, (profile) => profile.followers, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
   @JoinColumn({ name: 'followed_profile_id' })
   followedProfile: Profile;
 }

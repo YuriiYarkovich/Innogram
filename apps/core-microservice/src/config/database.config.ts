@@ -1,12 +1,12 @@
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
-import { User } from '../common/entities/user.entity';
-import { Profile } from '../common/entities/profile.entity';
-import { Account } from '../common/entities/account.entity';
-import { PostAsset } from '../common/entities/post-asset.entity';
-import { ProfileFollow } from '../common/entities/profile-follow.entity';
-import { Post } from '../common/entities/post.entity';
+import { User } from '../common/entities/accountDedicated/user.entity';
+import { Profile } from '../common/entities/accountDedicated/profile.entity';
+import { Account } from '../common/entities/accountDedicated/account.entity';
+import { PostAsset } from '../common/entities/postsDedicated/post-asset.entity';
+import { ProfileFollow } from '../common/entities/accountDedicated/profile-follow.entity';
+import { Post } from '../common/entities/postsDedicated/post.entity';
 
 @Injectable()
 export class DatabaseConfig implements TypeOrmOptionsFactory {

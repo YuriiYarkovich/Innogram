@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 import { ProfileFollow } from './profile-follow.entity';
-import { Post } from './post.entity';
+import { Post } from '../postsDedicated/post.entity';
 
 @Entity('profiles', { schema: 'main' })
 export class Profile {
@@ -54,7 +54,10 @@ export class Profile {
   deleted: boolean;
 
   // Relations
-  @ManyToOne(() => User, (user): Profile[] => user.profiles)
+  @ManyToOne(() => User, (user): Profile[] => user.profiles, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
   @JoinColumn({ name: 'user_id' })
   user: User;
 

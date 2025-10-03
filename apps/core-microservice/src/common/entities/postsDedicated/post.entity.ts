@@ -1,6 +1,7 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -8,8 +9,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Profile } from './profile.entity';
+import { Profile } from '../accountDedicated/profile.entity';
 import { PostAsset } from './post-asset.entity';
+import { Comment } from '../commentsDedicated/comment.entity';
 
 @Entity('posts', { schema: 'main' })
 export class Post {
@@ -37,14 +39,20 @@ export class Post {
   @UpdateDateColumn()
   archived_at: Date;
 
-  @UpdateDateColumn()
+  @DeleteDateColumn()
   deleted_at: Date;
 
   // Relations
-  @ManyToOne(() => Profile, (profile) => profile.posts)
+  @ManyToOne(() => Profile, (profile) => profile.posts, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
   @JoinColumn({ name: 'profile_id' })
   profile: Profile;
 
   @OneToMany(() => PostAsset, (postAsset) => postAsset.post)
   postAssets: PostAsset[];
+
+  @OneToMany(() => Comment, (comment) => comment.post)
+  comments: Comment[];
 }
