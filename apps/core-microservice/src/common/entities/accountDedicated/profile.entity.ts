@@ -13,6 +13,7 @@ import { ProfileFollow } from './profile-follow.entity';
 import { Post } from '../postsDedicated/post.entity';
 import { Comment } from '../commentsDedicated/comment.entity';
 import { ChatParticipant } from '../chatDedicated/chat-participant.entity';
+import { Message } from '../chatDedicated/message.entity';
 
 @Entity('profiles', { schema: 'main' })
 export class Profile {
@@ -80,4 +81,7 @@ export class Profile {
     (chatParticipant): Profile => chatParticipant.profile,
   )
   chatParticipants: ChatParticipant[];
+
+  @OneToMany(() => Message, (message) => message.sender)
+  messages: Message[];
 }

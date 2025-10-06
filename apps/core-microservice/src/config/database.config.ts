@@ -11,6 +11,8 @@ import { CommentMention } from '../common/entities/commentsDedicated/comment-men
 import { Comment } from '../common/entities/commentsDedicated/comment.entity';
 import { ChatParticipant } from '../common/entities/chatDedicated/chat-participant.entity';
 import { Chat } from '../common/entities/chatDedicated/chat.entity';
+import { MessageAsset } from '../common/entities/chatDedicated/message_asset.entity';
+import { Message } from '../common/entities/chatDedicated/message.entity';
 
 @Injectable()
 export class DatabaseConfig implements TypeOrmOptionsFactory {
@@ -35,6 +37,8 @@ export class DatabaseConfig implements TypeOrmOptionsFactory {
         CommentMention,
         Chat,
         ChatParticipant,
+        Message,
+        MessageAsset,
       ],
       autoLoadEntities: true,
       synchronize: true,

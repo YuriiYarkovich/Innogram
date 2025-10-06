@@ -7,6 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { ChatParticipant } from './chat-participant.entity';
+import { Message } from './message.entity';
 
 @Entity('chats', { schema: 'main' })
 export class Chat {
@@ -37,4 +38,7 @@ export class Chat {
 
   @OneToMany(() => ChatParticipant, (chatParticipant) => chatParticipant.chat)
   chatParticipants: ChatParticipant[];
+
+  @OneToMany(() => Message, (message) => message.chat)
+  messages: Message[];
 }
