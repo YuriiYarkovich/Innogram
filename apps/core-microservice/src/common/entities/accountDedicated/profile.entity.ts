@@ -46,9 +46,6 @@ export class Profile {
   @CreateDateColumn()
   created_at: Date;
 
-  @Column({ type: 'uuid' })
-  created_by: string;
-
   @UpdateDateColumn()
   updated_at: Date;
 

@@ -28,6 +28,7 @@ export class Post {
   @Column({
     type: 'enum',
     enum: ['active', 'archived', 'deleted'],
+    default: 'active',
   })
   status: 'active' | 'archived' | 'deleted';
 

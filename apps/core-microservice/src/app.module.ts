@@ -3,6 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { join } from 'path';
 import { DatabaseConfig } from './config/database.config';
+import { UsersModule } from './modules/users/users.module';
+import { PostsModule } from './modules/posts/posts.module';
+import { MinioModule } from './modules/minio/minio.module';
 
 @Module({
   imports: [
@@ -16,6 +19,9 @@ import { DatabaseConfig } from './config/database.config';
     TypeOrmModule.forRootAsync({
       useClass: DatabaseConfig,
     }),
+    UsersModule,
+    PostsModule,
+    MinioModule,
   ],
 })
 export class AppModule {}
