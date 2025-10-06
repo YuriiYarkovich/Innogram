@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { CommentMention } from './comment-mention.entity';
 import { Post } from '../postsDedicated/post.entity';
+import { Profile } from '../accountDedicated/profile.entity';
 
 @Entity('comments', { schema: 'main' })
 export class Comment {
@@ -20,11 +21,11 @@ export class Comment {
   @Column({ type: 'uuid' })
   post_id: string;
 
-  @Column({ type: 'uuid', nullable: true })
+  @Column({ type: 'uuid' })
   parent_comment_id: string;
 
   @Column({ type: 'uuid' })
-  user_id: string;
+  profile_id: string;
 
   @Column({ type: 'text' })
   content: string;
@@ -53,4 +54,11 @@ export class Comment {
   })
   @JoinColumn({ name: 'post_id' })
   post: Post;
+
+  @ManyToOne(() => Profile, (profile): Comment[] => profile.comments, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({ name: 'profile_id' })
+  profile: Profile;
 }

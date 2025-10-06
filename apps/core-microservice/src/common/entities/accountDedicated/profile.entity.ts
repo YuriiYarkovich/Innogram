@@ -11,6 +11,8 @@ import {
 import { User } from './user.entity';
 import { ProfileFollow } from './profile-follow.entity';
 import { Post } from '../postsDedicated/post.entity';
+import { Comment } from '../commentsDedicated/comment.entity';
+import { ChatParticipant } from '../chatDedicated/chat-participant.entity';
 
 @Entity('profiles', { schema: 'main' })
 export class Profile {
@@ -69,4 +71,13 @@ export class Profile {
 
   @OneToMany(() => Post, (post) => post.profile)
   posts: Post[];
+
+  @OneToMany(() => Comment, (comment): Profile => comment.profile)
+  comments: Comment[];
+
+  @OneToMany(
+    () => ChatParticipant,
+    (chatParticipant): Profile => chatParticipant.profile,
+  )
+  chatParticipants: ChatParticipant[];
 }
