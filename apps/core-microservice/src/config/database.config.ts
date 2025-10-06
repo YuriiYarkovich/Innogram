@@ -13,6 +13,8 @@ import { ChatParticipant } from '../common/entities/chatDedicated/chat-participa
 import { Chat } from '../common/entities/chatDedicated/chat.entity';
 import { MessageAsset } from '../common/entities/chatDedicated/message_asset.entity';
 import { Message } from '../common/entities/chatDedicated/message.entity';
+import { PostLike } from '../common/entities/postsDedicated/post-like.entity';
+import { CommentLike } from '../common/entities/commentsDedicated/comment-like.entity';
 
 @Injectable()
 export class DatabaseConfig implements TypeOrmOptionsFactory {
@@ -39,6 +41,8 @@ export class DatabaseConfig implements TypeOrmOptionsFactory {
         ChatParticipant,
         Message,
         MessageAsset,
+        PostLike,
+        CommentLike,
       ],
       autoLoadEntities: true,
       synchronize: true,

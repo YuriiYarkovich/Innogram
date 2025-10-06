@@ -12,6 +12,7 @@ import {
 import { Profile } from '../accountDedicated/profile.entity';
 import { PostAsset } from './post-asset.entity';
 import { Comment } from '../commentsDedicated/comment.entity';
+import { PostLike } from './post-like.entity';
 
 @Entity('posts', { schema: 'main' })
 export class Post {
@@ -55,4 +56,7 @@ export class Post {
 
   @OneToMany(() => Comment, (comment) => comment.post)
   comments: Comment[];
+
+  @OneToMany(() => PostLike, (postLike) => postLike.post)
+  postLikes: PostLike[];
 }

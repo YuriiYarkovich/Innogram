@@ -12,6 +12,7 @@ import {
 import { CommentMention } from './comment-mention.entity';
 import { Post } from '../postsDedicated/post.entity';
 import { Profile } from '../accountDedicated/profile.entity';
+import { CommentLike } from './comment-like.entity';
 
 @Entity('comments', { schema: 'main' })
 export class Comment {
@@ -61,4 +62,7 @@ export class Comment {
   })
   @JoinColumn({ name: 'profile_id' })
   profile: Profile;
+
+  @OneToMany(() => CommentLike, (commentLike) => commentLike.comment)
+  commentLikes: CommentLike[];
 }
