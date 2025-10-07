@@ -19,5 +19,6 @@ import { PostLike } from '../../common/entities/postsDedicated/post-like.entity'
     PostLikeRepository,
   ],
   imports: [TypeOrmModule.forFeature([Post, PostAsset, PostLike]), MinioModule],
+  exports: [PostsRepository],
 })
 export class PostsModule {}

@@ -22,7 +22,7 @@ export class Comment {
   @Column({ type: 'uuid' })
   post_id: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ type: 'uuid', nullable: true })
   parent_comment_id: string;
 
   @Column({ type: 'uuid' })
@@ -31,7 +31,7 @@ export class Comment {
   @Column({ type: 'text' })
   content: string;
 
-  @Column({ type: 'enum', enum: ['active', 'deleted'] })
+  @Column({ type: 'enum', enum: ['active', 'deleted'], default: 'active' })
   status: 'active' | 'deleted';
 
   @CreateDateColumn()
