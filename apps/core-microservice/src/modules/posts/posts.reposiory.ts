@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PostAsset } from '../../common/entities/postsDedicated/post-asset.entity';
 import { Post } from '../../common/entities/postsDedicated/post.entity';
 import { QueryRunner, Repository } from 'typeorm';
 
@@ -8,8 +7,6 @@ import { QueryRunner, Repository } from 'typeorm';
 export class PostsRepository {
   constructor(
     @InjectRepository(Post) private postRepository: Repository<Post>,
-    @InjectRepository(PostAsset)
-    private postAssetRepository: Repository<PostAsset>,
   ) {}
 
   async createPost(
@@ -34,5 +31,30 @@ export class PostsRepository {
         profile_id: profileId,
       },
     });
+  }
+
+  async getPostByIdAndProfile(profileId: string, postId: string) {
+    return await this.postRepository.findOne({
+      where: {
+        profile_id: profileId,
+        id: postId,
+      },
+    });
+  }
+
+  async updatePost(
+    postId: string,
+    content: string,
+    queryRunner: QueryRunner,
+  ): Promise<Post> {
+    await queryRunner.manager.update(Post, { id: postId }, { content });
+
+    const updatedPost = await queryRunner.manager.findOne(Post, {
+      where: { id: postId },
+    });
+
+    if (!updatedPost) throw new InternalServerErrorException();
+
+    return updatedPost;
   }
 }

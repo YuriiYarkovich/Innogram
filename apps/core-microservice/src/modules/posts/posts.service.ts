@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Post } from '../../common/entities/postsDedicated/post.entity';
 import { PostsRepository } from './posts.reposiory';
-import { DataSource } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import { MinioService } from '../minio/minio.service';
 import { PostAsset } from '../../common/entities/postsDedicated/post-asset.entity';
 import { PostAssetRepository } from './post-asset.repository';
@@ -27,7 +27,7 @@ export class PostsService {
       );
 
       let order = 0;
-      for (const file of files) {
+      /*for (const file of files) {
         const fileData = await this.minioService.uploadFile(file);
         queryRunner.manager.create(PostAsset, {
           hashed_file_name: fileData.hashedFileName,
@@ -39,7 +39,8 @@ export class PostsService {
           fileData.type,
           ++order,
         );
-      }
+      }*/
+      await this.uploadFilesArray(files, queryRunner, post, order);
 
       await queryRunner.commitTransaction();
 
@@ -47,6 +48,27 @@ export class PostsService {
     } catch (e) {
       await queryRunner.rollbackTransaction();
       throw e;
+    }
+  }
+
+  async uploadFilesArray(
+    files,
+    queryRunner: QueryRunner,
+    post: Post,
+    order: number,
+  ) {
+    for (const file of files) {
+      const fileData = await this.minioService.uploadFile(file);
+      queryRunner.manager.create(PostAsset, {
+        hashed_file_name: fileData.hashedFileName,
+      });
+      await this.postAssetRepository.addAsset(
+        fileData.hashedFileName,
+        post.id,
+        queryRunner,
+        fileData.type,
+        ++order,
+      );
     }
   }
 
@@ -64,5 +86,48 @@ export class PostsService {
       );
     }
     return foundPosts;
+  }
+
+  async updatePost(postId: string, profileId: string, content: string, files) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const foundPost = await this.postsRepository.getPostByIdAndProfile(
+        profileId,
+        postId,
+      );
+
+      if (!foundPost) throw new BadRequestException(`Post couldn't be found`);
+
+      const updatedPost = await this.postsRepository.updatePost(
+        postId,
+        content,
+        queryRunner,
+      );
+
+      const foundAssets = await this.postAssetRepository.foundAssetsOfPost(
+        updatedPost.id,
+      );
+
+      if (foundAssets.length < 10 && files.length < 10 - foundAssets.length) {
+        await this.uploadFilesArray(
+          files,
+          queryRunner,
+          updatedPost,
+          files.length,
+        );
+      } else {
+        console.error(`Files length: ${files.length}`);
+        throw new BadRequestException('Wrong files length');
+      }
+
+      await queryRunner.commitTransaction();
+
+      return updatedPost;
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      throw e;
+    }
   }
 }
