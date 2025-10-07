@@ -3,14 +3,21 @@ import { PostsController } from './posts.controller';
 import { PostsService } from './posts.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Post } from '../../common/entities/postsDedicated/post.entity';
-import { PostsRepository } from './posts.reposiory';
-import { PostAssetRepository } from './post-asset.repository';
+import { PostsRepository } from './repositories/posts.reposiory';
+import { PostAssetRepository } from './repositories/post-asset.repository';
 import { MinioModule } from '../minio/minio.module';
 import { PostAsset } from '../../common/entities/postsDedicated/post-asset.entity';
+import { PostLikeRepository } from './repositories/post-like.repository';
+import { PostLike } from '../../common/entities/postsDedicated/post-like.entity';
 
 @Module({
   controllers: [PostsController],
-  providers: [PostsService, PostsRepository, PostAssetRepository],
-  imports: [TypeOrmModule.forFeature([Post, PostAsset]), MinioModule],
+  providers: [
+    PostsService,
+    PostsRepository,
+    PostAssetRepository,
+    PostLikeRepository,
+  ],
+  imports: [TypeOrmModule.forFeature([Post, PostAsset, PostLike]), MinioModule],
 })
 export class PostsModule {}

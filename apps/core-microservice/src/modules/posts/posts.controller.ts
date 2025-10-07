@@ -50,4 +50,21 @@ export class PostsController {
     const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
     return await this.postsService.deletePost(postId, profileId);
   }
+
+  @Post('like/:postId')
+  async likePost(@Param('postId') postId: string) {
+    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    return this.postsService.addLike(postId, profileId);
+  }
+
+  @Delete('unlike/:postId')
+  async unlikePost(@Param('postId') postId: string) {
+    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    return this.postsService.removeLike(postId, profileId);
+  }
+
+  @Get('/allLikes/:postId')
+  async getAllLikes(@Param('postId') postId: string) {
+    return this.postsService.getAllLikesOfPost(postId);
+  }
 }

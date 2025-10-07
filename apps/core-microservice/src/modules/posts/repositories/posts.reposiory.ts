@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Post } from '../../common/entities/postsDedicated/post.entity';
+import { Post } from '../../../common/entities/postsDedicated/post.entity';
 import { QueryRunner, Repository } from 'typeorm';
 
 @Injectable()
@@ -26,6 +26,7 @@ export class PostsRepository {
     return await this.postRepository.find({
       relations: {
         postAssets: true,
+        postLikes: true,
       },
       where: [
         {

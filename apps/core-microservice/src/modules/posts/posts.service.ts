@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Post } from '../../common/entities/postsDedicated/post.entity';
-import { PostsRepository } from './posts.reposiory';
+import { PostsRepository } from './repositories/posts.reposiory';
 import { DataSource, QueryRunner } from 'typeorm';
 import { MinioService } from '../minio/minio.service';
 import { PostAsset } from '../../common/entities/postsDedicated/post-asset.entity';
-import { PostAssetRepository } from './post-asset.repository';
+import { PostAssetRepository } from './repositories/post-asset.repository';
+import { PostLikeRepository } from './repositories/post-like.repository';
 
 @Injectable()
 export class PostsService {
@@ -13,6 +14,7 @@ export class PostsService {
     private dataSource: DataSource,
     private minioService: MinioService,
     private postAssetRepository: PostAssetRepository,
+    private postLikeRepository: PostLikeRepository,
   ) {}
 
   async createPost(profile_id: string, content: string, files): Promise<Post> {
@@ -140,5 +142,26 @@ export class PostsService {
     if (!foundPost) throw new BadRequestException(`Post couldn't be found`);
 
     return await this.postsRepository.deletePost(postId);
+  }
+
+  async addLike(postId: string, profileId: string) {
+    const like = await this.postLikeRepository.findLike(postId, profileId);
+    if (like)
+      throw new BadRequestException('Post is already liked by this user');
+    return await this.postLikeRepository.addLike(postId, profileId);
+  }
+
+  async removeLike(postId: string, profileId: string) {
+    const like = await this.postLikeRepository.findLike(postId, profileId);
+    if (!like)
+      throw new BadRequestException(`This users hasn't liked that post`);
+    return await this.postLikeRepository.removeLike(postId, profileId);
+  }
+
+  async getAllLikesOfPost(postId: string) {
+    const post = await this.postsRepository.findPostById(postId);
+    if (!post) throw new BadRequestException(`This post doesn't exist`);
+
+    return await this.postLikeRepository.findAllLikesOfPost(postId);
   }
 }
