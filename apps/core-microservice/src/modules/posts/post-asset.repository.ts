@@ -5,7 +5,7 @@ import { PostAsset } from '../../common/entities/postsDedicated/post-asset.entit
 @Injectable()
 export class PostAssetRepository {
   async addAsset(
-    url: string,
+    hashedFileName: string,
     postId: string,
     queryRunner: QueryRunner,
     fileType: string,
@@ -16,7 +16,7 @@ export class PostAssetRepository {
     }
     const postAsset = queryRunner.manager.create(PostAsset, {
       post_id: postId,
-      url,
+      hashed_file_name: hashedFileName,
       type: fileType,
       order,
     });

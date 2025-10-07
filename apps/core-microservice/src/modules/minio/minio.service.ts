@@ -18,6 +18,7 @@ import { extname } from 'path';
 import { ConfigService } from '@nestjs/config';
 import * as ffmpeg from 'fluent-ffmpeg';
 import * as ffprobeStatic from 'ffprobe-static';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 ffmpeg.setFfprobePath(ffprobeStatic.path);
 
@@ -25,7 +26,8 @@ ffmpeg.setFfprobePath(ffprobeStatic.path);
 export class MinioService {
   private s3Client: S3Client;
 
-  private readonly bucketName = 'innogram-files';
+  private readonly bucketName: string | undefined;
+  private readonly s3BaseUrl: string | undefined;
 
   constructor(private readonly config: ConfigService) {
     this.s3Client = new S3Client({
@@ -40,6 +42,8 @@ export class MinioService {
 
       forcePathStyle: true,
     });
+    this.bucketName = this.config.get<string>('S3_BUCKET');
+    this.s3BaseUrl = this.config.get<string>('S3_ENDPOINT');
   }
 
   private getVideoDuration(buffer: Buffer): Promise<number> {
@@ -48,7 +52,7 @@ export class MinioService {
       import('fs').then((fs) => {
         fs.writeFileSync(tempPath, buffer);
         ffmpeg.ffprobe(tempPath, (err, metadata) => {
-          fs.unlinkSync(tempPath); // удаляем временный файл
+          fs.unlinkSync(tempPath);
           if (err) return reject(err);
           resolve(metadata.format.duration || 0);
         });
@@ -56,7 +60,9 @@ export class MinioService {
     });
   }
 
-  async uploadFile(file: MulterFile): Promise<{ url: string; type: string }> {
+  async uploadFile(
+    file: MulterFile,
+  ): Promise<{ hashedFileName: string; type: string }> {
     let type: string;
     const fileExtension = extname(file.originalname).toLowerCase();
     const mimeType = file.mimetype;
@@ -86,7 +92,16 @@ export class MinioService {
 
     await this.s3Client.send(command);
 
-    return { url: hashedFileName, type };
+    return { hashedFileName, type };
+  }
+
+  async getPublicUrl(fileKey: string): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: fileKey,
+    });
+
+    return await getSignedUrl(this.s3Client, command, { expiresIn: 600 });
   }
 
   async getFile(key: string): Promise<Readable> {

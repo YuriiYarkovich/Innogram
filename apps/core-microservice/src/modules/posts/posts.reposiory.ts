@@ -24,4 +24,15 @@ export class PostsRepository {
     await queryRunner.manager.save(post);
     return post;
   }
+
+  async getByProfile(profileId: string) {
+    return await this.postRepository.find({
+      relations: {
+        postAssets: true,
+      },
+      where: {
+        profile_id: profileId,
+      },
+    });
+  }
 }

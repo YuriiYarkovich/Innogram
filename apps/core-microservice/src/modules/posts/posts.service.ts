@@ -29,9 +29,11 @@ export class PostsService {
       let order = 0;
       for (const file of files) {
         const fileData = await this.minioService.uploadFile(file);
-        queryRunner.manager.create(PostAsset, { url: fileData.url });
+        queryRunner.manager.create(PostAsset, {
+          hashed_file_name: fileData.hashedFileName,
+        });
         await this.postAssetRepository.addAsset(
-          fileData.url,
+          fileData.hashedFileName,
           post.id,
           queryRunner,
           fileData.type,
@@ -46,5 +48,21 @@ export class PostsService {
       await queryRunner.rollbackTransaction();
       throw e;
     }
+  }
+
+  async getByProfile(profileId: string) {
+    const foundPosts = await this.postsRepository.getByProfile(profileId);
+
+    for (const post of foundPosts) {
+      await Promise.all(
+        post.postAssets.map(async (postAsset) => {
+          const url = await this.minioService.getPublicUrl(
+            postAsset.hashed_file_name,
+          );
+          postAsset.url = url;
+        }),
+      );
+    }
+    return foundPosts;
   }
 }

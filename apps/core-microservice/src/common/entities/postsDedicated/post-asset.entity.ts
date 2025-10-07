@@ -20,7 +20,7 @@ export class PostAsset {
   type: 'image' | 'video';
 
   @Column({ type: 'text' })
-  url: string;
+  hashed_file_name: string;
 
   @Column({ type: 'int' })
   order: number;
@@ -29,7 +29,12 @@ export class PostAsset {
   created_at: Date;
 
   // Relations
-  @ManyToOne(() => Post, (post) => post.postAssets)
+  @ManyToOne(() => Post, (post) => post.postAssets, {
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  })
   @JoinColumn({ name: 'post_id' })
   post: Post;
+
+  url?: string;
 }

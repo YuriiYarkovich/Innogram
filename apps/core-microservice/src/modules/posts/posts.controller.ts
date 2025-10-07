@@ -1,6 +1,8 @@
 import {
   Body,
   Controller,
+  Get,
+  Param,
   Post,
   UploadedFiles,
   UseInterceptors,
@@ -19,5 +21,10 @@ export class PostsController {
     //console.log(`Files in controller: ${JSON.stringify(files)}`);
     const profile_id = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO remove when auth module ready
     return await this.postsService.createPost(profile_id, content, files);
+  }
+
+  @Get('/getByProfile/:profileId')
+  async getByAccount(@Param('profileId') profileId: string) {
+    return await this.postsService.getByProfile(profileId);
   }
 }
