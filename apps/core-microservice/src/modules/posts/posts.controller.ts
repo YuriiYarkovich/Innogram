@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -42,5 +43,11 @@ export class PostsController {
       content,
       files,
     );
+  }
+
+  @Delete('/delete/:postId')
+  async deletePost(@Param('postId') postId: string) {
+    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    return await this.postsService.deletePost(postId, profileId);
   }
 }

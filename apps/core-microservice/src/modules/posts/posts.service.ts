@@ -130,4 +130,15 @@ export class PostsService {
       throw e;
     }
   }
+
+  async deletePost(postId: string, profileId: string) {
+    const foundPost = await this.postsRepository.getPostByIdAndProfile(
+      profileId,
+      postId,
+    );
+
+    if (!foundPost) throw new BadRequestException(`Post couldn't be found`);
+
+    return await this.postsRepository.deletePost(postId);
+  }
 }

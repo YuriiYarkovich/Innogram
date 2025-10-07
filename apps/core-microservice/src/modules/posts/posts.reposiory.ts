@@ -27,18 +27,33 @@ export class PostsRepository {
       relations: {
         postAssets: true,
       },
-      where: {
-        profile_id: profileId,
-      },
+      where: [
+        {
+          profile_id: profileId,
+          status: 'active',
+        },
+        {
+          profile_id: profileId,
+          status: 'archived',
+        },
+      ],
     });
   }
 
   async getPostByIdAndProfile(profileId: string, postId: string) {
     return await this.postRepository.findOne({
-      where: {
-        profile_id: profileId,
-        id: postId,
-      },
+      where: [
+        {
+          profile_id: profileId,
+          id: postId,
+          status: 'active',
+        },
+        {
+          profile_id: profileId,
+          id: postId,
+          status: 'archived',
+        },
+      ],
     });
   }
 
@@ -56,5 +71,15 @@ export class PostsRepository {
     if (!updatedPost) throw new InternalServerErrorException();
 
     return updatedPost;
+  }
+
+  async deletePost(postId: string) {
+    await this.postRepository.update(postId, { status: 'deleted' });
+
+    return await this.findPostById(postId);
+  }
+
+  async findPostById(postId: string) {
+    return await this.postRepository.findOne({ where: { id: postId } });
   }
 }
