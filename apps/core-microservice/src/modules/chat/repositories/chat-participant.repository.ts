@@ -35,4 +35,10 @@ export class ChatParticipantRepository {
       },
     });
   }
+
+  async findChatParticipant(profileId: string, chatId: string) {
+    return await this.chatParticipantRepository.findOne({
+      where: { profile_id: profileId, chat_id: chatId },
+    });
+  }
 }

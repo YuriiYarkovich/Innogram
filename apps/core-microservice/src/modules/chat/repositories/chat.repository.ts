@@ -15,4 +15,18 @@ export class ChatRepository {
     await queryRunner.manager.save(chat);
     return chat;
   }
+
+  async getChatInfo(chatId: string) {
+    return await this.chatRepository.findOne({
+      relations: {
+        chatParticipants: true,
+        messages: true,
+      },
+      where: { id: chatId },
+    });
+  }
+
+  async updateChatTitle(chatId: string, title: string) {
+    await this.chatRepository.update({ id: chatId }, { title });
+  }
 }

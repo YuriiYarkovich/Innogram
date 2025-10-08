@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { ChatRepository } from './repositories/chat.repository';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { DataSource } from 'typeorm';
@@ -44,5 +48,28 @@ export class ChatService {
     return await this.chatParticipantRepository.foundAllChatsOfProfile(
       profileId,
     );
+  }
+
+  async getChatInfo(chatId: string) {
+    const chat = await this.chatRepository.getChatInfo(chatId);
+    if (!chat) throw new BadRequestException(`This chat doesn't exist!`);
+    return chat;
+  }
+
+  async updateChatTitle(chatId: string, title: string, profileId: string) {
+    const chatParticipant =
+      await this.chatParticipantRepository.findChatParticipant(
+        profileId,
+        chatId,
+      );
+
+    if (!chatParticipant)
+      throw new BadRequestException('Chat has no such participant');
+
+    if (chatParticipant.role !== 'admin')
+      throw new ForbiddenException('Participant is not admin of this chat');
+
+    await this.chatRepository.updateChatTitle(chatId, title);
+    return await this.chatRepository.getChatInfo(chatId);
   }
 }

@@ -27,9 +27,6 @@ export class Chat {
   @Column({ type: 'varchar', length: 255, nullable: true })
   title: string;
 
-  @Column({ type: 'text', nullable: true })
-  description: string;
-
   @CreateDateColumn()
   createdAt: Date;
 

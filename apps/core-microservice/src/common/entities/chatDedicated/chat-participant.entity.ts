@@ -19,6 +19,13 @@ export class ChatParticipant {
   @Column({ type: 'uuid' })
   chat_id: string;
 
+  @Column({
+    type: 'enum',
+    enum: ['participant', 'admin'],
+    default: 'participant',
+  })
+  role: 'participant' | 'admin';
+
   @ManyToOne(() => Profile, (profile) => profile.chatParticipants, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
