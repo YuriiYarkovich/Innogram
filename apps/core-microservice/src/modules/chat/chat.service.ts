@@ -39,4 +39,10 @@ export class ChatService {
       throw e;
     }
   }
+
+  async getAllChatsOfProfile(profileId: string) {
+    return await this.chatParticipantRepository.foundAllChatsOfProfile(
+      profileId,
+    );
+  }
 }

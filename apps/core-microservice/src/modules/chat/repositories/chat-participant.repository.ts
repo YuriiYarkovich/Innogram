@@ -24,4 +24,15 @@ export class ChatParticipantRepository {
 
     return chatParticipant;
   }
+
+  async foundAllChatsOfProfile(profileId: string) {
+    return await this.chatParticipantRepository.find({
+      relations: {
+        chat: true,
+      },
+      where: {
+        profile_id: profileId,
+      },
+    });
+  }
 }
