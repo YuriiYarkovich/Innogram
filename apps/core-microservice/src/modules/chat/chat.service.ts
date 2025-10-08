@@ -36,6 +36,14 @@ export class ChatService {
         );
       }
 
+      if (chatParticipantsIds.length > 2) {
+        await this.chatParticipantRepository.updateRoleInTransaction(
+          chatParticipantsIds[0],
+          'admin',
+          queryRunner,
+        );
+      }
+
       await queryRunner.commitTransaction();
       return createdChat;
     } catch (e) {
@@ -57,19 +65,34 @@ export class ChatService {
   }
 
   async updateChatTitle(chatId: string, title: string, profileId: string) {
-    const chatParticipant =
-      await this.chatParticipantRepository.findChatParticipant(
-        profileId,
-        chatId,
-      );
-
-    if (!chatParticipant)
-      throw new BadRequestException('Chat has no such participant');
+    const chatParticipant = await this.checkIfParticipantExists(
+      chatId,
+      profileId,
+    );
 
     if (chatParticipant.role !== 'admin')
       throw new ForbiddenException('Participant is not admin of this chat');
 
     await this.chatRepository.updateChatTitle(chatId, title);
     return await this.chatRepository.getChatInfo(chatId);
+  }
+
+  private async checkIfParticipantExists(chatId: string, profileId: string) {
+    const participant =
+      await this.chatParticipantRepository.findChatParticipant(
+        profileId,
+        chatId,
+      );
+
+    if (!participant)
+      throw new BadRequestException('Chat has no such participant!');
+
+    return participant;
+  }
+
+  async leaveChat(chatId: string, profileId: string) {
+    await this.checkIfParticipantExists(chatId, profileId);
+
+    return await this.chatParticipantRepository.leaveChat(chatId, profileId);
   }
 }

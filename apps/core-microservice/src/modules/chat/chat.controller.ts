@@ -8,7 +8,7 @@ export class ChatController {
   @Post(`/create`)
   async createChat(
     @Body() dto: CreateChatDto,
-    @Body('chatParticipantsIds') chatParticipantsIds: string[],
+    @Body('chatParticipantsIds') chatParticipantsIds: string[], //the first one should be the creator, he'll become admin
   ) {
     return await this.chatService.createChat(dto, chatParticipantsIds);
   }
@@ -31,5 +31,11 @@ export class ChatController {
   ) {
     const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
     return this.chatService.updateChatTitle(chatId, title, profileId);
+  }
+
+  @Put(`/leave/:chatId`)
+  async leaveChat(@Param('chatId') chatId: string) {
+    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    return await this.chatService.leaveChat(chatId, profileId);
   }
 }
