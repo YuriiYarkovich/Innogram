@@ -7,6 +7,7 @@ import { UsersModule } from './modules/users/users.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { MinioModule } from './modules/minio/minio.module';
 import { CommentsModule } from './modules/comments/comments.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { CommentsModule } from './modules/comments/comments.module';
     PostsModule,
     MinioModule,
     CommentsModule,
+    ChatModule,
   ],
 })
 export class AppModule {}
