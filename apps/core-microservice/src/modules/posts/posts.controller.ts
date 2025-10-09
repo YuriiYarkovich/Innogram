@@ -24,12 +24,12 @@ export class PostsController {
     return await this.postsService.createPost(profileId, content, files);
   }
 
-  @Get('/getByProfile/:profileId')
+  @Get('/allOfProfile/:profileId')
   async getByAccount(@Param('profileId') profileId: string) {
     return await this.postsService.getByProfile(profileId);
   }
 
-  @Put('/editPost/:postId')
+  @Put('/edit/:postId')
   @UseInterceptors(FilesInterceptor('files'))
   async editPost(
     @Param('postId') postId: string,

@@ -10,7 +10,7 @@ export class PostAssetRepository {
     private postAssetRepository: Repository<PostAsset>,
   ) {}
 
-  async addAsset(
+  async createPostAsset(
     hashedFileName: string,
     postId: string,
     queryRunner: QueryRunner,
@@ -31,9 +31,21 @@ export class PostAssetRepository {
     return postAsset;
   }
 
-  async foundAssetsOfPost(postId: string): Promise<PostAsset[]> {
+  async findAssetsByPost(postId: string): Promise<PostAsset[]> {
     return await this.postAssetRepository.find({
       where: { post_id: postId },
     });
+  }
+
+  async findAssetByName(hashedFileName: string) {
+    return await this.postAssetRepository.findOne({
+      where: {
+        hashed_file_name: hashedFileName,
+      },
+    });
+  }
+
+  async deletePostAsset(assetId: string, queryRunner: QueryRunner) {
+    await queryRunner.manager.delete(PostAsset, { id: assetId });
   }
 }

@@ -66,6 +66,7 @@ export class PostsRepository {
     await queryRunner.manager.update(Post, { id: postId }, { content });
 
     const updatedPost = await queryRunner.manager.findOne(Post, {
+      relations: { postAssets: true },
       where: { id: postId },
     });
 

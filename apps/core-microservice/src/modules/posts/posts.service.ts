@@ -6,6 +6,7 @@ import { MinioService } from '../minio/minio.service';
 import { PostAsset } from '../../common/entities/postsDedicated/post-asset.entity';
 import { PostAssetRepository } from './repositories/post-asset.repository';
 import { PostLikeRepository } from './repositories/post-like.repository';
+import { File as MulterFile } from 'multer';
 
 @Injectable()
 export class PostsService {
@@ -29,19 +30,6 @@ export class PostsService {
       );
 
       let order = 0;
-      /*for (const file of files) {
-        const fileData = await this.minioService.uploadFile(file);
-        queryRunner.manager.create(PostAsset, {
-          hashed_file_name: fileData.hashedFileName,
-        });
-        await this.postAssetRepository.addAsset(
-          fileData.hashedFileName,
-          post.id,
-          queryRunner,
-          fileData.type,
-          ++order,
-        );
-      }*/
       await this.uploadFilesArray(files, queryRunner, post, order);
 
       await queryRunner.commitTransaction();
@@ -64,7 +52,7 @@ export class PostsService {
       queryRunner.manager.create(PostAsset, {
         hashed_file_name: fileData.hashedFileName,
       });
-      await this.postAssetRepository.addAsset(
+      await this.postAssetRepository.createPostAsset(
         fileData.hashedFileName,
         post.id,
         queryRunner,
@@ -90,7 +78,12 @@ export class PostsService {
     return foundPosts;
   }
 
-  async updatePost(postId: string, profileId: string, content: string, files) {
+  async updatePost(
+    postId: string,
+    profileId: string,
+    content: string,
+    files: MulterFile[],
+  ) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -108,20 +101,47 @@ export class PostsService {
         queryRunner,
       );
 
-      const foundAssets = await this.postAssetRepository.foundAssetsOfPost(
-        updatedPost.id,
+      const existingFileNames =
+        updatedPost?.postAssets?.map((a) => a.hashed_file_name) ?? [];
+      const newFileNames = files.map((f) => f.originalname);
+
+      const namesToAdd = newFileNames.filter(
+        (name) => !existingFileNames.includes(name),
+      );
+      const namesToRemove = existingFileNames.filter(
+        (name) => !newFileNames.includes(name),
       );
 
-      if (foundAssets.length < 10 && files.length < 10 - foundAssets.length) {
-        await this.uploadFilesArray(
-          files,
-          queryRunner,
-          updatedPost,
-          files.length,
+      if (namesToRemove.length > 0) {
+        for (const fileName of namesToRemove) {
+          const asset =
+            await this.postAssetRepository.findAssetByName(fileName);
+          if (!asset) continue;
+
+          await this.postAssetRepository.deletePostAsset(asset.id, queryRunner);
+          await this.minioService.deleteFile(fileName);
+        }
+      }
+
+      if (namesToAdd.length > 0) {
+        const existingAssets =
+          await this.postAssetRepository.findAssetsByPost(postId);
+        let order = existingAssets.length;
+
+        const filesToAdd = files.filter((f) =>
+          namesToAdd.includes(f.originalname),
         );
-      } else {
-        console.error(`Files length: ${files.length}`);
-        throw new BadRequestException('Wrong files length');
+
+        for (const file of filesToAdd) {
+          const newAsset = await this.minioService.uploadFile(file);
+          await this.postAssetRepository.createPostAsset(
+            newAsset.hashedFileName,
+            postId,
+            queryRunner,
+            newAsset.type,
+            ++order,
+          );
+        }
       }
 
       await queryRunner.commitTransaction();
