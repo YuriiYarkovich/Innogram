@@ -20,7 +20,7 @@ export class MessageAsset {
   type: 'image' | 'video';
 
   @Column({ type: 'text' })
-  url: string;
+  hashed_file_name: string;
 
   @Column({ type: 'int', default: 1 })
   order: number;
@@ -34,4 +34,6 @@ export class MessageAsset {
   })
   @JoinColumn({ name: 'message_id' })
   message: Message;
+
+  url: string;
 }

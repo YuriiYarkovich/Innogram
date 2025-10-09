@@ -29,4 +29,8 @@ export class ChatRepository {
   async updateChatTitle(chatId: string, title: string) {
     await this.chatRepository.update({ id: chatId }, { title });
   }
+
+  async deleteChat(chatId: string) {
+    await this.chatRepository.delete({ id: chatId });
+  }
 }

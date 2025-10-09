@@ -11,5 +11,6 @@ import { ChatParticipantRepository } from './repositories/chat-participant.repos
   imports: [TypeOrmModule.forFeature([Chat, ChatParticipant])],
   controllers: [ChatController],
   providers: [ChatService, ChatRepository, ChatParticipantRepository],
+  exports: [ChatService, ChatRepository, ChatParticipantRepository],
 })
 export class ChatModule {}
