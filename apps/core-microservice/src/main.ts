@@ -7,7 +7,18 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  const PORT = configService.get<number>('PORT') ?? 3000;
+
+  const frontendUrl = configService.get<string>('CLIENT_URL');
+  const isDev = configService.get<string>('NODE_ENV') === 'development';
+
+  app.enableCors({
+    origin: isDev ? [frontendUrl, 'http://localhost:3000'] : frontendUrl,
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  });
+
+  const PORT = configService.get<number>('CORE_SERVICE_PORT') ?? 3001;
   const config = new DocumentBuilder()
     .setTitle(
       'API for Innogram -- better version of popular social network ;-)',
