@@ -13,18 +13,35 @@ import { Profile } from '../accountDedicated/profile.entity';
 import { PostAsset } from './post-asset.entity';
 import { Comment } from '../commentsDedicated/comment.entity';
 import { PostLike } from './post-like.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('posts', { schema: 'main' })
 export class Post {
+  @ApiProperty({
+    example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
+    description: 'unique identifier',
+  })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @ApiProperty({
+    example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
+    description: `Reference to the author's profile`,
+  })
   @Column({ type: 'uuid' })
   profile_id: string;
 
+  @ApiProperty({
+    example: 'Today in Paris ;-)',
+    description: 'Content of the post',
+  })
   @Column({ type: 'text' })
   content: string;
 
+  @ApiProperty({
+    example: 'active',
+    description: 'Status of the post',
+  })
   @Column({
     type: 'enum',
     enum: ['active', 'archived', 'deleted'],

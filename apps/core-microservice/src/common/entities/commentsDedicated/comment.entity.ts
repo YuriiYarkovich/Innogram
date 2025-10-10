@@ -13,24 +13,49 @@ import { CommentMention } from './comment-mention.entity';
 import { Post } from '../postsDedicated/post.entity';
 import { Profile } from '../accountDedicated/profile.entity';
 import { CommentLike } from './comment-like.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('comments', { schema: 'main' })
 export class Comment {
+  @ApiProperty({
+    example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
+    description: 'unique identifier',
+  })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @ApiProperty({
+    example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
+    description: 'Reference to the post',
+  })
   @Column({ type: 'uuid' })
   post_id: string;
 
+  @ApiProperty({
+    example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
+    description: 'Reference to the parent comment',
+  })
   @Column({ type: 'uuid', nullable: true })
   parent_comment_id: string;
 
+  @ApiProperty({
+    example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
+    description: `Reference to the author's profile`,
+  })
   @Column({ type: 'uuid' })
   profile_id: string;
 
+  @ApiProperty({
+    example: 'Wow! You look very gorgeous today!',
+    description: 'Text of the message',
+  })
   @Column({ type: 'text' })
   content: string;
 
+  @ApiProperty({
+    example: 'active',
+    description: 'status of the comment',
+  })
   @Column({ type: 'enum', enum: ['active', 'deleted'], default: 'active' })
   status: 'active' | 'deleted';
 
