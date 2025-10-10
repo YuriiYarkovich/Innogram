@@ -16,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { CommentLike } from '../../common/entities/commentsDedicated/comment-like.entity';
 import { CreateCommentDto } from './dto/crete-comment.dto';
+import { Comment } from '../../common/entities/commentsDedicated/comment.entity';
 
 @ApiTags('Operations with comments')
 @ApiBearerAuth('access-token')

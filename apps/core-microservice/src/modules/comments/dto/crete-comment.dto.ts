@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsString } from 'class-validator';
 
 export class CreateCommentDto {
   constructor(content: string) {
@@ -9,5 +10,6 @@ export class CreateCommentDto {
     example: 'You look absolutely gorgeous today! OMG!',
     description: 'Content of the comment',
   })
+  @IsString()
   readonly content: string;
 }

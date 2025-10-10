@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsArray, IsIn, IsString, IsUUID } from 'class-validator';
 
 export class CreateChatDto {
   constructor(
@@ -17,18 +18,22 @@ export class CreateChatDto {
     example: 'private',
     description: 'Chat type',
   })
+  @IsString()
+  @IsIn(['private', 'group'])
   readonly chat_type: 'private' | 'group';
 
   @ApiProperty({
     example: 'Great chat',
     description: 'Chat title',
   })
+  @IsString()
   readonly title: string;
 
   @ApiProperty({
     example: 'The best chat of the best chats of the best chats',
     description: 'Description of the chat',
   })
+  @IsString()
   readonly description: string;
 
   @ApiProperty({
@@ -38,5 +43,7 @@ export class CreateChatDto {
     ],
     description: 'IDs of all chat participants',
   })
+  @IsUUID()
+  @IsArray()
   readonly participantsIds: string[];
 }

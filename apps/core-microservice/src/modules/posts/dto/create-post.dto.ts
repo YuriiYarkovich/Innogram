@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsString } from 'class-validator';
 
 export class CreatePostDto {
   constructor(content: string) {
@@ -9,5 +10,6 @@ export class CreatePostDto {
     example: `Today chilin' in Paris`,
     description: 'Content of the post',
   })
+  @IsString()
   readonly content: string;
 }
