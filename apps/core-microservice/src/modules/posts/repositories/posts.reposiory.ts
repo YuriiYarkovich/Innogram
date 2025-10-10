@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from '../../../common/entities/postsDedicated/post.entity';
 import { QueryRunner, Repository } from 'typeorm';
+import { CreatePostDto } from '../dto/create-post.dto';
 
 @Injectable()
 export class PostsRepository {
@@ -11,11 +12,11 @@ export class PostsRepository {
 
   async createPost(
     profileId: string,
-    content: string,
+    dto: CreatePostDto,
     queryRunner: QueryRunner,
   ): Promise<Post> {
     const post = queryRunner.manager.create(Post, {
-      content,
+      content: dto.content,
       profile_id: profileId,
     });
     await queryRunner.manager.save(post);
@@ -60,10 +61,14 @@ export class PostsRepository {
 
   async updatePost(
     postId: string,
-    content: string,
+    dto: CreatePostDto,
     queryRunner: QueryRunner,
   ): Promise<Post> {
-    await queryRunner.manager.update(Post, { id: postId }, { content });
+    await queryRunner.manager.update(
+      Post,
+      { id: postId },
+      { content: dto.content },
+    );
 
     const updatedPost = await queryRunner.manager.findOne(Post, {
       relations: { postAssets: true },

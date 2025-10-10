@@ -19,6 +19,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { PostLike } from '../../common/entities/postsDedicated/post-like.entity';
+import { CreatePostDto } from './dto/create-post.dto';
 
 @ApiTags('Operations with posts')
 @ApiBearerAuth('access-token')
@@ -31,10 +32,9 @@ export class PostsController {
   @ApiConsumes('multipart/form-data')
   @Post('/create')
   @UseInterceptors(FilesInterceptor('files'))
-  async createPost(@Body('content') content: string, @UploadedFiles() files) {
-    console.log(`content in controller: ${content}`);
+  async createPost(@Body() dto: CreatePostDto, @UploadedFiles() files) {
     const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
-    return await this.postsService.createPost(profileId, content, files);
+    return await this.postsService.createPost(profileId, dto, files);
   }
 
   @ApiOperation({ summary: 'Returns all posts of profile' })
@@ -51,16 +51,11 @@ export class PostsController {
   @UseInterceptors(FilesInterceptor('files'))
   async editPost(
     @Param('postId') postId: string,
-    @Body('content') content: string,
+    @Body() dto: CreatePostDto,
     @UploadedFiles() files,
   ) {
     const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
-    return await this.postsService.updatePost(
-      postId,
-      profileId,
-      content,
-      files,
-    );
+    return await this.postsService.updatePost(postId, profileId, dto, files);
   }
 
   @ApiOperation({ summary: 'Deletes posts' })

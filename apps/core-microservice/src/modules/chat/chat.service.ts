@@ -16,7 +16,7 @@ export class ChatService {
     private dataSource: DataSource,
   ) {}
 
-  async createChat(dto: CreateChatDto, chatParticipantsIds: string[]) {
+  async createChat(dto: CreateChatDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -27,6 +27,7 @@ export class ChatService {
         queryRunner,
       );
 
+      const chatParticipantsIds = dto.participantsIds;
       //TODO create check if all those users exist
       for (const chatParticipantId of chatParticipantsIds) {
         await this.chatParticipantRepository.addChatParticipant(
@@ -64,7 +65,7 @@ export class ChatService {
     return chat;
   }
 
-  async updateChatTitle(chatId: string, title: string, profileId: string) {
+  async updateChatTitle(chatId: string, dto: CreateChatDto, profileId: string) {
     const chatParticipant = await this.checkIfParticipantExists(
       chatId,
       profileId,
@@ -73,7 +74,7 @@ export class ChatService {
     if (chatParticipant.role !== 'admin')
       throw new ForbiddenException('Participant is not admin of this chat');
 
-    await this.chatRepository.updateChatTitle(chatId, title);
+    await this.chatRepository.updateChat(chatId, dto);
     return await this.chatRepository.getChatInfo(chatId);
   }
 

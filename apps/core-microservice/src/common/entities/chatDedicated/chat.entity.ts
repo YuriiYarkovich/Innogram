@@ -44,6 +44,13 @@ export class Chat {
   @Column({ type: 'varchar', length: 255, nullable: true })
   title: string;
 
+  @ApiProperty({
+    example: 'The best chat of the best chats of the best chats',
+    description: 'Description of the chat',
+  })
+  @Column({ type: 'varchar', length: 512, nullable: true })
+  description: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

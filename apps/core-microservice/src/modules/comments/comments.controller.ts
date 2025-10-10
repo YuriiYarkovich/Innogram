@@ -15,6 +15,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { CommentLike } from '../../common/entities/commentsDedicated/comment-like.entity';
+import { CreateCommentDto } from './dto/crete-comment.dto';
 
 @ApiTags('Operations with comments')
 @ApiBearerAuth('access-token')
@@ -26,11 +27,11 @@ export class CommentsController {
   @ApiResponse({ status: 200, type: Comment })
   @Post(`/add/:postId`)
   async createComment(
-    @Body('content') content: string,
+    @Body() dto: CreateCommentDto,
     @Param('postId') postId: string,
   ) {
     const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
-    return await this.commentsService.createComment(content, postId, profileId);
+    return await this.commentsService.createComment(dto, postId, profileId);
   }
 
   @ApiOperation({ summary: 'Returns all comments of posts' })
@@ -44,15 +45,11 @@ export class CommentsController {
   @ApiResponse({ status: 200, type: Comment })
   @Put(`/update/:commentId`)
   async updateComment(
-    @Body('content') content: string,
+    @Body() dto: CreateCommentDto,
     @Param('commentId') commentId: string,
   ) {
     const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
-    return await this.commentsService.updateComment(
-      commentId,
-      profileId,
-      content,
-    );
+    return await this.commentsService.updateComment(commentId, profileId, dto);
   }
 
   @ApiOperation({ summary: 'Deletes comments' })

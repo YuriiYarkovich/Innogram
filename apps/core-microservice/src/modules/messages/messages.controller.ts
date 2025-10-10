@@ -20,6 +20,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Message } from '../../common/entities/chatDedicated/message.entity';
+import { EditMessageDto } from './dto/edit-message.dto';
 
 @ApiTags('Operations with messages')
 @ApiBearerAuth('access-token')
@@ -52,13 +53,13 @@ export class MessagesController {
   @UseInterceptors(FilesInterceptor('files'))
   async editMessage(
     @Param('messageId') messageId: string,
-    @Body('content') content: string,
+    @Body() dto: EditMessageDto,
     @UploadedFiles() files,
   ) {
     const profileId = '49e602a4-7173-4d54-954b-47687f4e0c8e'; //TODO get from CLS when auth module ready
     return await this.messagesService.editMessage(
       messageId,
-      content,
+      dto,
       profileId,
       files,
     );

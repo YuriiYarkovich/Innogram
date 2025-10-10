@@ -11,15 +11,17 @@ export class CreateMessageDto {
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
     description: 'Reference to chat',
   })
-  public readonly chat_id: string;
+  readonly chat_id: string;
+
   @ApiProperty({
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
     description: 'Reference to replying message',
   })
-  private readonly reply_to_message_id: string;
+  readonly reply_to_message_id: string;
+
   @ApiProperty({
     example: 'Hello how are you',
     description: 'Content of the message',
   })
-  private readonly content: string;
+  readonly content: string;
 }

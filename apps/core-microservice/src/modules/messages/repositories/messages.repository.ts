@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Message } from '../../../common/entities/chatDedicated/message.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { CreateMessageDto } from '../dto/create-message.dto';
+import { EditMessageDto } from '../dto/edit-message.dto';
 
 @Injectable()
 export class MessagesRepository {
@@ -49,13 +50,13 @@ export class MessagesRepository {
 
   async updateMessage(
     messageId: string,
-    content: string,
+    dto: EditMessageDto,
     queryRunner: QueryRunner,
   ) {
     await queryRunner.manager.update(
       Message,
       { id: messageId },
-      { content, status: 'edited' },
+      { content: dto.content, status: 'edited' },
     );
     return await this.getMessageById(messageId);
   }

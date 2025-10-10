@@ -8,6 +8,7 @@ import { MinioService } from '../minio/minio.service';
 import { MessageAssetsRepository } from './repositories/message-assets.repository';
 import { ChatParticipantRepository } from '../chat/repositories/chat-participant.repository';
 import { File as MulterFile } from 'multer';
+import { EditMessageDto } from './dto/edit-message.dto';
 
 @Injectable()
 export class MessagesService {
@@ -206,7 +207,7 @@ export class MessagesService {
   }*/
   async editMessage(
     messageId: string,
-    content: string,
+    dto: EditMessageDto,
     profileId: string,
     files: MulterFile[],
   ) {
@@ -217,7 +218,7 @@ export class MessagesService {
 
       const updatedMessage = await this.messagesRepository.updateMessage(
         messageId,
-        content,
+        dto,
         queryRunner,
       );
 

@@ -7,6 +7,7 @@ import { PostAsset } from '../../common/entities/postsDedicated/post-asset.entit
 import { PostAssetRepository } from './repositories/post-asset.repository';
 import { PostLikeRepository } from './repositories/post-like.repository';
 import { File as MulterFile } from 'multer';
+import { CreatePostDto } from './dto/create-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -18,14 +19,18 @@ export class PostsService {
     private postLikeRepository: PostLikeRepository,
   ) {}
 
-  async createPost(profile_id: string, content: string, files): Promise<Post> {
+  async createPost(
+    profile_id: string,
+    dto: CreatePostDto,
+    files,
+  ): Promise<Post> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
       const post = await this.postsRepository.createPost(
         profile_id,
-        content,
+        dto,
         queryRunner,
       );
 
@@ -81,7 +86,7 @@ export class PostsService {
   async updatePost(
     postId: string,
     profileId: string,
-    content: string,
+    dto: CreatePostDto,
     files: MulterFile[],
   ) {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -97,7 +102,7 @@ export class PostsService {
 
       const updatedPost = await this.postsRepository.updatePost(
         postId,
-        content,
+        dto,
         queryRunner,
       );
 

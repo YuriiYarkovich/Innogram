@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CommentsRepository } from './repositories/comments.repository';
 import { PostsRepository } from '../posts/repositories/posts.reposiory';
 import { CommentLikeRepository } from './repositories/comment-like.repository';
+import { CreateCommentDto } from './dto/crete-comment.dto';
 
 @Injectable()
 export class CommentsService {
@@ -11,14 +12,14 @@ export class CommentsService {
     private commentLikeRepository: CommentLikeRepository,
   ) {}
 
-  async createComment(content: string, postId: string, profileId: string) {
+  async createComment(
+    dto: CreateCommentDto,
+    postId: string,
+    profileId: string,
+  ) {
     await this.checkIfPostExists(postId);
 
-    return await this.commentsRepository.createComment(
-      content,
-      postId,
-      profileId,
-    );
+    return await this.commentsRepository.createComment(dto, postId, profileId);
   }
 
   private async checkIfPostExists(postId: string) {
@@ -32,9 +33,13 @@ export class CommentsService {
     return await this.commentsRepository.findAllCommentsOfPost(postId);
   }
 
-  async updateComment(commentId: string, profileId: string, content: string) {
+  async updateComment(
+    commentId: string,
+    profileId: string,
+    dto: CreateCommentDto,
+  ) {
     await this.checkIfCommentExist(commentId, profileId);
-    return await this.commentsRepository.updateComment(commentId, content);
+    return await this.commentsRepository.updateComment(commentId, dto);
   }
 
   private async checkIfCommentExist(commentId: string, profileId: string) {

@@ -11,7 +11,11 @@ export class ChatRepository {
   ) {}
 
   async createChat(dto: CreateChatDto, queryRunner: QueryRunner) {
-    const chat = queryRunner.manager.create(Chat, { ...dto });
+    const chat = queryRunner.manager.create(Chat, {
+      title: dto.title,
+      description: dto.description,
+      chat_type: dto.chat_type,
+    });
     await queryRunner.manager.save(chat);
     return chat;
   }
@@ -26,8 +30,11 @@ export class ChatRepository {
     });
   }
 
-  async updateChatTitle(chatId: string, title: string) {
-    await this.chatRepository.update({ id: chatId }, { title });
+  async updateChat(chatId: string, dto: CreateChatDto) {
+    await this.chatRepository.update(
+      { id: chatId },
+      { title: dto.title, description: dto.description },
+    );
   }
 
   async deleteChat(chatId: string) {

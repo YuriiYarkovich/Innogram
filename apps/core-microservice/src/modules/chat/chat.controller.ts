@@ -19,11 +19,8 @@ export class ChatController {
   @ApiOperation({ summary: 'Creates chat' })
   @ApiResponse({ status: 200, type: Chat })
   @Post(`/create`)
-  async createChat(
-    @Body() dto: CreateChatDto,
-    @Body('chatParticipantsIds') chatParticipantsIds: string[], //the first one should be the creator, he'll become admin
-  ) {
-    return await this.chatService.createChat(dto, chatParticipantsIds);
+  async createChat(@Body() dto: CreateChatDto) {
+    return await this.chatService.createChat(dto);
   }
 
   @ApiOperation({ summary: 'Returns all chats of user' })
@@ -46,12 +43,9 @@ export class ChatController {
   @ApiOperation({ summary: 'Updates chat title' })
   @ApiResponse({ status: 200, type: Chat })
   @Put(`/updateTitle/:chatId`)
-  async editChatTitle(
-    @Param('chatId') chatId: string,
-    @Body('title') title: string,
-  ) {
+  async editChat(@Param('chatId') chatId: string, @Body() dto: CreateChatDto) {
     const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
-    return this.chatService.updateChatTitle(chatId, title, profileId);
+    return this.chatService.updateChatTitle(chatId, dto, profileId);
   }
 
   @ApiOperation({ summary: 'Deletes participant from chat' })
