@@ -65,7 +65,8 @@ export class ChatService {
     );
   }
 
-  async getChatInfo(chatId: string) {
+  async getChatInfo(chatId: string, profileId: string) {
+    await this.checkIfParticipantExists(chatId, profileId);
     const chat = await this.chatRepository.getChatInfo(chatId);
     if (!chat) throw new BadRequestException(`This chat doesn't exist!`);
     return chat;
@@ -103,9 +104,15 @@ export class ChatService {
     return await this.chatParticipantRepository.leaveChat(chatId, profileId);
   }
 
-  async addChatParticipants(chatId: string, dto: AddParticipantDto) {
+  async addChatParticipants(
+    chatId: string,
+    dto: AddParticipantDto,
+    profileId: string,
+  ) {
     const queryRunner = await this.createTransaction();
     try {
+      await this.checkIfParticipantExists(chatId, profileId);
+
       //TODO create check if all those users exist
       for (const chatParticipantId of dto.participantsIds) {
         await this.chatParticipantRepository.addChatParticipant(

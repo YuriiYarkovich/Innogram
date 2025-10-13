@@ -38,7 +38,8 @@ export class ChatController {
   @ApiResponse({ status: 200, type: Chat })
   @Get(`/info/:chatId`)
   async getChatInfo(@Param('chatId') chatId: string) {
-    return await this.chatService.getChatInfo(chatId);
+    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    return await this.chatService.getChatInfo(chatId, profileId);
   }
 
   @ApiOperation({ summary: 'Updates chat title' })
@@ -64,7 +65,8 @@ export class ChatController {
     @Param(`chatId`) chatId: string,
     @Body() dto: AddParticipantDto,
   ) {
-    return await this.chatService.addChatParticipants(chatId, dto);
+    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    return await this.chatService.addChatParticipants(chatId, dto, profileId);
   }
 
   @ApiOperation({ summary: 'Archives chat' })
