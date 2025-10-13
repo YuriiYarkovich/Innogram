@@ -9,6 +9,7 @@ import {
 } from '@nestjs/swagger';
 import { Chat } from '../../common/entities/chatDedicated/chat.entity';
 import { ChatParticipant } from '../../common/entities/chatDedicated/chat-participant.entity';
+import { AddParticipantDto } from './dto/add-participant.dto';
 
 @ApiTags('Operations with chats')
 @ApiBearerAuth('access-token')
@@ -25,7 +26,7 @@ export class ChatController {
 
   @ApiOperation({ summary: 'Returns all chats of user' })
   @ApiResponse({ status: 200, type: ChatParticipant })
-  @Get(`/allChats/`)
+  @Get(`/allChatsOfProfile/`)
   async getAllChatsOfUser() {
     const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
     return await this.chatService.getAllChatsOfProfile(profileId);
@@ -54,5 +55,23 @@ export class ChatController {
   async leaveChat(@Param('chatId') chatId: string) {
     const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
     return await this.chatService.leaveChat(chatId, profileId);
+  }
+
+  @ApiOperation({ summary: 'Adds participants to chat' })
+  @ApiResponse({ status: 200, type: ChatParticipant })
+  @Post(`/addParticipant/:chatId`)
+  async addParticipant(
+    @Param(`chatId`) chatId: string,
+    @Body() dto: AddParticipantDto,
+  ) {
+    return await this.chatService.addChatParticipants(chatId, dto);
+  }
+
+  @ApiOperation({ summary: 'Archives chat' })
+  @ApiResponse({ status: 200, type: Chat })
+  @Put(`/archive/:chatId`)
+  async archiveChat(@Param(`chatId`) chatId: string) {
+    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    return await this.chatService.archiveChat(chatId, profileId);
   }
 }

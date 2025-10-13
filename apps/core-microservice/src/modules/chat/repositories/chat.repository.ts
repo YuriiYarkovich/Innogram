@@ -40,4 +40,13 @@ export class ChatRepository {
   async deleteChat(chatId: string) {
     await this.chatRepository.delete({ id: chatId });
   }
+
+  async archiveChat(chatId: string) {
+    await this.chatRepository.update(
+      { id: chatId },
+      { chat_status: 'archived' },
+    );
+
+    return await this.getChatInfo(chatId);
+  }
 }

@@ -43,7 +43,7 @@ export class CreateChatDto {
     ],
     description: 'IDs of all chat participants',
   })
-  @IsUUID()
+  //@IsUUID()
   @IsArray()
   readonly participantsIds: string[];
 }

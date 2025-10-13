@@ -5,8 +5,9 @@ import {
 } from '@nestjs/common';
 import { ChatRepository } from './repositories/chat.repository';
 import { CreateChatDto } from './dto/create-chat.dto';
-import { DataSource } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import { ChatParticipantRepository } from './repositories/chat-participant.repository';
+import { AddParticipantDto } from './dto/add-participant.dto';
 
 @Injectable()
 export class ChatService {
@@ -16,10 +17,15 @@ export class ChatService {
     private dataSource: DataSource,
   ) {}
 
-  async createChat(dto: CreateChatDto) {
+  async createTransaction(): Promise<QueryRunner> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
+    return queryRunner;
+  }
+
+  async createChat(dto: CreateChatDto) {
+    const queryRunner = await this.createTransaction();
 
     try {
       const createdChat = await this.chatRepository.createChat(
@@ -95,5 +101,30 @@ export class ChatService {
     await this.checkIfParticipantExists(chatId, profileId);
 
     return await this.chatParticipantRepository.leaveChat(chatId, profileId);
+  }
+
+  async addChatParticipants(chatId: string, dto: AddParticipantDto) {
+    const queryRunner = await this.createTransaction();
+    try {
+      //TODO create check if all those users exist
+      for (const chatParticipantId of dto.participantsIds) {
+        await this.chatParticipantRepository.addChatParticipant(
+          chatId,
+          chatParticipantId,
+          queryRunner,
+        );
+      }
+      await queryRunner.commitTransaction();
+      return await this.chatRepository.getChatInfo(chatId);
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      throw e;
+    }
+  }
+
+  async archiveChat(chatId: string, participantId: string) {
+    await this.checkIfParticipantExists(chatId, participantId);
+
+    return await this.chatRepository.archiveChat(chatId);
   }
 }
