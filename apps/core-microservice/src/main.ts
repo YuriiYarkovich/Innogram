@@ -1,12 +1,20 @@
-import { NestFactory } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
+import { HttpExceptionFilter } from './common/global-filters/http-exception.filter';
+import { AllExceptionsFilter } from './common/global-filters/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  const PORT = configService.get<number>('CORE_SERVICE_PORT') ?? 3001;
+  const frontendUrl = configService.get<string>('CLIENT_URL');
+  const isDev = configService.get<string>('NODE_ENV') === 'development';
+  const httpAdapterHost = app.get(HttpAdapterHost);
+
   app.use(
     helmet({
       contentSecurityPolicy: {
@@ -35,10 +43,11 @@ async function bootstrap() {
       referrerPolicy: { policy: 'no-referrer' },
     }),
   );
-  const configService = app.get(ConfigService);
-  const frontendUrl = configService.get<string>('CLIENT_URL');
-  const isDev = configService.get<string>('NODE_ENV') === 'development';
-
+  app.useGlobalFilters(
+    new HttpExceptionFilter(configService),
+    //new AllExceptionsFilter(httpAdapterHost),
+  );
+  app.useGlobalPipes(new ValidationPipe());
   app.enableCors({
     origin: isDev ? [frontendUrl, 'http://localhost:3000'] : frontendUrl,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
@@ -46,7 +55,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const PORT = configService.get<number>('CORE_SERVICE_PORT') ?? 3001;
   const config = new DocumentBuilder()
     .setTitle(
       'API for Innogram -- better version of popular social network ;-)',
@@ -72,7 +80,7 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('/api/docs', app, document);
-  app.useGlobalPipes(new ValidationPipe());
+
   await app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
   });

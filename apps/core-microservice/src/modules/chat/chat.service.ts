@@ -8,6 +8,7 @@ import { CreateChatDto } from './dto/create-chat.dto';
 import { DataSource, QueryRunner } from 'typeorm';
 import { ChatParticipantRepository } from './repositories/chat-participant.repository';
 import { AddParticipantDto } from './dto/add-participant.dto';
+import { WrongUserException } from '../../common/exceptions/wrong-user.exception';
 
 @Injectable()
 export class ChatService {
@@ -93,7 +94,7 @@ export class ChatService {
       );
 
     if (!participant)
-      throw new BadRequestException('Chat has no such participant!');
+      throw new WrongUserException('Chat has no such participant!');
 
     return participant;
   }

@@ -38,7 +38,7 @@ export class ChatController {
   @ApiResponse({ status: 200, type: Chat })
   @Get(`/info/:chatId`)
   async getChatInfo(@Param('chatId') chatId: string) {
-    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    const profileId = '26b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
     return await this.chatService.getChatInfo(chatId, profileId);
   }
 
