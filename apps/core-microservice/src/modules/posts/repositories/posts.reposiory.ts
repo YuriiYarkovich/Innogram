@@ -89,4 +89,9 @@ export class PostsRepository {
   async findPostById(postId: string) {
     return await this.postRepository.findOne({ where: { id: postId } });
   }
+
+  async archivePost(postId: string) {
+    await this.postRepository.update({ id: postId }, { status: 'archived' });
+    return await this.findPostById(postId);
+  }
 }

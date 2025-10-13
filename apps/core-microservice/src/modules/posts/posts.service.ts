@@ -8,6 +8,7 @@ import { PostAssetRepository } from './repositories/post-asset.repository';
 import { PostLikeRepository } from './repositories/post-like.repository';
 import { File as MulterFile } from 'multer';
 import { CreatePostDto } from './dto/create-post.dto';
+import { WrongUserException } from '../../common/exceptions/wrong-user.exception';
 
 @Injectable()
 export class PostsService {
@@ -188,5 +189,16 @@ export class PostsService {
     if (!post) throw new BadRequestException(`This post doesn't exist`);
 
     return await this.postLikeRepository.findAllLikesOfPost(postId);
+  }
+
+  async archivePost(postId: string, profileId: string) {
+    const post = await this.postsRepository.getPostByIdAndProfile(
+      postId,
+      profileId,
+    );
+    if (!post)
+      throw new WrongUserException('This user has not got post with this id!');
+
+    return await this.postsRepository.archivePost(postId);
   }
 }

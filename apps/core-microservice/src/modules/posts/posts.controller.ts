@@ -88,4 +88,12 @@ export class PostsController {
   async getAllLikes(@Param('postId') postId: string) {
     return this.postsService.getAllLikesOfPost(postId);
   }
+
+  @ApiOperation({ summary: 'Archives post' })
+  @ApiResponse({ status: 200, type: Post })
+  @Put(`/archive/:postIs`)
+  async archivePost(@Param(`postId`) postId: string) {
+    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    return await this.postsService.archivePost(postId, profileId);
+  }
 }
