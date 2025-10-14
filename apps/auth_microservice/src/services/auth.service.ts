@@ -1,4 +1,3 @@
-import { NextFunction } from 'express';
 import pool from '../database/db.config';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';

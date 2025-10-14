@@ -27,4 +27,6 @@ export class AuthController {
     const { email, password } = req.body;
     return res.json(await this.authService.login(email, password));
   };
+
+  loginWithGoogle = async (req: Request, res: Response) => {};
 }
