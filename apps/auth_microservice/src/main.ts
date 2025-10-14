@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import { createClient } from 'redis';
 import dotenv from 'dotenv';
 import { join } from 'path';
@@ -22,9 +22,10 @@ const redisClient = createClient();
 const PORT = process.env.AUTH_SERVICE_PORT;
 
 const app = express();
+app.use(express.json());
 app.use(`/api`, router);
 
-const start = async () => {
+const start = () => {
   try {
     app.listen(PORT, () => {
       console.log(
