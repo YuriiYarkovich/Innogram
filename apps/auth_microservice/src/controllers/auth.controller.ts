@@ -1,14 +1,14 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { CreateAccountDto } from '../dto/create-account.dto';
 import { AuthService } from '../services/auth.service';
+import { LoginDto } from '../dto/login.dto';
 
 export class AuthController {
   readonly authService: AuthService = new AuthService();
 
-  registerUsingLogin = async (
+  registerUsingEmailPassword = async (
     req: Request<CreateAccountDto>,
     res: Response,
-    next: NextFunction,
   ) => {
     const { email, bio, displayName, username, password, birthday } = req.body;
     return res.json(
@@ -19,8 +19,12 @@ export class AuthController {
         displayName,
         birthday,
         bio,
-        next,
       ),
     );
+  };
+
+  loginUsingEmailPassword = async (req: Request<LoginDto>, res: Response) => {
+    const { email, password } = req.body;
+    return res.json(await this.authService.login(email, password));
   };
 }

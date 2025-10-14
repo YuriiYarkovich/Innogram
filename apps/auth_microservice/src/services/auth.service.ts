@@ -19,6 +19,21 @@ export class AuthService {
     });
   };
 
+  private async checkIfAccountExist(email: string) {
+    const result = await pool.query<{ id: string; email: string }>(
+      `SELECT a.id, a.email, a.password_hash, u.role AS user_id
+       FROM main.accounts AS a
+       LEFT JOIN main.users AS u ON a.user_id = u.id
+       WHERE email = $1
+      `,
+      [email],
+    );
+    console.log('Founding candidate request executed');
+    const candidate = result.rows[0];
+    if (candidate) return { isExist: true, account: candidate };
+    return { isExist: false, account: undefined };
+  }
+
   async register(
     email: string,
     password: string,
@@ -26,24 +41,18 @@ export class AuthService {
     displayName: string,
     birthday: string,
     bio: string,
-    next: NextFunction,
   ) {
     try {
       await pool.query(`BEGIN`);
       console.log('transaction begun');
-      const result = await pool.query<{ id: string; email: string }>(
-        `SELECT id, email FROM main.accounts
-       WHERE email=$1
-      `,
-        [email],
-      );
-      const candidate = result.rows[0];
-      console.log('Founding candidate request executed');
-      if (candidate) {
+
+      const candidate: { isExist: boolean; account: any } =
+        await this.checkIfAccountExist(email);
+      if (candidate.isExist) {
         console.log(
           `Candidate found: ${JSON.stringify(candidate)}, throwing error`,
         );
-        throw new Error('User with this email already exists'); //TODO implement errors handling
+        throw new Error('User with this email already exists'); //TODO implement exception class and handling
       }
 
       const hashPassword = await bcrypt.hash(password, 5);
@@ -82,5 +91,26 @@ export class AuthService {
       await pool.query(`ROLLBACK`);
       throw e;
     }
+  }
+
+  async login(email: string, password: string) {
+    const user = await this.checkIfAccountExist(email);
+    if (!user.isExist) {
+      console.log(`User with email not found, throwing exception!`);
+      throw new Error(`User with email not found`); //TODO implement exception class and handling
+    }
+
+    let comparedPassword = bcrypt.compareSync(
+      password,
+      user.account.password_hash,
+    );
+
+    console.log('Comparing hash passwords;');
+    if (!comparedPassword) {
+      console.log(`wrong password, throwing exception`);
+      throw new Error(`Wrong password!`); //TODO implement exception class and handling
+    }
+    console.log('Account authorized!');
+    return this.generateJwt(user.account.id, email, user.account.role);
   }
 }
