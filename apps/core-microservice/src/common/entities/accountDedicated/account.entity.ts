@@ -37,7 +37,7 @@ export class Account {
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
     description: `Hash of user's password`,
   })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   password_hash: string;
 
   @ApiProperty({

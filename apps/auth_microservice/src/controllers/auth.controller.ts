@@ -23,10 +23,23 @@ export class AuthController {
     );
   };
 
+  googleSuccess(req, res) {
+    const user = req.user as any;
+    const token = user?.token;
+
+    if (!token) {
+      return res.status(400).json({ message: 'Token not found' });
+    }
+
+    res.json({ token });
+  }
+
   loginUsingEmailPassword = async (req: Request<LoginDto>, res: Response) => {
     const { email, password } = req.body;
     return res.json(await this.authService.login(email, password));
   };
 
-  loginWithGoogle = async (req: Request, res: Response) => {};
+  googleAuthFailure = (req: Request, res: Response) => {
+    res.send('Something went wrong!');
+  };
 }

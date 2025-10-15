@@ -3,6 +3,8 @@ import { createClient } from 'redis';
 import dotenv from 'dotenv';
 import { join } from 'path';
 import router from './routes';
+import session from 'express-session';
+import passport from 'passport';
 
 dotenv.config({ path: join(__dirname, '..', '..', '..', '.env') });
 
@@ -23,6 +25,19 @@ const PORT = process.env.AUTH_SERVICE_PORT;
 
 const app = express();
 app.use(express.json());
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, //TODO change to secure after switching to httpS
+      maxAge: 24 * 60 * 60 * 1000,
+    },
+  }),
+);
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(`/api`, router);
 
 const start = () => {

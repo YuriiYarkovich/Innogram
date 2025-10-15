@@ -53,7 +53,7 @@ export class Profile {
     example: '2003-06-30',
     description: 'Date of birth of user',
   })
-  @Column({ type: 'date' })
+  @Column({ type: 'date', nullable: true })
   birthday: Date;
 
   @ApiProperty({
