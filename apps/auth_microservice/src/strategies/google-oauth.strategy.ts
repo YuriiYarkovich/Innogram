@@ -1,10 +1,8 @@
 import { Strategy as GoogleStrategy } from 'passport-google-oauth2';
 import passport from 'passport';
-import dotenv from 'dotenv';
-import { join } from 'path';
 import { AuthService } from '../services/auth.service';
+import '../config/load-env.config';
 
-dotenv.config({ path: join(__dirname, '..', '..', '..', '..', '.env') });
 const authService: AuthService = new AuthService();
 
 passport.use(

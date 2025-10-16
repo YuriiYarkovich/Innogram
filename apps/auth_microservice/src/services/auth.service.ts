@@ -1,14 +1,10 @@
-import pool from '../database/db.config';
+import pool from '../config/db.config';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { join } from 'path';
-import dotenv from 'dotenv';
 import { NextFunction } from 'express';
 import { AccountsRepository } from '../repositories/accounts.repository';
 import { ApiError } from '../error/api.error';
-import errorList from '../error/error-list';
-
-dotenv.config({ path: join(__dirname, '..', '..', '..', '.env') });
+import '../config/load-env.config';
 
 export class AuthService {
   readonly accountsRepository: AccountsRepository = new AccountsRepository();

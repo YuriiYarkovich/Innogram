@@ -1,13 +1,10 @@
 import express from 'express';
 import { createClient } from 'redis';
-import dotenv from 'dotenv';
-import { join } from 'path';
 import router from './routes';
 import session from 'express-session';
 import passport from 'passport';
 import { errorHandlingMiddleware } from './middleware/error-handling.middleware';
-
-dotenv.config({ path: join(__dirname, '..', '..', '..', '.env') });
+import './config/load-env.config';
 
 const redisClient = createClient();
 (async () => {

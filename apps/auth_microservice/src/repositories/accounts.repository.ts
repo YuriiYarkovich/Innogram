@@ -1,4 +1,4 @@
-import pool from '../database/db.config';
+import pool from '../config/db.config';
 
 export class AccountsRepository {
   async createUser() {

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { CreateAccountDto } from '../dto/create-account.dto';
 import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dto/login.dto';
@@ -9,18 +9,24 @@ export class AuthController {
   registerUsingEmailPassword = async (
     req: Request<CreateAccountDto>,
     res: Response,
+    next: NextFunction,
   ) => {
-    const { email, bio, displayName, username, password, birthday } = req.body;
-    return res.json(
-      await this.authService.register(
-        email,
-        password,
-        username,
-        displayName,
-        birthday,
-        bio,
-      ),
-    );
+    try {
+      const { email, bio, displayName, username, password, birthday } =
+        req.body;
+      return res.json(
+        await this.authService.register(
+          email,
+          password,
+          username,
+          displayName,
+          birthday,
+          bio,
+        ),
+      );
+    } catch (e) {
+      next(e);
+    }
   };
 
   googleSuccess(req, res) {
@@ -34,9 +40,17 @@ export class AuthController {
     res.json({ token });
   }
 
-  loginUsingEmailPassword = async (req: Request<LoginDto>, res: Response) => {
-    const { email, password } = req.body;
-    return res.json(await this.authService.login(email, password));
+  loginUsingEmailPassword = async (
+    req: Request<LoginDto>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const { email, password } = req.body;
+      return res.json(await this.authService.login(email, password));
+    } catch (e) {
+      next(e);
+    }
   };
 
   googleAuthFailure = (req: Request, res: Response) => {
