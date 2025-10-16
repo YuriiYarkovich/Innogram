@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import { CreateAccountDto } from '../dto/create-account.dto';
-import { AuthService } from '../services/auth.service';
-import { LoginDto } from '../dto/login.dto';
+import { CreateAccountDto } from '../dto/create-account.dto.ts';
+import { AuthService } from '../services/auth.service.ts';
+import { LoginDto } from '../dto/login.dto.ts';
 
 export class AuthController {
   readonly authService: AuthService = new AuthService();

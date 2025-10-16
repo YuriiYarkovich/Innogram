@@ -1,4 +1,4 @@
-import { ApiError as apiError } from '../error/api.error';
+import { ApiError as apiError } from '../error/api.error.ts';
 
 export function errorHandlingMiddleware(err, req, res, next) {
   if (err instanceof apiError) {

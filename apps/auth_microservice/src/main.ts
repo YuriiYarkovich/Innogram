@@ -1,23 +1,10 @@
 import express from 'express';
-import { createClient } from 'redis';
-import router from './routes';
+import router from './routes/index.ts';
 import session from 'express-session';
 import passport from 'passport';
-import { errorHandlingMiddleware } from './middleware/error-handling.middleware';
-import './config/load-env.config';
-
-const redisClient = createClient();
-(async () => {
-  redisClient.on('error', (err) => {
-    console.log(`Redis client error: `, err);
-  });
-
-  redisClient.on('ready', () => {
-    console.log(`Redis client started!`);
-  });
-  await redisClient.connect();
-  await redisClient.ping();
-})();
+import { errorHandlingMiddleware } from './middleware/error-handling.middleware.ts';
+import './config/load-env.config.ts';
+import { initRedis } from './config/redis.init.ts';
 
 const PORT = process.env.AUTH_SERVICE_PORT;
 
@@ -39,8 +26,9 @@ app.use(passport.session());
 app.use(`/api`, router);
 app.use(errorHandlingMiddleware);
 
-const start = () => {
+const start = async () => {
   try {
+    await initRedis();
     app.listen(PORT, () => {
       console.log(
         `Server is running on port: ${process.env.AUTH_SERVICE_PORT}`,

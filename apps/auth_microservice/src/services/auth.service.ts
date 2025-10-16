@@ -1,10 +1,10 @@
-import pool from '../config/db.config';
+import pool from '../config/db.config.ts';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { NextFunction } from 'express';
-import { AccountsRepository } from '../repositories/accounts.repository';
-import { ApiError } from '../error/api.error';
-import '../config/load-env.config';
+import { AccountsRepository } from '../repositories/accounts.repository.ts';
+import { ApiError } from '../error/api.error.ts';
+import '../config/load-env.config.ts';
 
 export class AuthService {
   readonly accountsRepository: AccountsRepository = new AccountsRepository();

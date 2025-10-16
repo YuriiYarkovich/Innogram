@@ -1,9 +1,9 @@
 import { Router } from 'express';
 const router = Router();
-import { AuthController } from '../controllers/auth.controller';
+import { AuthController } from '../controllers/auth.controller.ts';
 import passport from 'passport';
-import { AuthService } from '../services/auth.service';
-import '../strategies/google-oauth.strategy';
+import { AuthService } from '../services/auth.service.ts';
+import '../strategies/google-oauth.strategy.ts';
 
 const authController = new AuthController();
 const authService = new AuthService();

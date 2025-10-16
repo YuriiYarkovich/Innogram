@@ -1,7 +1,7 @@
 import { Strategy as GoogleStrategy } from 'passport-google-oauth2';
 import passport from 'passport';
-import { AuthService } from '../services/auth.service';
-import '../config/load-env.config';
+import { AuthService } from '../services/auth.service.ts';
+import '../config/load-env.config.ts';
 
 const authService: AuthService = new AuthService();
 
