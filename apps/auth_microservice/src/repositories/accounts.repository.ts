@@ -78,4 +78,15 @@ export class AccountsRepository {
     );
     return result.rows[0];
   }
+
+  async updateLastLogin(accountId: string) {
+    await pool.query(
+      `
+       UPDATE main.accounts
+       SET last_login_at=NOW()
+       WHERE id=$1
+      `,
+      [accountId],
+    );
+  }
 }

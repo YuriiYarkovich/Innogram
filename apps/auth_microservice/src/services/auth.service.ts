@@ -55,6 +55,7 @@ export class AuthService {
       console.log(`profile created: ${JSON.stringify(createdProfile)}`);
 
       console.log('commit transaction');
+      await this.accountsRepository.updateLastLogin(createdAccount.id);
       await pool.query('COMMIT');
       return this.generateJwt(createdAccount.id, email, createdUser.role);
     } catch (e) {
@@ -108,6 +109,7 @@ export class AuthService {
       );
       console.log(`profile created: ${JSON.stringify(createdProfile)}`);
       console.log('commit transaction');
+      await this.accountsRepository.updateLastLogin(createdAccount.id);
       await pool.query('COMMIT');
       return this.generateJwt(createdAccount.id, email, createdUser.role);
     } catch (e) {
@@ -135,6 +137,7 @@ export class AuthService {
       throw new Error(`Wrong password!`); //TODO implement exception class and handling
     }
     console.log('Account authorized!');
+    await this.accountsRepository.updateLastLogin(user.account.id);
     return this.generateJwt(user.account.id, email, user.account.role);
   }
 }
