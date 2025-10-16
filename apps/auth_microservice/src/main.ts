@@ -5,6 +5,7 @@ import { join } from 'path';
 import router from './routes';
 import session from 'express-session';
 import passport from 'passport';
+import { errorHandlingMiddleware } from './middleware/error-handling.middleware';
 
 dotenv.config({ path: join(__dirname, '..', '..', '..', '.env') });
 
@@ -39,6 +40,7 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(`/api`, router);
+app.use(errorHandlingMiddleware);
 
 const start = () => {
   try {

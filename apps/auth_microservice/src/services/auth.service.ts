@@ -5,6 +5,8 @@ import { join } from 'path';
 import dotenv from 'dotenv';
 import { NextFunction } from 'express';
 import { AccountsRepository } from '../repositories/accounts.repository';
+import { ApiError } from '../error/api.error';
+import errorList from '../error/error-list';
 
 dotenv.config({ path: join(__dirname, '..', '..', '..', '.env') });
 
@@ -83,7 +85,7 @@ export class AuthService {
         console.log(
           `Candidate found: ${JSON.stringify(candidate)}, throwing error`,
         );
-        throw new Error('User with this email already exists'); //TODO implement exception class and handling
+        throw ApiError.badRequest('User with this email already exists');
       }
 
       const hashPassword = await bcrypt.hash(password, 5);
@@ -123,7 +125,7 @@ export class AuthService {
     const user = await this.checkIfAccountExist(email);
     if (!user.isExist) {
       console.log(`User with email not found, throwing exception!`);
-      throw new Error(`User with email not found`); //TODO implement exception class and handling
+      throw ApiError.badRequest(`User with email not found`);
     }
 
     let comparedPassword = bcrypt.compareSync(
@@ -134,7 +136,7 @@ export class AuthService {
     console.log('Comparing hash passwords;');
     if (!comparedPassword) {
       console.log(`wrong password, throwing exception`);
-      throw new Error(`Wrong password!`); //TODO implement exception class and handling
+      throw ApiError.badRequest(`Wrong password!`);
     }
     console.log('Account authorized!');
     await this.accountsRepository.updateLastLogin(user.account.id);
