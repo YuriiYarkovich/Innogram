@@ -52,11 +52,7 @@ export class AuthService {
       console.log('commit transaction');
       await this.accountsRepository.updateLastLogin(createdAccount.id);
       await pool.query('COMMIT');
-      return this.jwtService.generateAccessJwt(
-        createdAccount.id,
-        email,
-        createdUser.role,
-      );
+      return true;
     } catch (e) {
       console.log('rollback transaction');
       await pool.query(`ROLLBACK`);
@@ -110,11 +106,22 @@ export class AuthService {
       console.log('commit transaction');
       await this.accountsRepository.updateLastLogin(createdAccount.id);
       await pool.query('COMMIT');
-      return this.jwtService.generateAccessJwt(
+      const accessToken = this.jwtService.generateAccessJwt(
         createdAccount.id,
         email,
         createdUser.role,
       );
+      const refreshToken = this.jwtService.generateRefreshJwt(
+        createdAccount.id,
+      );
+
+      await redisClient.setEx(
+        accessToken,
+        900,
+        JSON.stringify({ email, role: createdUser.role }),
+      );
+
+      return { accessToken, refreshToken };
     } catch (e) {
       console.log('rollback transaction');
       await pool.query(`ROLLBACK`);
@@ -142,8 +149,6 @@ export class AuthService {
 
     let accessToken: string = '';
     let refreshToken: string = '';
-    //const userCache = await redisClient.get(accessToken); //TODO move access check into access check middleware
-    //if (!token || isEmpty(userCache)) {
     accessToken = this.jwtService.generateAccessJwt(
       user.account.id,
       email,
@@ -155,11 +160,10 @@ export class AuthService {
       900,
       JSON.stringify({ email, role: user.account.role }),
     );
-    await this.accountsRepository.updateLoginRefreshToken(
+    await this.accountsRepository.updateRefreshToken(
       user.account.user_id,
       refreshToken,
     );
-    //}
     console.log(`User with email ${email} authorized!`);
     await this.accountsRepository.updateLastLogin(user.account.id);
     return { accessToken, refreshToken };

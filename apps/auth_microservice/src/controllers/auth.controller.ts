@@ -16,30 +16,50 @@ export class AuthController {
     try {
       const { email, bio, displayName, username, password, birthday } =
         req.body;
-      return res.json(
-        await this.authService.register(
-          email,
-          password,
-          username,
-          displayName,
-          birthday,
-          bio,
-        ),
+      const tokens = await this.authService.register(
+        email,
+        password,
+        username,
+        displayName,
+        birthday,
+        bio,
       );
+      res.cookie('accessToken', tokens.accessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        maxAge: 15 * 60 * 1000,
+      });
+
+      res.cookie('refreshToken', tokens.refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+      return res.json(tokens);
     } catch (e) {
       next(e);
     }
   };
 
   googleSuccess(req, res) {
-    const user = req.user as any;
-    const token = user?.token;
+    const { accessToken, refreshToken } = req.user;
 
-    if (!token) {
-      return res.status(400).json({ message: 'Token not found' });
-    }
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000,
+    });
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
-    res.json({ token });
+    return res.json({ accessToken: accessToken, refreshToken: refreshToken }); //TODO redirect on frontend ???
   }
 
   loginUsingEmailPassword = async (

@@ -37,7 +37,7 @@ export class AccountsRepository {
     return createAccountQueryResult.rows[0];
   }
 
-  async updateLoginRefreshToken(userId: string, token: string) {
+  async updateRefreshToken(userId: string, token: string) {
     await pool.query(
       `
        UPDATE main.users
@@ -94,7 +94,7 @@ export class AccountsRepository {
   async findByRefreshToken(refreshToken: string) {
     const result = await pool.query(
       `
-        SELECT u.id, u.role, a.email
+        SELECT u.role, a.email, a.id
         FROM main.users AS u
                LEFT JOIN main.accounts AS a ON a.user_id = u.id
         WHERE refresh_token = $1
