@@ -2,8 +2,10 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth2';
 import passport from 'passport';
 import { AuthService } from '../services/auth.service.ts';
 import '../config/load-env.config.ts';
+import { JwtService } from '../services/jwt.service.ts';
 
 const authService: AuthService = new AuthService();
+const jwtService: JwtService = new JwtService();
 
 passport.use(
   new GoogleStrategy(
@@ -18,7 +20,7 @@ passport.use(
       console.log(`received profile: ${JSON.stringify(profile)}`);
       let token: string = '';
       if (foundData.isExist) {
-        token = authService.generateJwt(
+        token = jwtService.generateAccessJwt(
           foundData.account.id,
           foundData.account.email,
           foundData.account.role,

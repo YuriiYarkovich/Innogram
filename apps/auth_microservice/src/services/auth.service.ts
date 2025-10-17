@@ -1,19 +1,16 @@
 import pool from '../config/db.config.ts';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { NextFunction } from 'express';
 import { AccountsRepository } from '../repositories/accounts.repository.ts';
 import { ApiError } from '../error/api.error.ts';
 import '../config/load-env.config.ts';
+import redisClient from '../config/redis.init.ts';
+import { isEmpty } from 'lodash';
+import { JwtService } from './jwt.service.ts';
 
 export class AuthService {
   readonly accountsRepository: AccountsRepository = new AccountsRepository();
-
-  generateJwt = (id, email, role) => {
-    return jwt.sign({ id, email, role }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN,
-    });
-  };
+  readonly jwtService: JwtService = new JwtService();
 
   isLoggedIn(req, res, next: NextFunction) {
     req.user ? next() : res.sendStatus(401);
@@ -55,7 +52,11 @@ export class AuthService {
       console.log('commit transaction');
       await this.accountsRepository.updateLastLogin(createdAccount.id);
       await pool.query('COMMIT');
-      return this.generateJwt(createdAccount.id, email, createdUser.role);
+      return this.jwtService.generateAccessJwt(
+        createdAccount.id,
+        email,
+        createdUser.role,
+      );
     } catch (e) {
       console.log('rollback transaction');
       await pool.query(`ROLLBACK`);
@@ -109,7 +110,11 @@ export class AuthService {
       console.log('commit transaction');
       await this.accountsRepository.updateLastLogin(createdAccount.id);
       await pool.query('COMMIT');
-      return this.generateJwt(createdAccount.id, email, createdUser.role);
+      return this.jwtService.generateAccessJwt(
+        createdAccount.id,
+        email,
+        createdUser.role,
+      );
     } catch (e) {
       console.log('rollback transaction');
       await pool.query(`ROLLBACK`);
@@ -134,8 +139,68 @@ export class AuthService {
       console.log(`wrong password, throwing exception`);
       throw ApiError.badRequest(`Wrong password!`);
     }
-    console.log('Account authorized!');
+
+    let accessToken: string = '';
+    let refreshToken: string = '';
+    //const userCache = await redisClient.get(accessToken); //TODO move access check into access check middleware
+    //if (!token || isEmpty(userCache)) {
+    accessToken = this.jwtService.generateAccessJwt(
+      user.account.id,
+      email,
+      user.account.role,
+    );
+    refreshToken = this.jwtService.generateRefreshJwt(user.account.id);
+    await redisClient.setEx(
+      accessToken,
+      900,
+      JSON.stringify({ email, role: user.account.role }),
+    );
+    await this.accountsRepository.updateLoginRefreshToken(
+      user.account.user_id,
+      refreshToken,
+    );
+    //}
+    console.log(`User with email ${email} authorized!`);
     await this.accountsRepository.updateLastLogin(user.account.id);
-    return this.generateJwt(user.account.id, email, user.account.role);
+    return { accessToken, refreshToken };
+  }
+
+  async logout(token: string) {
+    const user = await redisClient.get(token);
+    const userData = user ? JSON.parse(user) : null;
+    if (!isEmpty(user)) {
+      await redisClient.del(token);
+      console.log(`User with email: ${userData.email} logged out`);
+    }
+    return true;
+  }
+
+  async refreshAccessToken(refreshToken: string) {
+    try {
+      const decoded = this.jwtService.verifyToken(refreshToken);
+      const account =
+        await this.accountsRepository.findByRefreshToken(refreshToken);
+
+      if (!account) {
+        throw ApiError.forbidden('Invalid refresh token');
+      }
+
+      const newAccessToken = this.jwtService.generateAccessJwt(
+        account.id,
+        account.email,
+        account.role,
+      );
+
+      await redisClient.setEx(
+        newAccessToken,
+        900,
+        JSON.stringify({ email: account.email, role: account.role }),
+      );
+
+      return newAccessToken;
+    } catch (e) {
+      console.error(`Refresh token error: ${e}`);
+      throw ApiError.forbidden('Invalid or expired refresh token!');
+    }
   }
 }

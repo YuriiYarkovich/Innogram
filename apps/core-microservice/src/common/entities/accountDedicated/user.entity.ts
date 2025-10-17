@@ -33,6 +33,9 @@ export class User {
   @Column({ type: 'boolean', default: false })
   disabled: boolean;
 
+  @Column({ type: 'varchar', nullable: true })
+  refresh_token: string;
+
   @CreateDateColumn()
   created_at: Date;
 

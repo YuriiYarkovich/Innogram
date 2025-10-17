@@ -9,6 +9,8 @@ const authController = new AuthController();
 const authService = new AuthService();
 router.post(`/registration`, authController.registerUsingEmailPassword);
 router.post(`/login`, authController.loginUsingEmailPassword);
+router.post('/logout', authController.logout);
+router.get('/refresh', authController.refreshToken);
 router.get(
   `/google`,
   passport.authenticate('google', { scope: ['email', 'profile'] }),
