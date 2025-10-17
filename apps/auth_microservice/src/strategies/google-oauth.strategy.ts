@@ -40,21 +40,15 @@ passport.use(
         : (await authService.checkIfAccountExist(profile.email)).account;
 
       newAccessToken = jwtService.generateAccessJwt(
-        account.id,
-        account.email,
+        account.profile_id,
         account.role,
       );
       newRefreshToken = jwtService.generateRefreshJwt(account.id);
 
       await redisClient.setEx(
-        newAccessToken,
+        newRefreshToken,
         900,
         JSON.stringify({ email: account.email, role: account.role }),
-      );
-
-      await accountsRepository.updateRefreshToken(
-        account.user_id,
-        newRefreshToken,
       );
 
       return done(null, {

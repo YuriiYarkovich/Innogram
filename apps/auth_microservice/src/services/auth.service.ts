@@ -107,8 +107,7 @@ export class AuthService {
       await this.accountsRepository.updateLastLogin(createdAccount.id);
       await pool.query('COMMIT');
       const accessToken = this.jwtService.generateAccessJwt(
-        createdAccount.id,
-        email,
+        createdProfile.id,
         createdUser.role,
       );
       const refreshToken = this.jwtService.generateRefreshJwt(
@@ -116,7 +115,7 @@ export class AuthService {
       );
 
       await redisClient.setEx(
-        accessToken,
+        refreshToken,
         900,
         JSON.stringify({ email, role: createdUser.role }),
       );
@@ -130,15 +129,15 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
-    const user = await this.checkIfAccountExist(email);
-    if (!user.isExist) {
+    const userData = await this.checkIfAccountExist(email);
+    if (!userData.isExist) {
       console.log(`User with email not found, throwing exception!`);
       throw ApiError.badRequest(`User with email not found`);
     }
 
     let comparedPassword = bcrypt.compareSync(
       password,
-      user.account.password_hash,
+      userData.account.password_hash,
     );
 
     console.log('Comparing hash passwords;');
@@ -149,23 +148,20 @@ export class AuthService {
 
     let accessToken: string = '';
     let refreshToken: string = '';
+
     accessToken = this.jwtService.generateAccessJwt(
-      user.account.id,
-      email,
-      user.account.role,
+      userData.account.profile_id,
+      userData.account.role,
     );
-    refreshToken = this.jwtService.generateRefreshJwt(user.account.id);
+    refreshToken = this.jwtService.generateRefreshJwt(userData.account.id);
+
     await redisClient.setEx(
-      accessToken,
-      900,
-      JSON.stringify({ email, role: user.account.role }),
-    );
-    await this.accountsRepository.updateRefreshToken(
-      user.account.user_id,
       refreshToken,
+      900,
+      JSON.stringify({ email, role: userData.account.role }),
     );
     console.log(`User with email ${email} authorized!`);
-    await this.accountsRepository.updateLastLogin(user.account.id);
+    await this.accountsRepository.updateLastLogin(userData.account.id);
     return { accessToken, refreshToken };
   }
 
@@ -181,27 +177,19 @@ export class AuthService {
 
   async refreshAccessToken(refreshToken: string) {
     try {
-      const decoded = this.jwtService.verifyToken(refreshToken);
-      const account =
-        await this.accountsRepository.findByRefreshToken(refreshToken);
+      this.jwtService.verifyToken(refreshToken);
+      const foundDataFromRedis = await redisClient.get(refreshToken);
 
-      if (!account) {
+      if (!foundDataFromRedis) {
         throw ApiError.forbidden('Invalid refresh token');
       }
 
-      const newAccessToken = this.jwtService.generateAccessJwt(
-        account.id,
-        account.email,
+      const account = JSON.parse(foundDataFromRedis);
+
+      return this.jwtService.generateAccessJwt(
+        account.profile_id,
         account.role,
       );
-
-      await redisClient.setEx(
-        newAccessToken,
-        900,
-        JSON.stringify({ email: account.email, role: account.role }),
-      );
-
-      return newAccessToken;
     } catch (e) {
       console.error(`Refresh token error: ${e}`);
       throw ApiError.forbidden('Invalid or expired refresh token!');

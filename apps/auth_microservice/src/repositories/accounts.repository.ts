@@ -37,17 +37,6 @@ export class AccountsRepository {
     return createAccountQueryResult.rows[0];
   }
 
-  async updateRefreshToken(userId: string, token: string) {
-    await pool.query(
-      `
-       UPDATE main.users
-       SET refresh_token=$1
-       WHERE id=$2
-      `,
-      [token, userId],
-    );
-  }
-
   async createProfile(
     createdUser,
     username: string,
@@ -81,25 +70,13 @@ export class AccountsRepository {
   async findAccountByEmail(email: string) {
     const result = await pool.query<{ id: string; email: string }>(
       `
-        SELECT a.id, a.email, a.password_hash, a.user_id, u.role, u.refresh_token
+        SELECT a.id, a.email, a.password_hash, a.user_id, u.role, p.id AS profile_id
         FROM main.accounts AS a
                LEFT JOIN main.users AS u ON a.user_id = u.id
+               LEFT JOIN main.profiles AS p ON a.user_id = p.user_id 
         WHERE email = $1
       `,
       [email],
-    );
-    return result.rows[0];
-  }
-
-  async findByRefreshToken(refreshToken: string) {
-    const result = await pool.query(
-      `
-        SELECT u.role, a.email, a.id
-        FROM main.users AS u
-               LEFT JOIN main.accounts AS a ON a.user_id = u.id
-        WHERE refresh_token = $1
-      `,
-      [refreshToken],
     );
     return result.rows[0];
   }

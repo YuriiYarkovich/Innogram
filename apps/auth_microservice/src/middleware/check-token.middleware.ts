@@ -1,6 +1,5 @@
 import { ApiError } from '../error/api.error.ts';
 import { JwtService } from '../services/jwt.service.ts';
-import redisClient from '../config/redis.init.ts';
 
 const jwtService: JwtService = new JwtService();
 
@@ -19,12 +18,12 @@ export async function CheckTokenMiddleware(req, res, next) {
       throw ApiError.unauthorized('Invalid access token!');
     }
 
-    const userData = await redisClient.get(token);
+    /*const userData = await redisClient.get(token);
     if (!userData) {
       throw ApiError.unauthorized('Session expired!');
-    }
+    }*/
 
-    req.user = JSON.parse(userData);
+    req.user = JSON.parse(decoded);
     next();
   } catch (e) {
     console.error(`Auth middleware error: ${e}`);
