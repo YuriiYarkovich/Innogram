@@ -8,6 +8,7 @@ import {
   Put,
   UploadedFiles,
   UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -20,6 +21,8 @@ import {
 } from '@nestjs/swagger';
 import { PostLike } from '../../common/entities/postsDedicated/post-like.entity';
 import { CreatePostDto } from './dto/create-post.dto';
+import { AuthGuard } from '../../common/guards/auth.guard';
+import { context, CONTEXT_KEYS } from '../../common/cls/request-context';
 
 @ApiTags('Operations with posts')
 @ApiBearerAuth('access-token')
@@ -31,9 +34,10 @@ export class PostsController {
   @ApiResponse({ status: 200, type: Post })
   @ApiConsumes('multipart/form-data')
   @Post('/create')
+  @UseGuards(AuthGuard)
   @UseInterceptors(FilesInterceptor('files'))
   async createPost(@Body() dto: CreatePostDto, @UploadedFiles() files) {
-    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.postsService.createPost(profileId, dto, files);
   }
 

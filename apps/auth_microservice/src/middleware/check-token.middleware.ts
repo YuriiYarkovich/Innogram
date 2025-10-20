@@ -18,11 +18,6 @@ export async function CheckTokenMiddleware(req, res, next) {
       throw ApiError.unauthorized('Invalid access token!');
     }
 
-    /*const userData = await redisClient.get(token);
-    if (!userData) {
-      throw ApiError.unauthorized('Session expired!');
-    }*/
-
     req.user = JSON.parse(decoded);
     next();
   } catch (e) {

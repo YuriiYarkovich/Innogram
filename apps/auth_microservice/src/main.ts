@@ -7,6 +7,7 @@ import './config/load-env.config.ts';
 import { initRedis } from './config/redis.init.ts';
 import helmet from 'helmet';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 const PORT = process.env.AUTH_SERVICE_PORT;
 
@@ -39,6 +40,7 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(cookieParser());
 app.use(`/api`, router);
 app.use(errorHandlingMiddleware);
 

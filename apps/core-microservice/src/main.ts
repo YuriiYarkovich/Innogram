@@ -5,7 +5,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { HttpExceptionFilter } from './common/global-filters/http-exception.filter';
-import { AllExceptionsFilter } from './common/global-filters/all-exceptions.filter';
+import cookieParser from 'cookie-parser';
+import { ContextMiddleware } from './common/middleware/context.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -47,6 +48,7 @@ async function bootstrap() {
     new HttpExceptionFilter(configService),
     //new AllExceptionsFilter(httpAdapterHost),
   );
+  app.use(new ContextMiddleware().use);
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors({
     origin: isDev ? [frontendUrl, 'http://localhost:3000'] : frontendUrl,
@@ -54,6 +56,7 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   });
+  app.use(cookieParser());
 
   const config = new DocumentBuilder()
     .setTitle(

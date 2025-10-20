@@ -7,6 +7,7 @@ import '../config/load-env.config.ts';
 import redisClient from '../config/redis.init.ts';
 import { isEmpty } from 'lodash';
 import { JwtService } from './jwt.service.ts';
+import { isNumberObject } from 'node:util/types';
 
 export class AuthService {
   readonly accountsRepository: AccountsRepository = new AccountsRepository();
@@ -157,7 +158,7 @@ export class AuthService {
 
     await redisClient.setEx(
       refreshToken,
-      900,
+      parseInt(process.env.JWT_REFRESH_EXPIRES_IN || '10080') * 60,
       JSON.stringify({ email, role: userData.account.role }),
     );
     console.log(`User with email ${email} authorized!`);
@@ -177,6 +178,9 @@ export class AuthService {
 
   async refreshAccessToken(refreshToken: string) {
     try {
+      console.log(
+        `Refreshing access token. Received refresh token: ${refreshToken}`,
+      );
       this.jwtService.verifyToken(refreshToken);
       const foundDataFromRedis = await redisClient.get(refreshToken);
 
@@ -186,13 +190,41 @@ export class AuthService {
 
       const account = JSON.parse(foundDataFromRedis);
 
-      return this.jwtService.generateAccessJwt(
+      const user: {
+        profileId: string;
+        role: string;
+      } = { profileId: account.profile_id, role: account.role };
+
+      const newAccessToken = this.jwtService.generateAccessJwt(
         account.profile_id,
         account.role,
       );
+
+      return { user, newAccessToken };
     } catch (e) {
-      console.error(`Refresh token error: ${e}`);
-      throw ApiError.forbidden('Invalid or expired refresh token!');
+      throw ApiError.forbidden(e.message);
+    }
+  }
+
+  async validateToken(token: string) {
+    try {
+      if (!token) throw ApiError.unauthorized('No access token!');
+
+      console.log(`Validating token: ${token}`);
+      let decoded: string = '';
+      try {
+        decoded = this.jwtService.verifyToken(token);
+      } catch (e) {
+        if (e.name === 'TokenExpiredError') {
+          throw ApiError.unauthorized('Access token expired!');
+        }
+        throw ApiError.unauthorized('Invalid access token!');
+      }
+
+      return JSON.stringify(decoded);
+    } catch (e) {
+      console.log(`Validation method error: ${e}`);
+      throw e;
     }
   }
 }

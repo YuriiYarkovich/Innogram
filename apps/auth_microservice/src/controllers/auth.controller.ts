@@ -6,7 +6,11 @@ import '../config/load-env.config.ts';
 import { ApiError } from '../error/api.error.ts';
 
 export class AuthController {
-  readonly authService: AuthService = new AuthService();
+  readonly authService: AuthService;
+
+  constructor() {
+    this.authService = new AuthService();
+  }
 
   registerUsingEmailPassword = async (
     req: Request<CreateAccountDto>,
@@ -99,22 +103,33 @@ export class AuthController {
     );
   };
 
-  async refreshToken(req: Request, res: Response) {
-    const refreshToken = req.cookies.refreshToken;
+  refreshToken = async (req: Request, res: Response) => {
+    const refreshToken = req.body?.refreshToken;
     if (!refreshToken) {
+      console.log('No refresh token in refresh token controller method!');
       throw ApiError.unauthorized('No refresh token');
     }
 
-    const newAccessToken =
-      await this.authService.refreshAccessToken(refreshToken);
+    const refreshData = await this.authService.refreshAccessToken(refreshToken);
 
-    res.cookie('accessToken', newAccessToken, {
+    res.cookie('accessToken', refreshData.newAccessToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000,
     });
 
-    res.json({ newAccessToken: newAccessToken });
-  }
+    res.json(refreshData);
+  };
+
+  validateToken = async (req, res) => {
+    try {
+      const token = req.body?.accessToken;
+      const user = await this.authService.validateToken(token);
+      return res.json({ valid: true, user: user });
+    } catch (e) {
+      console.log(e);
+      return res.status(401).json({ valid: false, message: e.message });
+    }
+  };
 }
