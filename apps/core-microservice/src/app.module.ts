@@ -3,12 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { join } from 'path';
 import { DatabaseConfig } from './config/database.config';
-import { UsersModule } from './modules/users/users.module';
 import { PostsModule } from './modules/posts/posts.module';
 import { MinioModule } from './modules/minio/minio.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { MessagesModule } from './modules/messages/messages.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -22,12 +22,12 @@ import { MessagesModule } from './modules/messages/messages.module';
     TypeOrmModule.forRootAsync({
       useClass: DatabaseConfig,
     }),
-    UsersModule,
     PostsModule,
     MinioModule,
     CommentsModule,
     ChatModule,
     MessagesModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

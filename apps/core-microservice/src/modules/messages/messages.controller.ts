@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
@@ -21,6 +22,8 @@ import {
 } from '@nestjs/swagger';
 import { Message } from '../../common/entities/chatDedicated/message.entity';
 import { EditMessageDto } from './dto/edit-message.dto';
+import { context, CONTEXT_KEYS } from '../../common/cls/request-context';
+import { AuthGuard } from '../../common/guards/auth.guard';
 
 @ApiTags('Operations with messages')
 @ApiBearerAuth('access-token')
@@ -32,17 +35,19 @@ export class MessagesController {
   @ApiResponse({ status: 200, type: Message })
   @ApiConsumes('multipart/form-data')
   @Post(`/create`)
+  @UseGuards(AuthGuard)
   @UseInterceptors(FilesInterceptor('files'))
   async createMessage(@Body() dto: CreateMessageDto, @UploadedFiles() files) {
-    const profileId = '49e602a4-7173-4d54-954b-47687f4e0c8e'; //TODO get from CLS when auth module ready
+    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.messagesService.createMessage(dto, profileId, files);
   }
 
   @ApiOperation({ summary: 'Returns all messages of chat' })
   @ApiResponse({ status: 200, type: Message })
   @Get(`/allOfChat/:chatId`)
+  @UseGuards(AuthGuard)
   async getAllMessagesOfChat(@Param('chatId') chatId: string) {
-    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.messagesService.getAllMessagesOfChat(profileId, chatId);
   }
 
@@ -50,13 +55,14 @@ export class MessagesController {
   @ApiResponse({ status: 200, type: Message })
   @ApiConsumes('multipart/form-data')
   @Put(`/edit/:messageId`)
+  @UseGuards(AuthGuard)
   @UseInterceptors(FilesInterceptor('files'))
   async editMessage(
     @Param('messageId') messageId: string,
     @Body() dto: EditMessageDto,
     @UploadedFiles() files,
   ) {
-    const profileId = '49e602a4-7173-4d54-954b-47687f4e0c8e'; //TODO get from CLS when auth module ready
+    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.messagesService.editMessage(
       messageId,
       dto,
@@ -68,8 +74,9 @@ export class MessagesController {
   @ApiOperation({ summary: 'Deletes messages' })
   @ApiResponse({ status: 200, type: Message })
   @Delete(`/delete/:messageId`)
+  @UseGuards(AuthGuard)
   async deleteMessage(@Param('messageId') messageId: string) {
-    const profileId = '49e602a4-7173-4d54-954b-47687f4e0c8e'; //TODO get from CLS when auth module ready
+    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.messagesService.deleteMessage(messageId, profileId);
   }
 }

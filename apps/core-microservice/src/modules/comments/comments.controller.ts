@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import {
@@ -17,6 +18,8 @@ import {
 import { CommentLike } from '../../common/entities/commentsDedicated/comment-like.entity';
 import { CreateCommentDto } from './dto/crete-comment.dto';
 import { Comment } from '../../common/entities/commentsDedicated/comment.entity';
+import { context, CONTEXT_KEYS } from '../../common/cls/request-context';
+import { AuthGuard } from '../../common/guards/auth.guard';
 
 @ApiTags('Operations with comments')
 @ApiBearerAuth('access-token')
@@ -27,11 +30,12 @@ export class CommentsController {
   @ApiOperation({ summary: 'Adds comment to the post' })
   @ApiResponse({ status: 200, type: Comment })
   @Post(`/add/:postId`)
+  @UseGuards(AuthGuard)
   async createComment(
     @Body() dto: CreateCommentDto,
     @Param('postId') postId: string,
   ) {
-    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.commentsService.createComment(dto, postId, profileId);
   }
 
@@ -45,35 +49,39 @@ export class CommentsController {
   @ApiOperation({ summary: 'Edit comments' })
   @ApiResponse({ status: 200, type: Comment })
   @Put(`/update/:commentId`)
+  @UseGuards(AuthGuard)
   async updateComment(
     @Body() dto: CreateCommentDto,
     @Param('commentId') commentId: string,
   ) {
-    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.commentsService.updateComment(commentId, profileId, dto);
   }
 
   @ApiOperation({ summary: 'Deletes comments' })
   @ApiResponse({ status: 200, type: Comment })
   @Delete(`/delete/:commentId`)
+  @UseGuards(AuthGuard)
   async deleteComment(@Param('commentId') commentId: string) {
-    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.commentsService.deleteComment(commentId, profileId);
   }
 
   @ApiOperation({ summary: 'Adds like to the post' })
   @ApiResponse({ status: 200, type: CommentLike })
   @Post(`/like/:commentId`)
+  @UseGuards(AuthGuard)
   async likeComment(@Param('commentId') commentId: string) {
-    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.commentsService.likeComment(commentId, profileId);
   }
 
   @ApiOperation({ summary: 'Removes like from comment' })
   @ApiResponse({ status: 200, type: CommentLike })
   @Delete(`/unlike/:commentId`)
+  @UseGuards(AuthGuard)
   async unlikeComment(@Param('commentId') commentId: string) {
-    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.commentsService.unlikeComment(commentId, profileId);
   }
 

@@ -52,37 +52,41 @@ export class PostsController {
   @ApiResponse({ status: 200, type: Post })
   @ApiConsumes('multipart/form-data')
   @Put('/edit/:postId')
+  @UseGuards(AuthGuard)
   @UseInterceptors(FilesInterceptor('files'))
   async editPost(
     @Param('postId') postId: string,
     @Body() dto: CreatePostDto,
     @UploadedFiles() files,
   ) {
-    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.postsService.updatePost(postId, profileId, dto, files);
   }
 
   @ApiOperation({ summary: 'Deletes posts' })
   @ApiResponse({ status: 200, type: Post })
   @Delete('/delete/:postId')
+  @UseGuards(AuthGuard)
   async deletePost(@Param('postId') postId: string) {
-    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.postsService.deletePost(postId, profileId);
   }
 
   @ApiOperation({ summary: 'Adds like to posts' })
   @ApiResponse({ status: 200, type: PostLike })
   @Post('like/:postId')
+  @UseGuards(AuthGuard)
   async likePost(@Param('postId') postId: string) {
-    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
     return this.postsService.addLike(postId, profileId);
   }
 
   @ApiOperation({ summary: 'Removes likes from posts' })
   @ApiResponse({ status: 200, type: PostLike })
   @Delete('unlike/:postId')
+  @UseGuards(AuthGuard)
   async unlikePost(@Param('postId') postId: string) {
-    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
     return this.postsService.removeLike(postId, profileId);
   }
 
@@ -96,8 +100,9 @@ export class PostsController {
   @ApiOperation({ summary: 'Archives post' })
   @ApiResponse({ status: 200, type: Post })
   @Put(`/archive/:postIs`)
+  @UseGuards(AuthGuard)
   async archivePost(@Param(`postId`) postId: string) {
-    const profileId = '27b439b8-9bbc-4425-9690-8ecc73dcbc49'; //TODO get from CLS when auth module ready
+    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.postsService.archivePost(postId, profileId);
   }
 }

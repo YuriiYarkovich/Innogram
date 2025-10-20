@@ -6,6 +6,7 @@ import { AuthService } from '../services/auth.service.ts';
 import '../strategies/google-oauth.strategy.ts';
 import { validateRegistrationData } from '../middleware/registration-data-validation.middleware.ts';
 import { validateLoginData } from '../middleware/login-data-validation.middleware.ts';
+import '../config/load-env.config.ts';
 
 const authController = new AuthController();
 const authService = new AuthService();

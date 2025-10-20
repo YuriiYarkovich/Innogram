@@ -63,7 +63,10 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return res.json({ accessToken: accessToken, refreshToken: refreshToken }); //TODO redirect on frontend ???
+    console.log('In google success before redirecting');
+    return res.redirect(
+      `${process.env.CORE_SERVICE_URL}/api/auth/google/success?accessToken=${accessToken}`,
+    );
   }
 
   loginUsingEmailPassword = async (
@@ -73,6 +76,7 @@ export class AuthController {
   ) => {
     try {
       const { email, password } = req.body;
+      console.log(`Data received in login method: ${email};    ${password}`);
       const tokens = await this.authService.login(email, password);
       res.cookie('accessToken', tokens.accessToken, {
         httpOnly: true,
