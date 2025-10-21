@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiExcludeEndpoint,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -19,6 +20,8 @@ import { ConfigService } from '@nestjs/config';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { LoginDto } from './dto/login.dto';
 import type { Response } from 'express';
+import { AuthResponseDto } from './dto/auth-response.dto';
+import { GoogleResponseDto } from './dto/google-response.dto';
 
 @ApiTags('Authentication operations')
 @ApiBearerAuth('access-token')
@@ -41,7 +44,20 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Authenticates users in system' })
-  @ApiResponse({ status: 200, type: String })
+  @ApiResponse({
+    status: 200,
+    type: AuthResponseDto,
+    headers: {
+      'Set-Cookie': {
+        description: 'accessToken and refreshToken are set as HttpOnly cookies',
+        schema: {
+          type: 'string',
+          example:
+            'accessToken=abc123; HttpOnly; Path=/; Secure, refreshToken=xyz789; HttpOnly; Path=/; Secure',
+        },
+      },
+    },
+  })
   @Post('/login')
   async login(
     @Body() dto: LoginDto,
@@ -77,6 +93,21 @@ export class AuthController {
     }
   }
 
+  @ApiOperation({ summary: 'Registers users in system' })
+  @ApiResponse({
+    status: 200,
+    type: AuthResponseDto,
+    headers: {
+      'Set-Cookie': {
+        description: 'accessToken and refreshToken are set as HttpOnly cookies',
+        schema: {
+          type: 'string',
+          example:
+            'accessToken=abc123; HttpOnly; Path=/; Secure, refreshToken=xyz789; HttpOnly; Path=/; Secure',
+        },
+      },
+    },
+  })
   @Post('/registration')
   async registerUser(
     @Body() dto: CreateAccountDto,
@@ -109,6 +140,21 @@ export class AuthController {
     });
   }
 
+  @ApiOperation({ summary: 'Registers users using google OAuth2' })
+  @ApiResponse({
+    status: 200,
+    type: GoogleResponseDto,
+    headers: {
+      'Set-Cookie': {
+        description: 'accessToken and refreshToken are set as HttpOnly cookies',
+        schema: {
+          type: 'string',
+          example:
+            'accessToken=abc123; HttpOnly; Path=/; Secure, refreshToken=xyz789; HttpOnly; Path=/; Secure',
+        },
+      },
+    },
+  })
   @Get('/google')
   authenticateGoogleUser(@Res() res: Response) {
     console.log(`In google start point`);
@@ -116,6 +162,7 @@ export class AuthController {
     return res.redirect(authUrl);
   }
 
+  @ApiExcludeEndpoint()
   @Get('/google/success')
   googleSuccessCallback(
     @Res() res: Response,
@@ -133,6 +180,11 @@ export class AuthController {
     }
   }
 
+  @ApiOperation({ summary: 'Registers users using google OAuth2' })
+  @ApiResponse({
+    status: 200,
+    type: String,
+  })
   @Post('/logout')
   async logout(
     @Body('refreshToken') refreshToken: string,
@@ -167,6 +219,7 @@ export class AuthController {
     }
   }
 
+  @ApiExcludeEndpoint()
   @Get('/google/failure')
   googleFailureCallback(@Res() res: Response) {
     res.send('Something went wrong!');

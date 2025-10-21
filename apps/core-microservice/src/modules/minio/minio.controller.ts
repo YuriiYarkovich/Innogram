@@ -1,7 +1,9 @@
 import { Controller, Get, Param, Res } from '@nestjs/common';
 import { MinioService } from './minio.service';
 import express from 'express';
+import { ApiExcludeController } from '@nestjs/swagger';
 
+@ApiExcludeController()
 @Controller('/api/files')
 export class MinioController {
   constructor(private readonly minioService: MinioService) {}
