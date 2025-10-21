@@ -20,6 +20,13 @@ export class AuthController {
     try {
       const { email, bio, displayName, username, password, birthday } =
         req.body;
+
+      const deviceId = req.headers['x-device-id'] as string;
+
+      if (!deviceId) {
+        return res.status(400).json({ message: 'Device ID required' });
+      }
+
       const tokens = await this.authService.register(
         email,
         password,
@@ -27,6 +34,7 @@ export class AuthController {
         displayName,
         birthday,
         bio,
+        this.getDeviceId(req),
       );
       res.cookie('accessToken', tokens.accessToken, {
         httpOnly: true,
@@ -69,6 +77,10 @@ export class AuthController {
     );
   }
 
+  getDeviceId(req: any): string {
+    return req.headers['x-device-id'] as string;
+  }
+
   loginUsingEmailPassword = async (
     req: Request<LoginDto>,
     res: Response,
@@ -76,8 +88,15 @@ export class AuthController {
   ) => {
     try {
       const { email, password } = req.body;
-      console.log(`Data received in login method: ${email};    ${password}`);
-      const tokens = await this.authService.login(email, password);
+
+      const deviceId = this.getDeviceId(req);
+
+      if (!deviceId) {
+        return res.status(400).json({ message: 'Device ID required' });
+      }
+
+      const tokens = await this.authService.login(email, password, deviceId);
+
       res.cookie('accessToken', tokens.accessToken, {
         httpOnly: true,
         secure: true,
@@ -102,8 +121,13 @@ export class AuthController {
   };
 
   logout = async (req: Request, res: Response) => {
+    const result: boolean = await this.authService.logout(
+      req.body.refreshToken,
+    );
     res.json(
-      (await this.authService.logout(req.body.token)) ? 'Success' : 'failed',
+      result
+        ? { message: 'Success' }
+        : { message: 'No active sessions found for account' },
     );
   };
 
@@ -126,11 +150,11 @@ export class AuthController {
     res.json(refreshData);
   };
 
-  validateToken = async (req, res) => {
+  validateToken = async (req, res): Promise<string> => {
     try {
       const token = req.body?.accessToken;
       const user = await this.authService.validateToken(token);
-      return res.json({ valid: true, user: user });
+      return res.json({ valid: true, user });
     } catch (e) {
       console.log(e);
       return res.status(401).json({ valid: false, message: e.message });

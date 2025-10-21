@@ -5,6 +5,8 @@ import '../config/load-env.config.ts';
 import redisClient from '../config/redis.init.ts';
 import { JwtService } from '../services/jwt.service.ts';
 import { AccountsRepository } from '../repositories/accounts.repository.ts';
+import { ApiError } from '../error/api.error.ts';
+import { stringify } from 'node:querystring';
 
 const authService: AuthService = new AuthService();
 const accountsRepository: AccountsRepository = new AccountsRepository();
@@ -39,16 +41,28 @@ passport.use(
         ? foundData.account
         : (await authService.checkIfAccountExist(profile.email)).account;
 
+      if (!account) {
+        throw ApiError.internal();
+      }
+
       newAccessToken = jwtService.generateAccessJwt(
         account.profile_id,
         account.role,
       );
       newRefreshToken = jwtService.generateRefreshJwt(account.id);
 
-      await redisClient.setEx(
+      const deviceId: string =
+        (request.query.deviceId as string) || 'unknown-device';
+
+      const sessionKey: string = authService.getSessionKey(
+        account?.id,
+        deviceId,
+      );
+      await authService.setDataToRedis(
+        sessionKey,
         newRefreshToken,
-        900,
-        JSON.stringify({ email: account.email, role: account.role }),
+        profile.email,
+        account.role,
       );
 
       return done(null, {

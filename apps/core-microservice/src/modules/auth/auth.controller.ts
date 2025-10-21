@@ -2,7 +2,7 @@ import {
   Body,
   Controller,
   Get,
-  Param,
+  HttpException,
   Post,
   Query,
   Req,
@@ -16,10 +16,9 @@ import {
 } from '@nestjs/swagger';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { LoginDto } from './dto/login.dto';
 import type { Response } from 'express';
-import { ChatParticipant } from '../../common/entities/chatDedicated/chat-participant.entity';
 
 @ApiTags('Authentication operations')
 @ApiBearerAuth('access-token')
@@ -27,18 +26,41 @@ import { ChatParticipant } from '../../common/entities/chatDedicated/chat-partic
 export class AuthController {
   constructor(private readonly configService: ConfigService) {}
 
+  async forwardRequest<T = any>(
+    url: string,
+    options: AxiosRequestConfig,
+  ): Promise<AxiosResponse<T>> {
+    try {
+      return await axios(url, options);
+    } catch (e) {
+      if (axios.isAxiosError(e) && e.response) {
+        throw new HttpException(e.response.data, e.response.status);
+      }
+      throw new HttpException('Internal server error', 500);
+    }
+  }
+
   @ApiOperation({ summary: 'Authenticates users in system' })
   @ApiResponse({ status: 200, type: String })
   @Post('/login')
-  async login(@Body() dto: LoginDto, @Res() res: Response) {
+  async login(
+    @Body() dto: LoginDto,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
     try {
-      const response = await axios.post(
-        `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/login`,
-        {
-          ...dto,
-        },
-        { withCredentials: true },
-      );
+      const url: string = `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/login`;
+      const options = {
+        method: 'POST',
+        data: dto,
+        withCredentials: true,
+        headers: { 'x-device-id': req.headers['x-device-id'] },
+      };
+
+      const response = await this.forwardRequest<{
+        accessToken: string;
+        refreshToken: string;
+      }>(url, options);
 
       const setCookie = response.headers['set-cookie'];
       if (setCookie) {
@@ -56,29 +78,35 @@ export class AuthController {
   }
 
   @Post('/registration')
-  async registerUser(@Body() dto: CreateAccountDto, @Res() res: Response) {
-    try {
-      const response = await axios.post(
-        `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/registration`,
-        {
-          ...dto,
-        },
-        { withCredentials: true },
-      );
+  async registerUser(
+    @Body() dto: CreateAccountDto,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const url: string = `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/registration`;
+    const options = {
+      method: 'POST',
+      data: dto,
+      withCredentials: true,
+      headers: {
+        'x-device-id': req.headers['x-device-id'],
+      },
+    };
 
-      const setCookie = response.headers['set-cookie'];
-      if (setCookie) {
-        res.setHeader('Set-Cookie', setCookie);
-      }
+    const response = await this.forwardRequest<{
+      accessToken: string;
+      refreshToken: string;
+    }>(url, options);
 
-      return res.json({
-        accessToken: response.data.accessToken,
-        refreshToken: response.data.refreshToken,
-      });
-    } catch (e) {
-      console.error(e.response?.data);
-      throw e;
+    const setCookie = response.headers?.['set-cookie'];
+    if (setCookie) {
+      res.setHeader('Set-Cookie', setCookie);
     }
+
+    return res.json({
+      accessToken: response.data.accessToken,
+      refreshToken: response.data.refreshToken,
+    });
   }
 
   @Get('/google')
@@ -106,24 +134,33 @@ export class AuthController {
   }
 
   @Post('/logout')
-  async logout(@Body('token') token: string, @Res() res: Response) {
+  async logout(
+    @Body('refreshToken') refreshToken: string,
+    @Res() res: Response,
+  ) {
     try {
-      const authUrl = `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/logout`;
-
-      if (!token) {
-        return res.status(400).json({ message: 'Token not provided' });
+      if (!refreshToken) {
+        return res.status(400).json({ message: 'Refresh token not provided' });
       }
 
-      const { data } = await axios.post(
-        authUrl,
-        { token },
-        { withCredentials: true },
+      const logoutUrl = `${this.configService.get<{ string }>('AUTH_SERVICE_URL')}/api/auth/logout`;
+      const options = {
+        method: 'POST',
+        data: { refreshToken },
+        withCredentials: true,
+      };
+
+      const response = await this.forwardRequest<{ message: string }>(
+        logoutUrl,
+        options,
       );
 
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
 
-      return res.json({ message: 'Logged out successfully', result: data });
+      return res.json({
+        message: response.data.message,
+      });
     } catch (error) {
       console.error('Logout error:', error.message);
       return res.status(500).json({ message: 'Logout failed' });

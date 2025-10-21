@@ -68,6 +68,7 @@ export class AuthService {
     displayName: string,
     birthday: string,
     bio: string,
+    deviceId: string,
   ) {
     try {
       await pool.query(`BEGIN`);
@@ -75,26 +76,20 @@ export class AuthService {
 
       const candidate: { isExist: boolean; account: any } =
         await this.checkIfAccountExist(email);
+
       if (candidate.isExist) {
-        console.log(
-          `Candidate found: ${JSON.stringify(candidate)}, throwing error`,
-        );
         throw ApiError.badRequest('User with this email already exists');
       }
 
       const hashPassword = await bcrypt.hash(password, 5);
 
-      console.log('password hashed');
-
       const createdUser = await this.accountsRepository.createUser();
-      console.log(`user created: ${JSON.stringify(createdUser)}`);
 
       const createdAccount = await this.accountsRepository.createAccount(
         createdUser,
         email,
         hashPassword,
       );
-      console.log(`account created: ${JSON.stringify(createdAccount)}`);
 
       const createdProfile = await this.accountsRepository.createProfile(
         createdUser,
@@ -103,10 +98,10 @@ export class AuthService {
         birthday,
         bio,
       );
-      console.log(`profile created: ${JSON.stringify(createdProfile)}`);
-      console.log('commit transaction');
+
       await this.accountsRepository.updateLastLogin(createdAccount.id);
       await pool.query('COMMIT');
+
       const accessToken = this.jwtService.generateAccessJwt(
         createdProfile.id,
         createdUser.role,
@@ -115,10 +110,13 @@ export class AuthService {
         createdAccount.id,
       );
 
-      await redisClient.setEx(
+      const sessionKey = `session:${createdAccount.id}:${deviceId}`;
+
+      await this.setDataToRedis(
+        sessionKey,
         refreshToken,
-        900,
-        JSON.stringify({ email, role: createdUser.role }),
+        email,
+        createdUser.role,
       );
 
       return { accessToken, refreshToken };
@@ -129,10 +127,13 @@ export class AuthService {
     }
   }
 
-  async login(email: string, password: string) {
+  getSessionKey(accountId: string, deviceId: string): string {
+    return `session:${accountId}:${deviceId}`;
+  }
+
+  async login(email: string, password: string, deviceId: string) {
     const userData = await this.checkIfAccountExist(email);
-    if (!userData.isExist) {
-      console.log(`User with email not found, throwing exception!`);
+    if (!userData || !userData.isExist || !userData.account) {
       throw ApiError.badRequest(`User with email not found`);
     }
 
@@ -141,39 +142,82 @@ export class AuthService {
       userData.account.password_hash,
     );
 
-    console.log('Comparing hash passwords;');
     if (!comparedPassword) {
-      console.log(`wrong password, throwing exception`);
       throw ApiError.badRequest(`Wrong password!`);
     }
+
+    const accountId = userData.account.id;
+    const userRole = userData.account.role;
+
+    const sessionKey = this.getSessionKey(accountId, deviceId);
+    const existingSession = await redisClient.get(sessionKey);
 
     let accessToken: string = '';
     let refreshToken: string = '';
 
+    if (existingSession) {
+      console.log(`User ${email} already logged in on this device.`);
+      const sessionData: {
+        sessionKey: string;
+        refreshToken: string;
+        email: string;
+        role: string;
+      } = JSON.parse(existingSession);
+      refreshToken = sessionData.refreshToken;
+    } else {
+      refreshToken = this.jwtService.generateRefreshJwt(userData.account.id);
+    }
+
     accessToken = this.jwtService.generateAccessJwt(
       userData.account.profile_id,
-      userData.account.role,
+      userRole,
     );
-    refreshToken = this.jwtService.generateRefreshJwt(userData.account.id);
 
-    await redisClient.setEx(
-      refreshToken,
-      parseInt(process.env.JWT_REFRESH_EXPIRES_IN || '10080') * 60,
-      JSON.stringify({ email, role: userData.account.role }),
-    );
-    console.log(`User with email ${email} authorized!`);
+    await this.setDataToRedis(sessionKey, refreshToken, email, userRole);
+
+    console.log(`User ${email} authorized on device ${deviceId}`);
     await this.accountsRepository.updateLastLogin(userData.account.id);
     return { accessToken, refreshToken };
   }
 
-  async logout(token: string) {
-    const user = await redisClient.get(token);
-    const userData = user ? JSON.parse(user) : null;
-    if (!isEmpty(user)) {
-      await redisClient.del(token);
-      console.log(`User with email: ${userData.email} logged out`);
+  async setDataToRedis(
+    sessionKey: string,
+    refreshToken: string,
+    email: string,
+    role: string,
+  ) {
+    await redisClient.setEx(
+      sessionKey,
+      parseInt(process.env.JWT_REFRESH_EXPIRES_IN || '10080') * 60,
+      JSON.stringify({ refreshToken, email, role }),
+    );
+  }
+
+  async logout(refreshToken: string) {
+    const payload = this.jwtService.verifyToken(refreshToken);
+    console.log(`payload in logout method: ${JSON.stringify(payload)}`);
+    const accountId = payload.account_id;
+
+    const keys = await redisClient.keys(`session:${accountId}:*`);
+
+    if (!keys.length) {
+      console.log(`No active sessions found for account ${accountId}`);
+      return false;
     }
-    return true;
+
+    for (const key of keys) {
+      const session = JSON.parse((await redisClient.get(key)) || `{}`);
+      if (session.refreshToken === refreshToken) {
+        await redisClient.del(key);
+        console.log(
+          `Account ${accountId} logged out from device session ${key}`,
+        );
+        return true;
+      }
+    }
+
+    console.log(`Refresh token not found in active sessions`);
+    return false;
   }
 
   async refreshAccessToken(refreshToken: string) {
