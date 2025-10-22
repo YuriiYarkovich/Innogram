@@ -132,7 +132,8 @@ export class AuthController {
   };
 
   refreshToken = async (req: Request, res: Response) => {
-    const refreshToken = req.body?.refreshToken;
+    console.log(`refresh token in body: ${req.body.refreshToken}`);
+    const refreshToken: string = req.body.refreshToken;
     if (!refreshToken) {
       console.log('No refresh token in refresh token controller method!');
       throw ApiError.unauthorized('No refresh token');

@@ -8,12 +8,15 @@ import {
 import { HttpArgumentsHost } from '@nestjs/common/interfaces';
 import { ConfigService } from '@nestjs/config';
 import { context, CONTEXT_KEYS } from '../cls/request-context';
-import axios from 'axios';
 import { Request, Response } from 'express';
+import { AuthService } from '../../modules/auth/auth.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly authService: AuthService,
+  ) {}
 
   async canActivate(exContext: ExecutionContext): Promise<boolean> {
     const ctx: HttpArgumentsHost = exContext.switchToHttp();
@@ -28,18 +31,26 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      const { data } = await axios.post(
-        `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/validate`,
-        {
-          accessToken,
-        },
-      );
+      console.log(`Sending access token on validation`);
+      const url: string = `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/validate`;
+      const options = {
+        method: 'POST',
+        data: { accessToken },
+      };
+      const response = await this.authService.forwardRequest<{
+        valid: boolean;
+        user: { profile_id: string; role: string };
+      }>(url, options);
 
-      context.set(CONTEXT_KEYS.USER, JSON.parse(data.user));
+      console.log(
+        `Access token returned everything is fine. User: ${response.data.user}`,
+      );
+      context.set(CONTEXT_KEYS.USER, response.data.user);
       return true;
     } catch (e) {
       console.warn('Access token invalid or expired:', e.response?.data);
 
+      console.log(`Refresh token in guard: ${refreshToken}`);
       if (!refreshToken) {
         throw new UnauthorizedException(
           'Access token expired, and no refresh token found',
@@ -47,20 +58,29 @@ export class AuthGuard implements CanActivate {
       }
 
       try {
-        const { data: refreshData } = await axios.post(
-          `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/refresh`,
-          { refreshToken },
-          { withCredentials: true },
-        );
+        const url: string = `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/refresh`;
+        const options = {
+          method: 'POST',
+          data: { refreshToken },
+          withCredentials: true,
+        };
+        const refreshData = await this.authService.forwardRequest<{
+          user: { profileId: string; role: string };
+          newAccessToken: string;
+        }>(url, options);
 
-        res.cookie('accessToken', refreshData.newAccessToken, {
+        res.cookie('accessToken', refreshData.data.newAccessToken, {
           httpOnly: true,
           secure: true,
           sameSite: 'strict',
           maxAge: 15 * 60 * 1000,
         });
 
-        context.set(CONTEXT_KEYS.USER, refreshData.user);
+        console.log(
+          `User before setting to context^ ${JSON.stringify(refreshData.data.user)}`,
+        );
+
+        context.set(CONTEXT_KEYS.USER, refreshData.data.user);
         return true;
       } catch (e) {
         throw new InternalServerErrorException(e.message);

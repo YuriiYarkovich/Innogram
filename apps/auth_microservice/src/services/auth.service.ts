@@ -193,9 +193,11 @@ export class AuthService {
     );
   }
 
-  async logout(refreshToken: string) {
+  async findRedisNote(refreshToken: string) {
     const payload = this.jwtService.verifyToken(refreshToken);
-    console.log(`payload in logout method: ${JSON.stringify(payload)}`);
+    console.log(
+      `payload in find redis note method: ${JSON.stringify(payload)}`,
+    );
     const accountId = payload.account_id;
 
     const keys = await redisClient.keys(`session:${accountId}:*`);
@@ -208,12 +210,17 @@ export class AuthService {
     for (const key of keys) {
       const session = JSON.parse((await redisClient.get(key)) || `{}`);
       if (session.refreshToken === refreshToken) {
-        await redisClient.del(key);
-        console.log(
-          `Account ${accountId} logged out from device session ${key}`,
-        );
-        return true;
+        return { role: session.role, key };
       }
+    }
+    return undefined;
+  }
+
+  async logout(refreshToken: string) {
+    const redisNote = await this.findRedisNote(refreshToken);
+    if (redisNote) {
+      await redisClient.del(redisNote.key);
+      return true;
     }
 
     console.log(`Refresh token not found in active sessions`);
@@ -225,25 +232,32 @@ export class AuthService {
       console.log(
         `Refreshing access token. Received refresh token: ${refreshToken}`,
       );
-      this.jwtService.verifyToken(refreshToken);
-      const foundDataFromRedis = await redisClient.get(refreshToken);
 
-      if (!foundDataFromRedis) {
+      const redisNote = await this.findRedisNote(refreshToken);
+
+      if (!redisNote) {
         throw ApiError.forbidden('Invalid refresh token');
       }
 
-      const account = JSON.parse(foundDataFromRedis);
+      const decoded: { account_id: string } =
+        this.jwtService.verifyToken(refreshToken);
 
-      const user: {
-        profileId: string;
-        role: string;
-      } = { profileId: account.profile_id, role: account.role };
+      const foundProfileIdObject =
+        await this.accountsRepository.findProfileIdByAccountId(
+          decoded.account_id,
+        );
+
+      const profile_id = foundProfileIdObject.profile_id;
 
       const newAccessToken = this.jwtService.generateAccessJwt(
-        account.profile_id,
-        account.role,
+        profile_id,
+        redisNote.role,
       );
 
+      const user: { profile_id: string; role: string } = {
+        profile_id,
+        role: redisNote.role,
+      };
       return { user, newAccessToken };
     } catch (e) {
       throw ApiError.forbidden(e.message);

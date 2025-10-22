@@ -24,7 +24,7 @@ export class CommentsService {
 
   private async checkIfPostExists(postId: string) {
     const post = await this.postsRepository.findPostById(postId);
-    if (!post) throw new BadRequestException('There are no such post!');
+    if (!post) throw new BadRequestException('There is no such post!');
   }
 
   async getAllCommentsOfPost(postId: string) {

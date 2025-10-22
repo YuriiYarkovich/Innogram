@@ -9,6 +9,7 @@ import { MinioModule } from '../minio/minio.module';
 import { PostAsset } from '../../common/entities/postsDedicated/post-asset.entity';
 import { PostLikeRepository } from './repositories/post-like.repository';
 import { PostLike } from '../../common/entities/postsDedicated/post-like.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   controllers: [PostsController],
@@ -18,7 +19,11 @@ import { PostLike } from '../../common/entities/postsDedicated/post-like.entity'
     PostAssetRepository,
     PostLikeRepository,
   ],
-  imports: [TypeOrmModule.forFeature([Post, PostAsset, PostLike]), MinioModule],
+  imports: [
+    TypeOrmModule.forFeature([Post, PostAsset, PostLike]),
+    MinioModule,
+    AuthModule,
+  ],
   exports: [PostsRepository],
 })
 export class PostsModule {}

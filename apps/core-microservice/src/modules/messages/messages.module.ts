@@ -10,12 +10,14 @@ import { MessagesRepository } from './repositories/messages.repository';
 import { MinioModule } from '../minio/minio.module';
 import { MessageAssetsRepository } from './repositories/message-assets.repository';
 import { MessageAsset } from '../../common/entities/chatDedicated/message_asset.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Chat, Message, ChatParticipant, MessageAsset]),
     ChatModule,
     MinioModule,
+    AuthModule,
   ],
   controllers: [MessagesController],
   providers: [MessagesService, MessagesRepository, MessageAssetsRepository],

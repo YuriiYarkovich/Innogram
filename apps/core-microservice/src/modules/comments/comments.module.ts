@@ -9,6 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 import { Comment } from '../../common/entities/commentsDedicated/comment.entity';
 import { PostsModule } from '../posts/posts.module';
 import { CommentLikeRepository } from './repositories/comment-like.repository';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   controllers: [CommentsController],
@@ -17,6 +18,7 @@ import { CommentLikeRepository } from './repositories/comment-like.repository';
     TypeOrmModule.forFeature([Comment, CommentLike, Post]),
     ConfigModule,
     PostsModule,
+    AuthModule,
   ],
 })
 export class CommentsModule {}

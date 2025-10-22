@@ -6,9 +6,10 @@ import { Chat } from '../../common/entities/chatDedicated/chat.entity';
 import { ChatParticipant } from '../../common/entities/chatDedicated/chat-participant.entity';
 import { ChatRepository } from './repositories/chat.repository';
 import { ChatParticipantRepository } from './repositories/chat-participant.repository';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Chat, ChatParticipant])],
+  imports: [TypeOrmModule.forFeature([Chat, ChatParticipant]), AuthModule],
   controllers: [ChatController],
   providers: [ChatService, ChatRepository, ChatParticipantRepository],
   exports: [ChatService, ChatRepository, ChatParticipantRepository],

@@ -88,6 +88,19 @@ export class AccountsRepository {
     return result.rows[0];
   }
 
+  async findProfileIdByAccountId(account_id: string) {
+    const result = await pool.query(
+      `
+       SELECT id AS profile_id
+       FROM main.profiles
+       WHERE user_id=(SELECT user_id FROM main.accounts WHERE id=$1)
+      `,
+      [account_id],
+    );
+
+    return result.rows[0];
+  }
+
   async updateLastLogin(accountId: string) {
     await pool.query(
       `

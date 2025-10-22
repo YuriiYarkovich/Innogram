@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpException,
-  Post,
-  Query,
-  Req,
-  Res,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiExcludeEndpoint,
@@ -17,31 +8,20 @@ import {
 } from '@nestjs/swagger';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { ConfigService } from '@nestjs/config';
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { LoginDto } from './dto/login.dto';
 import type { Response } from 'express';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { GoogleResponseDto } from './dto/google-response.dto';
+import { AuthService } from './auth.service';
 
 @ApiTags('Authentication operations')
 @ApiBearerAuth('access-token')
 @Controller('/api/auth')
 export class AuthController {
-  constructor(private readonly configService: ConfigService) {}
-
-  async forwardRequest<T = any>(
-    url: string,
-    options: AxiosRequestConfig,
-  ): Promise<AxiosResponse<T>> {
-    try {
-      return await axios(url, options);
-    } catch (e) {
-      if (axios.isAxiosError(e) && e.response) {
-        throw new HttpException(e.response.data, e.response.status);
-      }
-      throw new HttpException('Internal server error', 500);
-    }
-  }
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly authService: AuthService,
+  ) {}
 
   @ApiOperation({ summary: 'Authenticates users in system' })
   @ApiResponse({
@@ -73,7 +53,7 @@ export class AuthController {
         headers: { 'x-device-id': req.headers['x-device-id'] },
       };
 
-      const response = await this.forwardRequest<{
+      const response = await this.authService.forwardRequest<{
         accessToken: string;
         refreshToken: string;
       }>(url, options);
@@ -124,7 +104,7 @@ export class AuthController {
       },
     };
 
-    const response = await this.forwardRequest<{
+    const response = await this.authService.forwardRequest<{
       accessToken: string;
       refreshToken: string;
     }>(url, options);
@@ -202,10 +182,9 @@ export class AuthController {
         withCredentials: true,
       };
 
-      const response = await this.forwardRequest<{ message: string }>(
-        logoutUrl,
-        options,
-      );
+      const response = await this.authService.forwardRequest<{
+        message: string;
+      }>(logoutUrl, options);
 
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
