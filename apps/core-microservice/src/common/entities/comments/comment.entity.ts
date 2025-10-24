@@ -10,8 +10,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { CommentMention } from './comment-mention.entity';
-import { Post } from '../postsDedicated/post.entity';
-import { Profile } from '../accountDedicated/profile.entity';
+import { Post } from '../posts/post.entity';
+import { Profile } from '../account/profile.entity';
 import { CommentLike } from './comment-like.entity';
 import { ApiProperty } from '@nestjs/swagger';
 

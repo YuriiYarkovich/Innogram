@@ -19,7 +19,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { PostLike } from '../../common/entities/postsDedicated/post-like.entity';
+import { PostLike } from '../../common/entities/posts/post-like.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { context, CONTEXT_KEYS } from '../../common/cls/request-context';

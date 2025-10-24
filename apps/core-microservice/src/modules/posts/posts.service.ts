@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Post } from '../../common/entities/postsDedicated/post.entity';
+import { Post } from '../../common/entities/posts/post.entity';
 import { PostsRepository } from './repositories/posts.reposiory';
 import { DataSource, QueryRunner } from 'typeorm';
 import { MinioService } from '../minio/minio.service';
-import { PostAsset } from '../../common/entities/postsDedicated/post-asset.entity';
+import { PostAsset } from '../../common/entities/posts/post-asset.entity';
 import { PostAssetRepository } from './repositories/post-asset.repository';
 import { PostLikeRepository } from './repositories/post-like.repository';
 import { File as MulterFile } from 'multer';

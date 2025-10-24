@@ -5,9 +5,7 @@ import { AccountsRepository } from '../repositories/accounts.repository.ts';
 import { ApiError } from '../error/api.error.ts';
 import '../config/load-env.config.ts';
 import redisClient from '../config/redis.init.ts';
-import { isEmpty } from 'lodash';
 import { JwtService } from './jwt.service.ts';
-import { isNumberObject } from 'node:util/types';
 
 export class AuthService {
   readonly accountsRepository: AccountsRepository = new AccountsRepository();
@@ -247,15 +245,15 @@ export class AuthService {
           decoded.account_id,
         );
 
-      const profile_id = foundProfileIdObject.profile_id;
+      const profileId: string = foundProfileIdObject.profile_id;
 
-      const newAccessToken = this.jwtService.generateAccessJwt(
-        profile_id,
+      const newAccessToken: string = this.jwtService.generateAccessJwt(
+        profileId,
         redisNote.role,
       );
 
-      const user: { profile_id: string; role: string } = {
-        profile_id,
+      const user: { profileId: string; role: string } = {
+        profileId: profileId,
         role: redisNote.role,
       };
       return { user, newAccessToken };
@@ -279,7 +277,7 @@ export class AuthService {
         throw ApiError.unauthorized('Invalid access token!');
       }
 
-      return JSON.stringify(decoded);
+      return decoded;
     } catch (e) {
       console.log(`Validation method error: ${e}`);
       throw e;

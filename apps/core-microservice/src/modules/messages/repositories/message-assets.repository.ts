@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MessageAsset } from '../../../common/entities/chatDedicated/message_asset.entity';
+import { MessageAsset } from '../../../common/entities/chat/message_asset.entity';
 import { QueryRunner, Repository } from 'typeorm';
 
 @Injectable()

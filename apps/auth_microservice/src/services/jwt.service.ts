@@ -2,8 +2,8 @@ import jwt from 'jsonwebtoken';
 import '../config/load-env.config.ts';
 
 export class JwtService {
-  generateAccessJwt = (profile_id: string, role: string) => {
-    return jwt.sign({ profile_id, role }, process.env.JWT_SECRET, {
+  generateAccessJwt = (profileId: string, role: string) => {
+    return jwt.sign({ profileId, role }, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_ACCESS_EXPIRES_IN,
     });
   };

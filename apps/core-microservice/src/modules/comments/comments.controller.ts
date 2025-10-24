@@ -15,9 +15,9 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { CommentLike } from '../../common/entities/commentsDedicated/comment-like.entity';
+import { CommentLike } from '../../common/entities/comments/comment-like.entity';
 import { CreateCommentDto } from './dto/crete-comment.dto';
-import { Comment } from '../../common/entities/commentsDedicated/comment.entity';
+import { Comment } from '../../common/entities/comments/comment.entity';
 import { context, CONTEXT_KEYS } from '../../common/cls/request-context';
 import { AuthGuard } from '../../common/guards/auth.guard';
 

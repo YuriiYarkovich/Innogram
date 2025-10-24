@@ -9,9 +9,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Profile } from '../accountDedicated/profile.entity';
+import { Profile } from '../account/profile.entity';
 import { PostAsset } from './post-asset.entity';
-import { Comment } from '../commentsDedicated/comment.entity';
+import { Comment } from '../comments/comment.entity';
 import { PostLike } from './post-like.entity';
 import { ApiProperty } from '@nestjs/swagger';
 

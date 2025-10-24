@@ -20,7 +20,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Message } from '../../common/entities/chatDedicated/message.entity';
+import { Message } from '../../common/entities/chat/message.entity';
 import { EditMessageDto } from './dto/edit-message.dto';
 import { context, CONTEXT_KEYS } from '../../common/cls/request-context';
 import { AuthGuard } from '../../common/guards/auth.guard';

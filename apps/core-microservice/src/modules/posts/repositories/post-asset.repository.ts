@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { QueryRunner, Repository } from 'typeorm';
-import { PostAsset } from '../../../common/entities/postsDedicated/post-asset.entity';
+import { PostAsset } from '../../../common/entities/posts/post-asset.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()

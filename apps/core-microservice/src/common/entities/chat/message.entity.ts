@@ -10,7 +10,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Chat } from './chat.entity';
-import { Profile } from '../accountDedicated/profile.entity';
+import { Profile } from '../account/profile.entity';
 import { MessageAsset } from './message_asset.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -53,14 +53,25 @@ export class Message {
 
   @ApiProperty({
     example: 'active',
-    description: 'status of the message',
+    description: 'visibility status of the message',
   })
   @Column({
     type: 'enum',
     enum: ['active', 'edited', 'deleted'],
     default: 'active',
   })
-  status: 'active' | 'edited' | 'deleted';
+  visible_status: 'active' | 'edited' | 'deleted';
+
+  @ApiProperty({
+    example: 'unread',
+    description: 'read status of the message',
+  })
+  @Column({
+    type: 'enum',
+    enum: ['read', 'unread'],
+    default: 'unread',
+  })
+  read_status: 'read' | 'unread';
 
   @CreateDateColumn()
   created_at: Date;

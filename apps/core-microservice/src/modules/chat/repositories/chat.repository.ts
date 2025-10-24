@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryRunner, Repository } from 'typeorm';
-import { Chat } from '../../../common/entities/chatDedicated/chat.entity';
+import { Chat } from '../../../common/entities/chat/chat.entity';
 import { CreateChatDto } from '../dto/create-chat.dto';
 
 @Injectable()

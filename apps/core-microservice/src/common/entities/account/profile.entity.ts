@@ -10,12 +10,12 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 import { ProfileFollow } from './profile-follow.entity';
-import { Post } from '../postsDedicated/post.entity';
-import { Comment } from '../commentsDedicated/comment.entity';
-import { ChatParticipant } from '../chatDedicated/chat-participant.entity';
-import { Message } from '../chatDedicated/message.entity';
-import { PostLike } from '../postsDedicated/post-like.entity';
-import { CommentLike } from '../commentsDedicated/comment-like.entity';
+import { Post } from '../posts/post.entity';
+import { Comment } from '../comments/comment.entity';
+import { ChatParticipant } from '../chat/chat-participant.entity';
+import { Message } from '../chat/message.entity';
+import { PostLike } from '../posts/post-like.entity';
+import { CommentLike } from '../comments/comment-like.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('profiles', { schema: 'main' })

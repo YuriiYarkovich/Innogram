@@ -12,7 +12,7 @@ import { LoginDto } from './dto/login.dto';
 import type { Response } from 'express';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { GoogleResponseDto } from './dto/google-response.dto';
-import { AuthService } from './auth.service';
+import { HttpService } from './httpService';
 
 @ApiTags('Authentication operations')
 @ApiBearerAuth('access-token')
@@ -20,7 +20,7 @@ import { AuthService } from './auth.service';
 export class AuthController {
   constructor(
     private readonly configService: ConfigService,
-    private readonly authService: AuthService,
+    private readonly httpService: HttpService,
   ) {}
 
   @ApiOperation({ summary: 'Authenticates users in system' })
@@ -53,7 +53,7 @@ export class AuthController {
         headers: { 'x-device-id': req.headers['x-device-id'] },
       };
 
-      const response = await this.authService.forwardRequest<{
+      const response = await this.httpService.forwardRequest<{
         accessToken: string;
         refreshToken: string;
       }>(url, options);
@@ -104,7 +104,7 @@ export class AuthController {
       },
     };
 
-    const response = await this.authService.forwardRequest<{
+    const response = await this.httpService.forwardRequest<{
       accessToken: string;
       refreshToken: string;
     }>(url, options);
@@ -182,7 +182,7 @@ export class AuthController {
         withCredentials: true,
       };
 
-      const response = await this.authService.forwardRequest<{
+      const response = await this.httpService.forwardRequest<{
         message: string;
       }>(logoutUrl, options);
 

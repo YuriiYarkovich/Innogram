@@ -5,7 +5,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Profile } from '../accountDedicated/profile.entity';
+import { Profile } from '../account/profile.entity';
 import { Post } from './post.entity';
 
 @Entity('post_likes', { schema: 'main' })

@@ -15,8 +15,8 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Chat } from '../../common/entities/chatDedicated/chat.entity';
-import { ChatParticipant } from '../../common/entities/chatDedicated/chat-participant.entity';
+import { Chat } from '../../common/entities/chat/chat.entity';
+import { ChatParticipant } from '../../common/entities/chat/chat-participant.entity';
 import { AddParticipantDto } from './dto/add-participant.dto';
 import { context, CONTEXT_KEYS } from '../../common/cls/request-context';
 import { AuthGuard } from '../../common/guards/auth.guard';

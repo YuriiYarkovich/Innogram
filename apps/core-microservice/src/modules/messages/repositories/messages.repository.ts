@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Message } from '../../../common/entities/chatDedicated/message.entity';
+import { Message } from '../../../common/entities/chat/message.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { CreateMessageDto } from '../dto/create-message.dto';
 import { EditMessageDto } from '../dto/edit-message.dto';
@@ -32,8 +32,8 @@ export class MessagesRepository {
         assets: true,
       },
       where: [
-        { chat_id: chatId, status: 'active' },
-        { chat_id: chatId, status: 'edited' },
+        { chat_id: chatId, visible_status: 'active' },
+        { chat_id: chatId, visible_status: 'edited' },
       ],
     });
   }
@@ -42,8 +42,8 @@ export class MessagesRepository {
     return await this.messageRepository.findOne({
       relations: { assets: true },
       where: [
-        { id: messageId, status: 'active' },
-        { id: messageId, status: 'edited' },
+        { id: messageId, visible_status: 'active' },
+        { id: messageId, visible_status: 'edited' },
       ],
     });
   }
@@ -56,7 +56,7 @@ export class MessagesRepository {
     await queryRunner.manager.update(
       Message,
       { id: messageId },
-      { content: dto.content, status: 'edited' },
+      { content: dto.content, visible_status: 'edited' },
     );
     return await this.getMessageById(messageId);
   }
@@ -64,7 +64,7 @@ export class MessagesRepository {
   async deleteMessage(messageId: string) {
     await this.messageRepository.update(
       { id: messageId },
-      { status: 'deleted' },
+      { visible_status: 'deleted' },
     );
   }
 }

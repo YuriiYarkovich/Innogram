@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Post } from '../../../common/entities/postsDedicated/post.entity';
+import { Post } from '../../../common/entities/posts/post.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { CreatePostDto } from '../dto/create-post.dto';
 
