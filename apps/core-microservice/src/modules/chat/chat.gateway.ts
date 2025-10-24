@@ -42,7 +42,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return;
       }
 
-      const user: { profileId: string; role: string } =
+      const user: UserInAccessToken =
         await this.authService.validateAccessToken(accessToken);
 
       const profileId: string = user.profileId;
@@ -52,21 +52,31 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log(
         `Client connected! ProfileId(key): ${user.profileId}, socketId:${socket.id}`,
       );
+      this.logAllConnectedUsers();
     } catch (e) {
       socket.disconnect();
       throw e;
     }
   }
 
+  private logAllConnectedUsers() {
+    console.log(`All connected users: `);
+    this.users.forEach((value, key) => {
+      console.log(`profileId: ${key}, socketId: ${value}`);
+    });
+  }
+
   handleDisconnect(socket: Socket) {
-    for (const [socketId, profileId] of this.users.entries()) {
-      if (socket.id === socketId) {
-        this.users.delete(socketId);
+    console.log(`In handle disconnect method`);
+
+    this.users.forEach((value, key) => {
+      if (socket.id === value) {
+        this.users.delete(key);
         console.log(
-          `User with socketId: ${socketId} and profileId: ${profileId} has disconnected!`,
+          `User with socketId: ${value} and profileId: ${key} has disconnected!`,
         );
-        break;
       }
-    }
+    });
+    this.logAllConnectedUsers();
   }
 }
