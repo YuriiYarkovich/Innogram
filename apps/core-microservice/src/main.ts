@@ -43,7 +43,7 @@ async function bootstrap() {
       referrerPolicy: { policy: 'no-referrer' },
     }),
   );
-  app.useGlobalFilters(new HttpExceptionFilter(configService));
+  //app.useGlobalFilters(new HttpExceptionFilter(configService));
   app.use(new ContextMiddleware().use);
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors({

@@ -1,4 +1,7 @@
 export interface MessageToEmit {
+  messageId: string;
   receiverProfileIds: string[];
-  message: string;
+  content: string;
+  chatId: string;
+  replyMessageId: string;
 }

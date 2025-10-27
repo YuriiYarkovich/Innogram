@@ -14,7 +14,7 @@ export class ChatRepository {
     const chat = queryRunner.manager.create(Chat, {
       title: dto.title,
       description: dto.description,
-      chat_type: dto.chat_type,
+      chat_type: dto.chatType,
     });
     await queryRunner.manager.save(chat);
     return chat;

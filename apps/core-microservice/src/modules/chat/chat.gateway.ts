@@ -18,6 +18,8 @@ import { UserInAccessToken } from '../../common/types/user.type';
 import { AuthService } from '../auth/auth.service';
 import * as cookie from 'cookie';
 import type { MessageToEmit } from '../../common/types/message.type';
+import { CreateMessageDto } from '../messages/dto/create-message.dto';
+import { Message } from '../../common/entities/chat/message.entity';
 
 @WebSocketGateway(3004, { cors: { origin: '*', credentials: true } })
 @Injectable()
@@ -60,6 +62,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log(
         `Client connected! ProfileId(key): ${user.profileId}, socketId:${socket.id}`,
       );
+      // TODO emit all unread messages of user
       this.logAllConnectedUsers();
     } catch (e) {
       socket.disconnect();
@@ -88,20 +91,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
     });
 
-    if (receiverSocketIds.length > 0) {
-      //TODO save to db with read status
-      const senderProfileId: string | undefined = this.getProfileIdBySocketId(
-        client.id,
+    const dto: CreateMessageDto = {
+      chatId: data.chatId,
+      content: data.content,
+    };
+
+    const senderProfileId: string | undefined = this.getProfileIdBySocketId(
+      client.id,
+    );
+    if (!senderProfileId)
+      throw new InternalServerErrorException(
+        `Client id is not in connected users list!`,
       );
 
-      if (!senderProfileId)
-        throw new InternalServerErrorException(
-          `Client id is not in connected users list!`,
-        );
+    if (receiverSocketIds.length > 0) {
+      const createdMessage: Message = await this.messagesService.createMessage(
+        dto,
+        senderProfileId,
+        true,
+      );
 
+      data.messageId = createdMessage.id;
       this.emitMessage(receiverSocketIds, senderProfileId, data);
     } else {
-      //TODO save message to db with unread status
+      await this.messagesService.createMessage(dto, senderProfileId, false);
     }
   }
 
@@ -115,10 +128,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         .to(receiverSocketId)
         .emit(
           'reply',
-          JSON.stringify({ senderProfileId, message: messageData.message }),
+          JSON.stringify({ senderProfileId, message: messageData.content }),
         );
       console.log(
-        `Message sent to user with socket id: ${receiverSocketId}: ${messageData.message}`,
+        `Message sent to user with socket id: ${receiverSocketId}: ${messageData.content}; to chat: ${messageData.chatId}`,
       );
     });
   }

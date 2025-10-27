@@ -17,7 +17,7 @@ export class ChatParticipantRepository {
   ) {
     const chatParticipant = queryRunner.manager.create(ChatParticipant, {
       profile_id: chatParticipantId,
-      chat_id: chatId,
+      chatId: chatId,
     });
 
     await queryRunner.manager.save(chatParticipant);
@@ -69,13 +69,13 @@ export class ChatParticipantRepository {
 
   async findChatParticipant(profileId: string, chatId: string) {
     return await this.chatParticipantRepository.findOne({
-      where: { profile_id: profileId, chat_id: chatId },
+      where: { profile_id: profileId, chatId: chatId },
     });
   }
 
   async leaveChat(profileId: string, chatId: string) {
     await this.chatParticipantRepository.delete({
-      chat_id: chatId,
+      chatId: chatId,
       profile_id: profileId,
     });
   }

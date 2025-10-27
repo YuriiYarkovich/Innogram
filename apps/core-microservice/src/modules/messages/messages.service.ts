@@ -27,22 +27,39 @@ export class MessagesService {
     return queryRunner;
   }
 
-  async createMessage(dto: CreateMessageDto, profileId: string, files) {
+  async createMessage(
+    dto: CreateMessageDto,
+    senderId: string,
+    readStatus: boolean,
+    files: MulterFile | undefined = null,
+  ) {
     const queryRunner = await this.createTransaction();
 
     try {
-      await this.checkIfUserIsChatParticipant(profileId, dto.chat_id);
+      await this.checkIfUserIsChatParticipant(senderId, dto.chatId);
 
-      const createdMessage = await this.messagesRepository.createMessage(
-        dto,
-        profileId,
-        queryRunner,
-      );
+      let createdMessage: Message | undefined = undefined;
 
-      if (files.length == 0) return createdMessage;
+      if (!readStatus) {
+        createdMessage = await this.messagesRepository.createMessage(
+          dto,
+          senderId,
+          queryRunner,
+        );
+      } else {
+        createdMessage = await this.messagesRepository.createReadMessage(
+          dto,
+          senderId,
+          queryRunner,
+        );
+      }
 
-      const order = 0;
-      await this.uploadFilesArray(files, queryRunner, createdMessage, order);
+      if (files) {
+        if (files.length == 0) return createdMessage;
+
+        const order = 0;
+        await this.uploadFilesArray(files, queryRunner, createdMessage, order);
+      }
 
       await queryRunner.commitTransaction();
 
@@ -121,90 +138,6 @@ export class MessagesService {
     return foundMessage;
   }
 
-  /*async editMessage(
-    messageId: string,
-    content: string,
-    profileId: string,
-    files: MulterFile[],
-  ) {
-    const queryRunner = await this.createTransaction();
-
-    try {
-      const foundMessage =
-        await this.messagesRepository.getMessageById(messageId);
-      if (!foundMessage)
-        throw new BadRequestException('There is no such message!');
-
-      if (foundMessage.sender_id !== profileId)
-        throw new BadRequestException('User is not an author of the message!');
-
-      const updatedMessage = await this.messagesRepository.updateMessage(
-        messageId,
-        content,
-        queryRunner,
-      );
-
-      const existingFileNames = updatedMessage?.assets.map(
-        (asset) => asset.hashed_file_name,
-      );
-
-      const newFileNames: string[] = files.map(
-        (file): string => file.originalname,
-      );
-
-      const namesOfFilesToAdd = newFileNames.filter(
-        (name) => !existingFileNames?.includes(name),
-      );
-
-      const namesOfFilesToRemove = existingFileNames?.filter(
-        (name) => !newFileNames.includes(name),
-      );
-
-      if (namesOfFilesToRemove) {
-        for (const fileName of namesOfFilesToRemove) {
-          const asset =
-            await this.messagesAssetRepository.findAssetByName(fileName);
-          if (asset) {
-            await this.messagesAssetRepository.deleteMessageAsset(
-              asset.id,
-              queryRunner,
-            );
-
-            await this.minioService.deleteFile(fileName);
-          }
-        }
-      }
-
-      if (namesOfFilesToAdd) {
-        const filesToAdd: MulterFile[] = [];
-        for (const file of files) {
-          for (const nameOfFileToAdd of namesOfFilesToAdd) {
-            if (file.originalname === nameOfFileToAdd) filesToAdd.unshift(file);
-          }
-        }
-        const leftFiles =
-          await this.messagesAssetRepository.findAssetsByMessage(messageId);
-        let order = leftFiles.length;
-
-        for (const fileToAdd of filesToAdd) {
-          const newAsset = await this.minioService.uploadFile(fileToAdd);
-          await this.messagesAssetRepository.createMessageAsset(
-            newAsset.hashedFileName,
-            messageId,
-            queryRunner,
-            newAsset.type,
-            ++order,
-          );
-        }
-      }
-
-      await queryRunner.commitTransaction();
-      return await this.messagesRepository.getMessageById(messageId);
-    } catch (e) {
-      await queryRunner.rollbackTransaction();
-      throw e;
-    }
-  }*/
   async editMessage(
     messageId: string,
     dto: EditMessageDto,

@@ -16,8 +16,8 @@ export class ChatParticipant {
   @Column({ type: 'uuid' })
   profile_id: string;
 
-  @Column({ type: 'uuid' })
-  chat_id: string;
+  @Column({ type: 'uuid', name: 'chat_id' })
+  chatId: string;
 
   @Column({
     type: 'enum',

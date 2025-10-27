@@ -13,12 +13,28 @@ export class MessagesRepository {
 
   async createMessage(
     dto: CreateMessageDto,
-    profileId: string,
+    senderId: string,
     queryRunner: QueryRunner,
   ) {
     const createdMessage = queryRunner.manager.create(Message, {
       ...dto,
-      sender_id: profileId,
+      sender_id: senderId,
+    });
+
+    await queryRunner.manager.save(createdMessage);
+
+    return createdMessage;
+  }
+
+  async createReadMessage(
+    dto: CreateMessageDto,
+    senderId: string,
+    queryRunner: QueryRunner,
+  ) {
+    const createdMessage = queryRunner.manager.create(Message, {
+      ...dto,
+      sender_id: senderId,
+      read_status: 'read',
     });
 
     await queryRunner.manager.save(createdMessage);
@@ -32,8 +48,8 @@ export class MessagesRepository {
         assets: true,
       },
       where: [
-        { chat_id: chatId, visible_status: 'active' },
-        { chat_id: chatId, visible_status: 'edited' },
+        { chatId: chatId, visible_status: 'active' },
+        { chatId: chatId, visible_status: 'edited' },
       ],
     });
   }

@@ -27,8 +27,8 @@ export class Message {
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
     description: 'Reference to the chat',
   })
-  @Column({ type: 'uuid' })
-  chat_id: string;
+  @Column({ type: 'uuid', name: 'chat_id' })
+  chatId: string;
 
   @ApiProperty({
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
@@ -41,8 +41,8 @@ export class Message {
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
     description: 'Reference to replying message',
   })
-  @Column({ type: 'uuid', nullable: true })
-  reply_to_message_id: string;
+  @Column({ type: 'uuid', name: 'reply_to_message_id', nullable: true })
+  replyToMessageId: string;
 
   @ApiProperty({
     example: 'Hello! How was your day!',
