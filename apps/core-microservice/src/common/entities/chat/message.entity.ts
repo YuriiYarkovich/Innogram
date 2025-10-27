@@ -13,6 +13,7 @@ import { Chat } from './chat.entity';
 import { Profile } from '../account/profile.entity';
 import { MessageAsset } from './message_asset.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { MessageReceiver } from './Message-Receiver.entity';
 
 @Entity('messages', { schema: 'main' })
 export class Message {
@@ -34,8 +35,8 @@ export class Message {
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
     description: 'Reference to the sender profile',
   })
-  @Column({ type: 'uuid' })
-  sender_id: string;
+  @Column({ type: 'uuid', name: 'sender_id' })
+  senderId: string;
 
   @ApiProperty({
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
@@ -59,19 +60,9 @@ export class Message {
     type: 'enum',
     enum: ['active', 'edited', 'deleted'],
     default: 'active',
+    name: 'visible_status',
   })
-  visible_status: 'active' | 'edited' | 'deleted';
-
-  @ApiProperty({
-    example: 'unread',
-    description: 'read status of the message',
-  })
-  @Column({
-    type: 'enum',
-    enum: ['read', 'unread'],
-    default: 'unread',
-  })
-  read_status: 'read' | 'unread';
+  visibleStatus: 'active' | 'edited' | 'deleted';
 
   @CreateDateColumn()
   created_at: Date;
@@ -82,20 +73,37 @@ export class Message {
   @DeleteDateColumn({ nullable: true })
   deleted_at: Date;
 
-  @ManyToOne(() => Chat, (chat): Message[] => chat.messages, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @ManyToOne(
+    (): typeof Chat => Chat,
+    (chat: Chat): Message[] => chat.messages,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+  )
   @JoinColumn({ name: 'chat_id' })
   chat: Chat;
 
-  @ManyToOne(() => Profile, (profile): Message[] => profile.messages, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @ManyToOne(
+    (): typeof Profile => Profile,
+    (profile: Profile): Message[] => profile.messages,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+  )
   @JoinColumn({ name: 'sender_id' })
   sender: Profile;
 
-  @OneToMany(() => MessageAsset, (messageAsset) => messageAsset.message)
+  @OneToMany(
+    (): typeof MessageAsset => MessageAsset,
+    (messageAsset: MessageAsset): Message => messageAsset.message,
+  )
   assets: MessageAsset[];
+
+  @OneToMany(
+    (): typeof MessageReceiver => MessageReceiver,
+    (messageReceiver: MessageReceiver): Message => messageReceiver.message,
+  )
+  messageReceivers: MessageReceiver[];
 }

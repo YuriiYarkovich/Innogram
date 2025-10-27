@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsUUID } from 'class-validator';
+import { Column } from 'typeorm';
 
 export class CreateMessageDto {
   constructor(chatId: string, content: string) {
@@ -20,4 +21,11 @@ export class CreateMessageDto {
   })
   @IsString()
   readonly content: string;
+
+  @ApiProperty({
+    example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
+    description: 'Reference to the sender profile',
+  })
+  @Column({ type: 'uuid', name: 'sender_id' })
+  senderId: string;
 }

@@ -9,7 +9,6 @@ import { CommentsModule } from './modules/comments/comments.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { AuthService } from './modules/auth/auth.service';
 
 @Module({
   imports: [

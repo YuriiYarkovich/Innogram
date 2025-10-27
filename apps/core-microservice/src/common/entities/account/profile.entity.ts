@@ -17,6 +17,7 @@ import { Message } from '../chat/message.entity';
 import { PostLike } from '../posts/post-like.entity';
 import { CommentLike } from '../comments/comment-like.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { MessageReceiver } from '../chat/Message-Receiver.entity';
 
 @Entity('profiles', { schema: 'main' })
 export class Profile {
@@ -123,4 +124,10 @@ export class Profile {
 
   @OneToMany(() => CommentLike, (commentLike) => commentLike.profile)
   commentLikes: CommentLike[];
+
+  @OneToMany(
+    () => MessageReceiver,
+    (messageReceiver) => messageReceiver.receiver,
+  )
+  messageReceivers: MessageReceiver[];
 }

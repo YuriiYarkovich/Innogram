@@ -11,16 +11,29 @@ import { MinioModule } from '../minio/minio.module';
 import { MessageAssetsRepository } from './repositories/message-assets.repository';
 import { MessageAsset } from '../../common/entities/chat/message_asset.entity';
 import { AuthModule } from '../auth/auth.module';
+import { MessageReceiverRepository } from './repositories/message-receiver.repository';
+import { MessageReceiver } from '../../common/entities/chat/Message-Receiver.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Chat, Message, ChatParticipant, MessageAsset]),
+    TypeOrmModule.forFeature([
+      Chat,
+      Message,
+      ChatParticipant,
+      MessageAsset,
+      MessageReceiver,
+    ]),
     forwardRef(() => ChatModule),
     MinioModule,
     AuthModule,
   ],
   controllers: [MessagesController],
-  providers: [MessagesService, MessagesRepository, MessageAssetsRepository],
+  providers: [
+    MessagesService,
+    MessagesRepository,
+    MessageAssetsRepository,
+    MessageReceiverRepository,
+  ],
   exports: [MessagesService],
 })
 export class MessagesModule {}

@@ -13,28 +13,10 @@ export class MessagesRepository {
 
   async createMessage(
     dto: CreateMessageDto,
-    senderId: string,
     queryRunner: QueryRunner,
-  ) {
-    const createdMessage = queryRunner.manager.create(Message, {
+  ): Promise<Message> {
+    const createdMessage: Message = queryRunner.manager.create(Message, {
       ...dto,
-      sender_id: senderId,
-    });
-
-    await queryRunner.manager.save(createdMessage);
-
-    return createdMessage;
-  }
-
-  async createReadMessage(
-    dto: CreateMessageDto,
-    senderId: string,
-    queryRunner: QueryRunner,
-  ) {
-    const createdMessage = queryRunner.manager.create(Message, {
-      ...dto,
-      sender_id: senderId,
-      read_status: 'read',
     });
 
     await queryRunner.manager.save(createdMessage);
@@ -48,8 +30,8 @@ export class MessagesRepository {
         assets: true,
       },
       where: [
-        { chatId: chatId, visible_status: 'active' },
-        { chatId: chatId, visible_status: 'edited' },
+        { chatId: chatId, visibleStatus: 'active' },
+        { chatId: chatId, visibleStatus: 'edited' },
       ],
     });
   }
@@ -58,8 +40,8 @@ export class MessagesRepository {
     return await this.messageRepository.findOne({
       relations: { assets: true },
       where: [
-        { id: messageId, visible_status: 'active' },
-        { id: messageId, visible_status: 'edited' },
+        { id: messageId, visibleStatus: 'active' },
+        { id: messageId, visibleStatus: 'edited' },
       ],
     });
   }
@@ -72,7 +54,7 @@ export class MessagesRepository {
     await queryRunner.manager.update(
       Message,
       { id: messageId },
-      { content: dto.content, visible_status: 'edited' },
+      { content: dto.content, visibleStatus: 'edited' },
     );
     return await this.getMessageById(messageId);
   }
@@ -80,7 +62,7 @@ export class MessagesRepository {
   async deleteMessage(messageId: string) {
     await this.messageRepository.update(
       { id: messageId },
-      { visible_status: 'deleted' },
+      { visibleStatus: 'deleted' },
     );
   }
 }

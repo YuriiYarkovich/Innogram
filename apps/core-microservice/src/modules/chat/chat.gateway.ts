@@ -17,7 +17,11 @@ import { Server, Socket } from 'socket.io';
 import { UserInAccessToken } from '../../common/types/user.type';
 import { AuthService } from '../auth/auth.service';
 import * as cookie from 'cookie';
-import type { MessageToEmit } from '../../common/types/message.type';
+import type {
+  MessageReceiverStatus,
+  MessageToEmit,
+  MessageToEmitToEnteredUser,
+} from '../../common/types/message.type';
 import { CreateMessageDto } from '../messages/dto/create-message.dto';
 import { Message } from '../../common/entities/chat/message.entity';
 
@@ -62,7 +66,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log(
         `Client connected! ProfileId(key): ${user.profileId}, socketId:${socket.id}`,
       );
-      // TODO emit all unread messages of user
+
+      const messagesToEmit: MessageToEmitToEnteredUser[] =
+        await this.messagesService.getAllUnreadMessagesOfProfile(profileId);
+
+      if (messagesToEmit.length > 0)
+        await this.emitMessagesToNewUser(messagesToEmit);
+
       this.logAllConnectedUsers();
     } catch (e) {
       socket.disconnect();
@@ -82,39 +92,58 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage(`message`)
   async handleMessage(client: Socket, data: MessageToEmit) {
     const receiverSocketIds: string[] = [];
+    const onlineReceiversIds: string[] = [];
+    const notOnlineReceiversIds: string[] = [];
 
-    this.users.forEach((value: string, key: string): void => {
-      data.receiverProfileIds.forEach((profileId: string) => {
-        if (key === profileId) {
-          receiverSocketIds.push(value);
-        }
-      });
+    data.receiverProfileIds.forEach((profileId: string) => {
+      const socketId: string | undefined = this.users.get(profileId);
+      if (socketId) {
+        receiverSocketIds.push(socketId);
+        onlineReceiversIds.push(profileId);
+      } else {
+        notOnlineReceiversIds.push(profileId);
+      }
     });
-
-    const dto: CreateMessageDto = {
-      chatId: data.chatId,
-      content: data.content,
-    };
 
     const senderProfileId: string | undefined = this.getProfileIdBySocketId(
       client.id,
     );
+
     if (!senderProfileId)
       throw new InternalServerErrorException(
         `Client id is not in connected users list!`,
       );
 
-    if (receiverSocketIds.length > 0) {
-      const createdMessage: Message = await this.messagesService.createMessage(
-        dto,
-        senderProfileId,
-        true,
-      );
+    const dto: CreateMessageDto = {
+      chatId: data.chatId,
+      content: data.content,
+      senderId: senderProfileId,
+    };
 
+    const receiverProfiles: MessageReceiverStatus[] = [];
+
+    for (const onlineReceiverId of onlineReceiversIds) {
+      receiverProfiles.push({
+        receiverId: onlineReceiverId,
+        readStatus: true,
+      });
+    }
+
+    for (const notOnlineReceiverId of notOnlineReceiversIds) {
+      receiverProfiles.push({
+        receiverId: notOnlineReceiverId,
+        readStatus: false,
+      });
+    }
+
+    const createdMessage: Message = await this.messagesService.createMessage(
+      dto,
+      receiverProfiles,
+    );
+
+    if (receiverSocketIds.length > 0) {
       data.messageId = createdMessage.id;
       this.emitMessage(receiverSocketIds, senderProfileId, data);
-    } else {
-      await this.messagesService.createMessage(dto, senderProfileId, false);
     }
   }
 
@@ -134,6 +163,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         `Message sent to user with socket id: ${receiverSocketId}: ${messageData.content}; to chat: ${messageData.chatId}`,
       );
     });
+  }
+
+  private async emitMessagesToNewUser(messages: MessageToEmitToEnteredUser[]) {
+    for (const message of messages) {
+      this.server.emit('reply', JSON.stringify(message));
+    }
+    await this.messagesService.updateReadStatusOfMessages(messages);
   }
 
   handleDisconnect(socket: Socket) {

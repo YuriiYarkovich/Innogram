@@ -9,11 +9,19 @@ import { MessageAssetsRepository } from './repositories/message-assets.repositor
 import { ChatParticipantRepository } from '../chat/repositories/chat-participant.repository';
 import { File as MulterFile } from 'multer';
 import { EditMessageDto } from './dto/edit-message.dto';
+import { MessageReceiverRepository } from './repositories/message-receiver.repository';
+import {
+  MessageReceiverStatus,
+  MessageToEmit,
+  MessageToEmitToEnteredUser,
+} from '../../common/types/message.type';
+import { MessageReceiver } from '../../common/entities/chat/Message-Receiver.entity';
 
 @Injectable()
 export class MessagesService {
   constructor(
     private messagesRepository: MessagesRepository,
+    private messageReceiverRepository: MessageReceiverRepository,
     private dataSource: DataSource,
     private minioService: MinioService,
     private messagesAssetRepository: MessageAssetsRepository,
@@ -29,29 +37,31 @@ export class MessagesService {
 
   async createMessage(
     dto: CreateMessageDto,
-    senderId: string,
-    readStatus: boolean,
+    receiverProfiles: MessageReceiverStatus[],
     files: MulterFile | undefined = null,
   ) {
-    const queryRunner = await this.createTransaction();
+    const queryRunner: QueryRunner = await this.createTransaction();
 
     try {
-      await this.checkIfUserIsChatParticipant(senderId, dto.chatId);
+      await this.checkIfUserIsChatParticipant(dto.senderId, dto.chatId);
 
-      let createdMessage: Message | undefined = undefined;
+      const createdMessage: Message =
+        await this.messagesRepository.createMessage(dto, queryRunner);
 
-      if (!readStatus) {
-        createdMessage = await this.messagesRepository.createMessage(
-          dto,
-          senderId,
-          queryRunner,
-        );
-      } else {
-        createdMessage = await this.messagesRepository.createReadMessage(
-          dto,
-          senderId,
-          queryRunner,
-        );
+      for (const receiverId of receiverProfiles) {
+        if (!receiverId.readStatus) {
+          await this.messageReceiverRepository.createMessageReceiver(
+            createdMessage.id,
+            receiverId.receiverId,
+            queryRunner,
+          );
+        } else {
+          await this.messageReceiverRepository.createReadMessageReceiver(
+            createdMessage.id,
+            receiverId.receiverId,
+            queryRunner,
+          );
+        }
       }
 
       if (files) {
@@ -132,7 +142,7 @@ export class MessagesService {
     if (!foundMessage)
       throw new BadRequestException('There is no such message!');
 
-    if (foundMessage.sender_id !== profileId)
+    if (foundMessage.senderId !== profileId)
       throw new BadRequestException('User is not an author of the message!');
 
     return foundMessage;
@@ -216,5 +226,40 @@ export class MessagesService {
     );
     await this.messagesRepository.deleteMessage(messageId);
     return messageToDelete;
+  }
+
+  async getAllUnreadMessagesOfProfile(
+    receiverProfileId: string,
+  ): Promise<MessageToEmitToEnteredUser[]> {
+    const messageIds: string[] =
+      await this.messageReceiverRepository.getUnreadMessagesIdsOfProfile(
+        receiverProfileId,
+      );
+
+    const foundMessages: MessageToEmitToEnteredUser[] = [];
+
+    for (const messageId of messageIds) {
+      const message: Message | null =
+        await this.messagesRepository.getMessageById(messageId);
+
+      if (!message) continue;
+
+      const messageToEmit: MessageToEmitToEnteredUser = {
+        messageId,
+        content: message.content,
+        chatId: message.chatId,
+        replyMessageId: message.replyToMessageId,
+      };
+
+      foundMessages.push(messageToEmit);
+    }
+
+    return foundMessages;
+  }
+
+  async updateReadStatusOfMessages(messages: MessageToEmitToEnteredUser[]) {
+    for (const message of messages) {
+      await this.messageReceiverRepository.updateReadStatus(message.messageId);
+    }
   }
 }

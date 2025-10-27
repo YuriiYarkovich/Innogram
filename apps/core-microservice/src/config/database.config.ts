@@ -15,6 +15,7 @@ import { MessageAsset } from '../common/entities/chat/message_asset.entity';
 import { Message } from '../common/entities/chat/message.entity';
 import { PostLike } from '../common/entities/posts/post-like.entity';
 import { CommentLike } from '../common/entities/comments/comment-like.entity';
+import { MessageReceiver } from '../common/entities/chat/Message-Receiver.entity';
 
 @Injectable()
 export class DatabaseConfig implements TypeOrmOptionsFactory {
@@ -43,6 +44,7 @@ export class DatabaseConfig implements TypeOrmOptionsFactory {
         MessageAsset,
         PostLike,
         CommentLike,
+        MessageReceiver,
       ],
       autoLoadEntities: true,
       synchronize: true,
