@@ -1,16 +1,23 @@
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
+  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { MessagesService } from '../messages/messages.service';
 import { ChatService } from './chat.service';
 import { Server, Socket } from 'socket.io';
 import { UserInAccessToken } from '../../common/types/user.type';
 import { AuthService } from '../auth/auth.service';
 import * as cookie from 'cookie';
+import type { MessageToEmit } from '../../common/types/message.type';
 
 @WebSocketGateway(3004, { cors: { origin: '*', credentials: true } })
 @Injectable()
@@ -22,9 +29,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   @WebSocketServer() private server: Server;
-  private users: Map<string, string> = new Map<string, string>(); // {socketId; profileId}
+  private users: Map<string, string> = new Map<string, string>(); // {profileId; socketId}
 
-  async handleConnection(socket: Socket) {
+  async handleConnection(socket: Socket): Promise<void> {
     try {
       const cookiesHeader: string | undefined = socket.handshake.headers.cookie;
       if (!cookiesHeader) {
@@ -33,7 +40,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         return;
       }
 
-      const cookies = cookie.parse(cookiesHeader);
+      const cookies: Record<string, string | undefined> =
+        cookie.parse(cookiesHeader);
       const accessToken: string | undefined = cookies['accessToken'];
 
       if (!accessToken) {
@@ -55,21 +63,68 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.logAllConnectedUsers();
     } catch (e) {
       socket.disconnect();
+      if (e instanceof HttpException || e.message === `Access token expired!`)
+        throw new UnauthorizedException(`Access token expired!`);
       throw e;
     }
   }
 
-  private logAllConnectedUsers() {
+  private logAllConnectedUsers(): void {
     console.log(`All connected users: `);
-    this.users.forEach((value, key) => {
+    this.users.forEach((value: string, key: string): void => {
       console.log(`profileId: ${key}, socketId: ${value}`);
     });
   }
 
-  handleDisconnect(socket: Socket) {
-    console.log(`In handle disconnect method`);
+  @SubscribeMessage(`message`)
+  async handleMessage(client: Socket, data: MessageToEmit) {
+    const receiverSocketIds: string[] = [];
 
-    this.users.forEach((value, key) => {
+    this.users.forEach((value: string, key: string): void => {
+      data.receiverProfileIds.forEach((profileId: string) => {
+        if (key === profileId) {
+          receiverSocketIds.push(value);
+        }
+      });
+    });
+
+    if (receiverSocketIds.length > 0) {
+      //TODO save to db with read status
+      const senderProfileId: string | undefined = this.getProfileIdBySocketId(
+        client.id,
+      );
+
+      if (!senderProfileId)
+        throw new InternalServerErrorException(
+          `Client id is not in connected users list!`,
+        );
+
+      this.emitMessage(receiverSocketIds, senderProfileId, data);
+    } else {
+      //TODO save message to db with unread status
+    }
+  }
+
+  private emitMessage(
+    receiverSocketIds: string[],
+    senderProfileId: string,
+    messageData: MessageToEmit,
+  ) {
+    receiverSocketIds.forEach((receiverSocketId: string) => {
+      this.server
+        .to(receiverSocketId)
+        .emit(
+          'reply',
+          JSON.stringify({ senderProfileId, message: messageData.message }),
+        );
+      console.log(
+        `Message sent to user with socket id: ${receiverSocketId}: ${messageData.message}`,
+      );
+    });
+  }
+
+  handleDisconnect(socket: Socket) {
+    this.users.forEach((value: string, key: string): void => {
       if (socket.id === value) {
         this.users.delete(key);
         console.log(
@@ -78,5 +133,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
     });
     this.logAllConnectedUsers();
+  }
+
+  private getProfileIdBySocketId(socketId: string): string | undefined {
+    for (const [key, value] of this.users) {
+      if (socketId === value) {
+        return key;
+      }
+    }
+    return undefined;
   }
 }

@@ -1,5 +1,5 @@
 import { body } from 'express-validator';
-import { handleError } from './registration-data-validation.middleware.ts';
+import { handleError } from './registration-data-validation.middleware';
 
 export const validateLoginData = [
   body('email').isEmail().withMessage('Invalid email'),
