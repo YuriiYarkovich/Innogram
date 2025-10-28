@@ -79,4 +79,8 @@ export class ChatParticipantRepository {
       profile_id: profileId,
     });
   }
+
+  async findAllParticipantsOfChat(chatId: string): Promise<ChatParticipant[]> {
+    return await this.chatParticipantRepository.find({ where: { chatId } });
+  }
 }

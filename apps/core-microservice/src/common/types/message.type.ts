@@ -1,9 +1,11 @@
+import { File as MulterFile } from 'multer';
+
 export interface MessageToEmit {
   messageId: string;
-  receiverProfileIds: string[];
   content: string;
   chatId: string;
   replyMessageId: string;
+  files: MulterFile | undefined;
 }
 
 export interface MessageReceiverStatus {
@@ -16,4 +18,11 @@ export interface MessageToEmitToEnteredUser {
   content: string;
   chatId: string;
   replyMessageId: string | undefined;
+}
+
+export interface MessageToEdit {
+  messageId: string;
+  updatedContent: string;
+  chatId: string;
+  files: MulterFile | undefined;
 }

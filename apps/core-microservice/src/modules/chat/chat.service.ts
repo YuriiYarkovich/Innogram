@@ -9,6 +9,7 @@ import { DataSource, QueryRunner } from 'typeorm';
 import { ChatParticipantRepository } from './repositories/chat-participant.repository';
 import { AddParticipantDto } from './dto/add-participant.dto';
 import { WrongUserException } from '../../common/exceptions/wrong-user.exception';
+import { ChatParticipant } from '../../common/entities/chat/chat-participant.entity';
 
 @Injectable()
 export class ChatService {
@@ -134,5 +135,11 @@ export class ChatService {
     await this.checkIfParticipantExists(chatId, participantId);
 
     return await this.chatRepository.archiveChat(chatId);
+  }
+
+  async getAllChatParticipants(chatId: string): Promise<ChatParticipant[]> {
+    return await this.chatParticipantRepository.findAllParticipantsOfChat(
+      chatId,
+    );
   }
 }

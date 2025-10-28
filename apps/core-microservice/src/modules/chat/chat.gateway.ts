@@ -19,11 +19,14 @@ import { AuthService } from '../auth/auth.service';
 import * as cookie from 'cookie';
 import type {
   MessageReceiverStatus,
+  MessageToEdit,
   MessageToEmit,
   MessageToEmitToEnteredUser,
 } from '../../common/types/message.type';
 import { CreateMessageDto } from '../messages/dto/create-message.dto';
 import { Message } from '../../common/entities/chat/message.entity';
+import { ChatParticipant } from '../../common/entities/chat/chat-participant.entity';
+import { EditMessageDto } from '../messages/dto/edit-message.dto';
 
 @WebSocketGateway(3004, { cors: { origin: '*', credentials: true } })
 @Injectable()
@@ -89,13 +92,77 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  @SubscribeMessage(`editMessage`)
+  async handleEditMessage(client: Socket, data: MessageToEdit) {
+    const senderProfileId: string = this.findSenderProfileId(client);
+
+    const receiverSocketIds: string[] = [];
+
+    const receiverProfileIds: string[] = await this.getReceiverProfileIds(
+      data,
+      senderProfileId,
+    );
+
+    receiverProfileIds.forEach((profileId: string) => {
+      const socketId: string | undefined = this.users.get(profileId);
+      if (socketId) {
+        receiverSocketIds.push(socketId);
+      }
+    });
+
+    const dto: EditMessageDto = {
+      content: data.updatedContent,
+    };
+
+    const updatedMessage: Message | null =
+      await this.messagesService.editMessage(
+        data.messageId,
+        dto,
+        senderProfileId,
+        data.files,
+      );
+
+    if (!updatedMessage)
+      throw new InternalServerErrorException(
+        `Something went wrong while updating message`,
+      );
+
+    this.emitEditMessageEvent(receiverSocketIds, senderProfileId, data);
+  }
+
+  private emitEditMessageEvent(
+    receiverSocketIds: string[],
+    senderProfileId: string,
+    messageData: MessageToEdit,
+  ) {
+    receiverSocketIds.forEach((receiverSocketId: string) => {
+      this.server.to(receiverSocketId).emit(
+        'edited',
+        JSON.stringify({
+          senderProfileId,
+          message: messageData.updatedContent,
+        }),
+      );
+      console.log(
+        `Message sent to user with socket id: ${receiverSocketId}: ${messageData.updatedContent}; to chat: ${messageData.chatId}`,
+      );
+    });
+  }
+
   @SubscribeMessage(`message`)
   async handleMessage(client: Socket, data: MessageToEmit) {
     const receiverSocketIds: string[] = [];
     const onlineReceiversIds: string[] = [];
     const notOnlineReceiversIds: string[] = [];
 
-    data.receiverProfileIds.forEach((profileId: string) => {
+    const senderProfileId: string = this.findSenderProfileId(client);
+
+    const receiverProfileIds: string[] = await this.getReceiverProfileIds(
+      data,
+      senderProfileId,
+    );
+
+    receiverProfileIds.forEach((profileId: string) => {
       const socketId: string | undefined = this.users.get(profileId);
       if (socketId) {
         receiverSocketIds.push(socketId);
@@ -104,15 +171,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         notOnlineReceiversIds.push(profileId);
       }
     });
-
-    const senderProfileId: string | undefined = this.getProfileIdBySocketId(
-      client.id,
-    );
-
-    if (!senderProfileId)
-      throw new InternalServerErrorException(
-        `Client id is not in connected users list!`,
-      );
 
     const dto: CreateMessageDto = {
       chatId: data.chatId,
@@ -139,6 +197,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const createdMessage: Message = await this.messagesService.createMessage(
       dto,
       receiverProfiles,
+      data.files,
     );
 
     if (receiverSocketIds.length > 0) {
@@ -191,5 +250,35 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
     }
     return undefined;
+  }
+
+  private async getReceiverProfileIds(
+    data: MessageToEmit | MessageToEdit,
+    senderProfileId: string,
+  ): Promise<string[]> {
+    const chatParticipants: ChatParticipant[] =
+      await this.chatService.getAllChatParticipants(data.chatId);
+
+    const receiverProfileIds: string[] = [];
+
+    chatParticipants.forEach((chatParticipant: ChatParticipant) => {
+      if (chatParticipant.profile_id !== senderProfileId)
+        receiverProfileIds.push(chatParticipant.profile_id);
+    });
+
+    return receiverProfileIds;
+  }
+
+  private findSenderProfileId(client: Socket): string {
+    const senderProfileId: string | undefined = this.getProfileIdBySocketId(
+      client.id,
+    );
+
+    if (!senderProfileId)
+      throw new InternalServerErrorException(
+        `Client id is not in connected users list!`,
+      );
+
+    return senderProfileId;
   }
 }
