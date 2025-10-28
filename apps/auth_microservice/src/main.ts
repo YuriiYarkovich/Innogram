@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Express } from 'express';
 import router from './routes/index.ts';
 import session from 'express-session';
 import passport from 'passport';
@@ -8,10 +8,12 @@ import { initRedis } from './config/redis.init.ts';
 import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import { deviceIdMiddleware } from './middleware/device-id.middleware.ts';
+import { requireEnv } from './validation/env.validation.ts';
 
-const PORT = process.env.AUTH_SERVICE_PORT;
+const PORT: string = requireEnv(`AUTH_SERVICE_PORT`);
 
-const app = express();
+const app: Express = express();
 app.use(express.json());
 app.use(
   helmet({
@@ -21,7 +23,7 @@ app.use(
 );
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: requireEnv(`SESSION_SECRET`),
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -33,7 +35,7 @@ app.use(
 app.use(
   cors({
     origin: process.env.CLIENT_URL || 'http://localhost:3000', // разрешённый источник
-    credentials: true, // если используешь cookies или сессии
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   }),
@@ -41,6 +43,7 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(cookieParser());
+//app.use(deviceIdMiddleware);
 app.use(`/api`, router);
 app.use(errorHandlingMiddleware);
 

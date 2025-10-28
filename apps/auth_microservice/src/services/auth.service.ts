@@ -1,6 +1,5 @@
 import pool from '../config/db.config.ts';
 import bcrypt from 'bcrypt';
-import { NextFunction } from 'express';
 import { AccountsRepository } from '../repositories/accounts.repository.ts';
 import { ApiError } from '../error/api.error.ts';
 import '../config/load-env.config.ts';
@@ -10,10 +9,6 @@ import { JwtService } from './jwt.service.ts';
 export class AuthService {
   readonly accountsRepository: AccountsRepository = new AccountsRepository();
   readonly jwtService: JwtService = new JwtService();
-
-  isLoggedIn(req, res, next: NextFunction) {
-    req.user ? next() : res.sendStatus(401);
-  }
 
   async checkIfAccountExist(email: string) {
     const candidate = await this.accountsRepository.findAccountByEmail(email);
@@ -79,7 +74,7 @@ export class AuthService {
         throw ApiError.badRequest('User with this email already exists');
       }
 
-      const hashPassword = await bcrypt.hash(password, 5);
+      const hashPassword: string = await bcrypt.hash(password, 5);
 
       const createdUser = await this.accountsRepository.createUser();
 
@@ -137,7 +132,7 @@ export class AuthService {
 
     let comparedPassword = bcrypt.compareSync(
       password,
-      userData.account.password_hash,
+      userData.account.passwordHash,
     );
 
     if (!comparedPassword) {
@@ -167,7 +162,7 @@ export class AuthService {
     }
 
     accessToken = this.jwtService.generateAccessJwt(
-      userData.account.profile_id,
+      userData.account.profileId,
       userRole,
     );
 

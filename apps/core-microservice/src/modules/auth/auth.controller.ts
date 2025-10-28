@@ -9,7 +9,7 @@ import {
 import { CreateAccountDto } from './dto/create-account.dto';
 import { ConfigService } from '@nestjs/config';
 import { LoginDto } from './dto/login.dto';
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { GoogleResponseDto } from './dto/google-response.dto';
 import { HttpService } from './httpService';
@@ -144,16 +144,18 @@ export class AuthController {
 
   @ApiExcludeEndpoint()
   @Get('/google/success')
-  googleSuccessCallback(
-    @Res() res: Response,
-    @Query('accessToken') accessToken: string,
-  ) {
+  googleSuccessCallback(@Req() req: Request, @Res() res: Response) {
     try {
       console.log('In success endpoint');
 
-      return res.json({
-        accessToken,
-      });
+      const accessToken: string = req.cookies['accessToken'];
+
+      if (!accessToken) {
+        console.warn('No access token in cookies');
+        return res.status(401).json({ message: 'Access token missing' });
+      }
+
+      return res.json({});
     } catch (e) {
       console.log(e.message);
       throw e;

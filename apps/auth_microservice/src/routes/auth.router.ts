@@ -2,14 +2,12 @@ import { Router } from 'express';
 const router = Router();
 import { AuthController } from '../controllers/auth.controller.ts';
 import passport from 'passport';
-import { AuthService } from '../services/auth.service.ts';
 import '../strategies/google-oauth.strategy.ts';
 import { validateRegistrationData } from '../middleware/registration-data-validation.middleware.ts';
 import { validateLoginData } from '../middleware/login-data-validation.middleware.ts';
 import '../config/load-env.config.ts';
 
 const authController = new AuthController();
-const authService = new AuthService();
 router.post(
   `/registration`,
   validateRegistrationData,
@@ -35,11 +33,7 @@ router.get(
   }),
 );
 
-router.get(
-  '/google/success',
-  authService.isLoggedIn,
-  authController.googleSuccess,
-);
+router.get('/google/success', authController.googleSuccess);
 
 router.get('/google/failure', authController.googleAuthFailure);
 

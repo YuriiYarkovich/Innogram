@@ -2,14 +2,10 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth2';
 import passport from 'passport';
 import { AuthService } from '../services/auth.service.ts';
 import '../config/load-env.config.ts';
-import redisClient from '../config/redis.init.ts';
 import { JwtService } from '../services/jwt.service.ts';
-import { AccountsRepository } from '../repositories/accounts.repository.ts';
 import { ApiError } from '../error/api.error.ts';
-import { stringify } from 'node:querystring';
 
 const authService: AuthService = new AuthService();
-const accountsRepository: AccountsRepository = new AccountsRepository();
 const jwtService: JwtService = new JwtService();
 
 passport.use(
@@ -46,7 +42,7 @@ passport.use(
       }
 
       newAccessToken = jwtService.generateAccessJwt(
-        account.profile_id,
+        account.profileId,
         account.role,
       );
       newRefreshToken = jwtService.generateRefreshJwt(account.id);
@@ -79,5 +75,5 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((user, done) => {
-  done(null, user);
+  if (user) done(null, user);
 });

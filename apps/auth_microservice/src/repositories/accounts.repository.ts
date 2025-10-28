@@ -70,12 +70,12 @@ export class AccountsRepository {
   async findAccountByEmail(email: string): Promise<{
     id: string;
     email: string;
-    password_hash: string;
-    user_id: string;
+    passwordHash: string;
+    userId: string;
     role: string;
-    profile_id: string;
+    profileId: string;
   }> {
-    const result = await pool.query<{ id: string; email: string }>(
+    const result = await pool.query(
       `
         SELECT a.id, a.email, a.password_hash, a.user_id, u.role, p.id AS profile_id
         FROM main.accounts AS a

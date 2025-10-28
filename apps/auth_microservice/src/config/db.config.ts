@@ -1,15 +1,16 @@
-import { Pool } from 'pg';
-import dotenv from 'dotenv';
-import { join } from 'path';
+import { Pool, PoolConfig } from 'pg';
 
-dotenv.config({ path: join(__dirname, '..', '..', '..', '..', '.env') });
+import { requireEnv } from '../validation/env.validation.ts';
 
-const pool = new Pool({
-  user: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  host: process.env.POSTGRES_HOST,
-  port: process.env.POSTGRES_PORT,
-  database: process.env.POSTGRES_DB,
-});
+const config: PoolConfig = {
+  user: requireEnv(`POSTGRES_USER`),
+  password: requireEnv('POSTGRES_PASSWORD'),
+  host: requireEnv('POSTGRES_HOST'),
+  port: Number(requireEnv('POSTGRES_PORT')),
+  database: requireEnv('POSTGRES_DB'),
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call
+const pool: Pool = new Pool(config);
 
 export default pool;
