@@ -1,4 +1,5 @@
-import { body, validationResult } from 'express-validator';
+import { body } from 'express-validator';
+import { handleError } from './error-handling.middleware.ts';
 
 export const validateRegistrationData = [
   body('email').isEmail().withMessage('Invalid email'),
@@ -24,18 +25,3 @@ export const validateRegistrationData = [
 
   handleError,
 ];
-
-export function handleError(req, res, next) {
-  const errors = validationResult(req);
-
-  if (!errors.isEmpty()) {
-    return res.status(400).json({
-      message: 'Data validation error!',
-      errors: errors.array().map((e) => ({
-        field: (e as any).param ?? (e as any).location ?? 'unknown',
-        message: e.msg,
-      })),
-    });
-  }
-  next();
-}
