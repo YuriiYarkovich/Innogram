@@ -8,7 +8,13 @@ export interface Account {
 export interface AccountWithProfileId {
   id: string;
   email: string;
+  passwordHash: string | undefined;
   userId: string;
   role: string;
   profileId: string;
+}
+
+export interface ExistingAccount {
+  isExist: boolean;
+  account: AccountWithProfileId | undefined;
 }

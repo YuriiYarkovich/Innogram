@@ -21,7 +21,7 @@ export class AccountsRepository {
     const createAccountQueryResult: QueryResult<Account> = await pool.query(
       `INSERT INTO main.accounts (user_id, email, password_hash, created_by)
          VALUES($1, $2, $3, $1)
-         RETURNING id, user_id AS userId, email, provider;
+         RETURNING id, password_hash AS passwordHash, user_id AS userId, email, provider;
         `,
       [createdUser.id, email, hashPassword],
     );

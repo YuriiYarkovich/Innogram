@@ -1,5 +1,5 @@
 import { Router } from 'express';
-const router = Router();
+const router: Router = Router();
 import { AuthController } from '../controllers/auth.controller.ts';
 import passport from 'passport';
 import '../strategies/google-oauth.strategy.ts';
