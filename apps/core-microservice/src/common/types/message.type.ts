@@ -26,3 +26,8 @@ export interface MessageToEdit {
   chatId: string;
   files: MulterFile | undefined;
 }
+
+export interface MessageToDelete {
+  messageId: string;
+  chatId: string;
+}

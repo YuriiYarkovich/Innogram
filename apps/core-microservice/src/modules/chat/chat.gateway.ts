@@ -19,6 +19,7 @@ import { AuthService } from '../auth/auth.service';
 import * as cookie from 'cookie';
 import type {
   MessageReceiverStatus,
+  MessageToDelete,
   MessageToEdit,
   MessageToEmit,
   MessageToEmitToEnteredUser,
@@ -92,10 +93,40 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
-  @SubscribeMessage(`editMessage`)
-  async handleEditMessage(client: Socket, data: MessageToEdit) {
+  @SubscribeMessage(`deleteMessage`)
+  async handleDeletingMessage(client: Socket, data: MessageToDelete) {
     const senderProfileId: string = this.findSenderProfileId(client);
 
+    const receiverSocketIds: string[] = await this.getReceiverSocketIds(
+      data,
+      senderProfileId,
+    );
+
+    await this.messagesService.deleteMessage(data.messageId, senderProfileId);
+    this.emitDeleteMessageEvent(receiverSocketIds, senderProfileId, data);
+  }
+
+  private emitDeleteMessageEvent(
+    receiverSocketIds: string[],
+    senderProfileId: string,
+    messageData: MessageToDelete,
+  ) {
+    receiverSocketIds.forEach((receiverSocketId: string) => {
+      this.server.to(receiverSocketId).emit(
+        'deleted',
+        JSON.stringify({
+          senderProfileId,
+          message: messageData.messageId,
+        }),
+      );
+      console.log(`Message with id: ${messageData.messageId} has been deleted`);
+    });
+  }
+
+  private async getReceiverSocketIds(
+    data: MessageToEdit | MessageToDelete,
+    senderProfileId: string,
+  ): Promise<string[]> {
     const receiverSocketIds: string[] = [];
 
     const receiverProfileIds: string[] = await this.getReceiverProfileIds(
@@ -109,6 +140,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         receiverSocketIds.push(socketId);
       }
     });
+
+    return receiverSocketIds;
+  }
+
+  @SubscribeMessage(`editMessage`)
+  async handleEditMessage(client: Socket, data: MessageToEdit) {
+    const senderProfileId: string = this.findSenderProfileId(client);
+
+    const receiverSocketIds: string[] = await this.getReceiverSocketIds(
+      data,
+      senderProfileId,
+    );
 
     const dto: EditMessageDto = {
       content: data.updatedContent,
@@ -143,9 +186,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           message: messageData.updatedContent,
         }),
       );
-      console.log(
-        `Message sent to user with socket id: ${receiverSocketId}: ${messageData.updatedContent}; to chat: ${messageData.chatId}`,
-      );
+      console.log(`Message with id: ${messageData.messageId} has been edited`);
     });
   }
 
@@ -253,7 +294,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private async getReceiverProfileIds(
-    data: MessageToEmit | MessageToEdit,
+    data: MessageToEmit | MessageToEdit | MessageToDelete,
     senderProfileId: string,
   ): Promise<string[]> {
     const chatParticipants: ChatParticipant[] =
