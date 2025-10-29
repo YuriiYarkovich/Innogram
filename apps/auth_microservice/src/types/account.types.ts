@@ -8,7 +8,7 @@ export interface Account {
 export interface AccountWithProfileId {
   id: string;
   email: string;
-  passwordHash: string | undefined;
+  passwordHash: string | null;
   userId: string;
   role: string;
   profileId: string;

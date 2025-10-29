@@ -10,6 +10,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { deviceIdMiddleware } from './middleware/device-id.middleware.ts';
 import { requireEnv } from './validation/env.validation.ts';
+import morgan from 'morgan';
 
 const PORT: string = requireEnv(`AUTH_SERVICE_PORT`);
 
@@ -43,6 +44,7 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(cookieParser());
+app.use(morgan('common'));
 //app.use(deviceIdMiddleware);
 app.use(`/api`, router);
 app.use(errorHandlingMiddleware);

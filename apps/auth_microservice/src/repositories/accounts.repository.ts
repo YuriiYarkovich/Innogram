@@ -81,16 +81,17 @@ export class AccountsRepository {
   }
 
   async findAccountByEmail(email: string): Promise<AccountWithProfileId> {
-    const result: QueryResult<AccountWithProfileId> = await pool.query(
-      `
-        SELECT a.id, a.email, a.user_id AS userId, u.role, p.id AS profileId
+    const result: QueryResult<AccountWithProfileId> =
+      await pool.query<AccountWithProfileId>(
+        `
+        SELECT a.id, a.email, a.password_hash AS "passwordHash", a.user_id AS "userId", u.role, p.id AS "profileId"
         FROM main.accounts AS a
                LEFT JOIN main.users AS u ON a.user_id = u.id
-               LEFT JOIN main.profiles AS p ON a.user_id = p.user_id 
+               LEFT JOIN main.profiles AS p ON a.user_id = p.user_id
         WHERE email = $1
       `,
-      [email],
-    );
+        [email],
+      );
     return result.rows[0];
   }
 

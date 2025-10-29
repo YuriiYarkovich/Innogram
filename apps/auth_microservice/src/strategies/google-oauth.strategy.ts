@@ -4,8 +4,11 @@ import { AuthService } from '../services/auth.service.ts';
 import '../config/load-env.config.ts';
 import { JwtService } from '../services/jwt.service.ts';
 import { ApiError } from '../error/api.error.ts';
+import { RedisService } from '../services/redis.service.ts';
+import { AccountWithProfileId } from '../types/account.types.ts';
 
 const authService: AuthService = new AuthService();
+const redisService: RedisService = new RedisService();
 const jwtService: JwtService = new JwtService();
 
 passport.use(
@@ -33,7 +36,7 @@ passport.use(
         );
       }
 
-      const account = foundData.isExist
+      const account: AccountWithProfileId | undefined = foundData.isExist
         ? foundData.account
         : (await authService.checkIfAccountExist(profile.email)).account;
 
@@ -54,7 +57,7 @@ passport.use(
         account?.id,
         deviceId,
       );
-      await authService.setDataToRedis(
+      await redisService.setDataToRedis(
         sessionKey,
         newRefreshToken,
         profile.email,
