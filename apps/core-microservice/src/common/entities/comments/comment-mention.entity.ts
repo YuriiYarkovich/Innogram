@@ -13,18 +13,18 @@ export class CommentMention {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid' })
-  comment_id: string;
+  @Column({ type: 'uuid', name: 'comment_id' })
+  commentId: string;
 
-  @Column({ type: 'uuid' })
-  mentioned_user_id: string;
+  @Column({ type: 'uuid', name: 'mentioned_profile_id' })
+  mentionedProfileId: string;
 
   @CreateDateColumn()
   CreatedAt: Date;
 
   @ManyToOne(
-    () => Comment,
-    (comment): CommentMention[] => comment.comment_mentions,
+    (): typeof Comment => Comment,
+    (comment: Comment): CommentMention[] => comment.comment_mentions,
     {
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',

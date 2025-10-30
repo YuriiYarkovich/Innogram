@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { QueryRunner, Repository } from 'typeorm';
 import { PostAsset } from '../../../common/entities/posts/post-asset.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AssetType } from '../../../common/enums/message.enum';
 
 @Injectable()
 export class PostAssetRepository {
@@ -16,14 +17,14 @@ export class PostAssetRepository {
     queryRunner: QueryRunner,
     fileType: string,
     order: number,
-  ) {
+  ): Promise<PostAsset> {
     if (fileType !== 'image' && fileType !== 'video') {
       throw new BadRequestException('Invalid type value');
     }
-    const postAsset = queryRunner.manager.create(PostAsset, {
-      post_id: postId,
-      hashed_file_name: hashedFileName,
-      type: fileType,
+    const postAsset: PostAsset = queryRunner.manager.create(PostAsset, {
+      postId: postId,
+      hashedFileName: hashedFileName,
+      type: fileType as AssetType,
       order,
     });
 
@@ -33,14 +34,14 @@ export class PostAssetRepository {
 
   async findAssetsByPost(postId: string): Promise<PostAsset[]> {
     return await this.postAssetRepository.find({
-      where: { post_id: postId },
+      where: { postId: postId },
     });
   }
 
-  async findAssetByName(hashedFileName: string) {
+  async findAssetByName(hashedFileName: string): Promise<PostAsset | null> {
     return await this.postAssetRepository.findOne({
       where: {
-        hashed_file_name: hashedFileName,
+        hashedFileName: hashedFileName,
       },
     });
   }

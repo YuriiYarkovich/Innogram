@@ -1,3 +1,5 @@
+import { IsDate, IsEmail, IsString, Length } from 'class-validator';
+
 export class CreateAccountDto {
   constructor(
     email: string,
@@ -14,10 +16,17 @@ export class CreateAccountDto {
     this.birthday = birthday;
     this.bio = bio;
   }
+  @IsEmail()
   readonly email: string;
+  @IsString()
+  @Length(6)
   readonly password: string;
+  @IsString()
   readonly username: string;
+  @IsString()
   readonly displayName: string;
+  @IsDate()
   readonly birthday: string;
+  @IsString()
   readonly bio: string;
 }

@@ -303,8 +303,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const receiverProfileIds: string[] = [];
 
     chatParticipants.forEach((chatParticipant: ChatParticipant) => {
-      if (chatParticipant.profile_id !== senderProfileId)
-        receiverProfileIds.push(chatParticipant.profile_id);
+      if (chatParticipant.profileId !== senderProfileId)
+        receiverProfileIds.push(chatParticipant.profileId);
     });
 
     return receiverProfileIds;

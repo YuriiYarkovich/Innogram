@@ -24,7 +24,7 @@ ffmpeg.setFfprobePath(ffprobeStatic.path);
 
 @Injectable()
 export class MinioService {
-  private s3Client: S3Client;
+  private readonly s3Client: S3Client;
 
   private readonly bucketName: string | undefined;
   private readonly s3BaseUrl: string | undefined;
@@ -67,21 +67,21 @@ export class MinioService {
     const fileExtension = extname(file.originalname).toLowerCase();
     const mimeType = file.mimetype;
 
-    const isImage = mimeType.startsWith('image/');
-    const isVideo = mimeType.startsWith('video/');
+    const isImage: boolean = mimeType.startsWith('image/');
+    const isVideo: boolean = mimeType.startsWith('video/');
 
     if (!isImage && !isVideo)
       throw new BadRequestException('Unknown file type');
 
     if (isVideo) {
-      const duration = await this.getVideoDuration(file.buffer);
+      const duration: number = await this.getVideoDuration(file.buffer);
       type = 'video';
       if (duration > 60) {
         throw new BadRequestException('Video is longer then one minute');
       }
     } else type = 'image';
 
-    const hashedFileName = uuid.v4() + fileExtension;
+    const hashedFileName: string = uuid.v4() + fileExtension;
 
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
@@ -113,18 +113,24 @@ export class MinioService {
     try {
       const response = await this.s3Client.send(command);
       return response.Body as Readable;
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (
-        error.name === 'NoSuchKey' ||
-        error.$metadata?.httpStatusCode === 404
+        typeof error === 'object' &&
+        error !== null &&
+        ('name' in error || '$metadata' in error)
       ) {
-        throw new NotFoundException(`File "${key}" couldn't be found`);
+        const e = error as {
+          name?: string;
+          $metadata?: { httpStatusCode?: number };
+        };
+
+        if (e.name === 'NoSuchKey' || e.$metadata?.httpStatusCode === 404) {
+          throw new NotFoundException(`File "${key}" couldn't be found`);
+        }
       }
 
-      console.error(`Error while getting file "${key}":`, error);
-
       throw new InternalServerErrorException(
-        'Error while getting file from MinIO',
+        `Error while getting file "${key}": ${error}`,
       );
     }
   }

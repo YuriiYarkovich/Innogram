@@ -8,7 +8,6 @@ import { initRedis } from './config/redis.init.ts';
 import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { deviceIdMiddleware } from './middleware/device-id.middleware.ts';
 import { requireEnv } from './validation/env.validation.ts';
 import morgan from 'morgan';
 

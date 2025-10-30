@@ -37,7 +37,7 @@ export class PostsController {
   @UseGuards(AuthGuard)
   @UseInterceptors(FilesInterceptor('files'))
   async createPost(@Body() dto: CreatePostDto, @UploadedFiles() files) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.postsService.createPost(profileId, dto, files);
   }
 
@@ -59,7 +59,7 @@ export class PostsController {
     @Body() dto: CreatePostDto,
     @UploadedFiles() files,
   ) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.postsService.updatePost(postId, profileId, dto, files);
   }
 
@@ -68,7 +68,7 @@ export class PostsController {
   @Delete('/delete/:postId')
   @UseGuards(AuthGuard)
   async deletePost(@Param('postId') postId: string) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.postsService.deletePost(postId, profileId);
   }
 
@@ -77,7 +77,7 @@ export class PostsController {
   @Post('like/:postId')
   @UseGuards(AuthGuard)
   async likePost(@Param('postId') postId: string) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
     return this.postsService.addLike(postId, profileId);
   }
 
@@ -86,7 +86,7 @@ export class PostsController {
   @Delete('unlike/:postId')
   @UseGuards(AuthGuard)
   async unlikePost(@Param('postId') postId: string) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
     return this.postsService.removeLike(postId, profileId);
   }
 
@@ -102,7 +102,7 @@ export class PostsController {
   @Put(`/archive/:postIs`)
   @UseGuards(AuthGuard)
   async archivePost(@Param(`postId`) postId: string) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.postsService.archivePost(postId, profileId);
   }
 }

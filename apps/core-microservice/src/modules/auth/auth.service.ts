@@ -12,7 +12,6 @@ export class AuthService {
   async validateAccessToken(
     accessToken: string,
   ): Promise<{ profileId: string; role: string }> {
-    console.log(`Sending access token on validation`);
     const url: string = `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/validate`;
     const options = {
       method: 'POST',
@@ -23,9 +22,6 @@ export class AuthService {
       user: { profileId: string; role: string };
     }>(url, options);
 
-    console.log(
-      `Access token returned everything is fine. User: ${JSON.stringify(response.data.user)}`,
-    );
     return response.data.user;
   }
 

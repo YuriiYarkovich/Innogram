@@ -10,10 +10,10 @@ export class PostLikeRepository {
     private postLikeRepository: Repository<PostLike>,
   ) {}
 
-  async addLike(postId: string, profileId: string) {
-    const like = this.postLikeRepository.create({
-      post_id: postId,
-      profile_id: profileId,
+  async addLike(postId: string, profileId: string): Promise<PostLike> {
+    const like: PostLike = this.postLikeRepository.create({
+      postId: postId,
+      profileId: profileId,
     });
 
     await this.postLikeRepository.save(like);
@@ -21,32 +21,35 @@ export class PostLikeRepository {
     return like;
   }
 
-  async findLike(postId: string, profileId: string) {
+  async findLike(postId: string, profileId: string): Promise<PostLike | null> {
     return await this.postLikeRepository.findOne({
       where: {
-        post_id: postId,
-        profile_id: profileId,
+        postId: postId,
+        profileId: profileId,
       },
     });
   }
 
-  async removeLike(postId: string, profileId: string) {
-    const deletedLike = await this.postLikeRepository.findOne({
-      where: { post_id: postId, profile_id: profileId },
+  async removeLike(
+    postId: string,
+    profileId: string,
+  ): Promise<PostLike | null> {
+    const deletedLike: PostLike | null = await this.postLikeRepository.findOne({
+      where: { postId: postId, profileId: profileId },
     });
 
     await this.postLikeRepository.delete({
-      post_id: postId,
-      profile_id: profileId,
+      postId: postId,
+      profileId: profileId,
     });
 
     return deletedLike;
   }
 
-  async findAllLikesOfPost(postId: string) {
+  async findAllLikesOfPost(postId: string): Promise<PostLike[]> {
     return await this.postLikeRepository.find({
       where: {
-        post_id: postId,
+        postId: postId,
       },
     });
   }

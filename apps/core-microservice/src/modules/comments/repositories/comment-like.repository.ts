@@ -10,10 +10,13 @@ export class CommentLikeRepository {
     private commentLikeRepository: Repository<CommentLike>,
   ) {}
 
-  async likeComment(commentId: string, profileId: string) {
-    const like = this.commentLikeRepository.create({
-      comment_id: commentId,
-      profile_id: profileId,
+  async likeComment(
+    commentId: string,
+    profileId: string,
+  ): Promise<CommentLike> {
+    const like: CommentLike = this.commentLikeRepository.create({
+      commentId: commentId,
+      profileId: profileId,
     });
 
     await this.commentLikeRepository.save(like);
@@ -21,15 +24,18 @@ export class CommentLikeRepository {
     return like;
   }
 
-  async getLike(commentId: string, profileId: string) {
+  async getLike(
+    commentId: string,
+    profileId: string,
+  ): Promise<CommentLike | null> {
     return await this.commentLikeRepository.findOne({
-      where: { comment_id: commentId, profile_id: profileId },
+      where: { commentId: commentId, profileId: profileId },
     });
   }
 
-  async getAllLikesOfComment(commentId: string) {
+  async getAllLikesOfComment(commentId: string): Promise<CommentLike[]> {
     return await this.commentLikeRepository.find({
-      where: { comment_id: commentId },
+      where: { commentId: commentId },
     });
   }
 

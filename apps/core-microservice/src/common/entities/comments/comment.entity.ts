@@ -14,6 +14,7 @@ import { Post } from '../posts/post.entity';
 import { Profile } from '../account/profile.entity';
 import { CommentLike } from './comment-like.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { CommentStatus } from '../../enums/comment.enum';
 
 @Entity('comments', { schema: 'main' })
 export class Comment {
@@ -28,22 +29,22 @@ export class Comment {
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
     description: 'Reference to the post',
   })
-  @Column({ type: 'uuid' })
-  post_id: string;
+  @Column({ type: 'uuid', name: 'post_id' })
+  postId: string;
 
   @ApiProperty({
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
     description: 'Reference to the parent comment',
   })
-  @Column({ type: 'uuid', nullable: true })
-  parent_comment_id: string;
+  @Column({ type: 'uuid', nullable: true, name: 'parent_comment_id' })
+  parentCommentId: string;
 
   @ApiProperty({
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
     description: `Reference to the author's profile`,
   })
-  @Column({ type: 'uuid' })
-  profile_id: string;
+  @Column({ type: 'uuid', name: 'profile_id' })
+  profileId: string;
 
   @ApiProperty({
     example: 'Wow! You look very gorgeous today!',
@@ -56,8 +57,8 @@ export class Comment {
     example: 'active',
     description: 'status of the comment',
   })
-  @Column({ type: 'enum', enum: ['active', 'deleted'], default: 'active' })
-  status: 'active' | 'deleted';
+  @Column({ type: 'enum', enum: CommentStatus, default: CommentStatus.ACTIVE })
+  status: CommentStatus.ACTIVE | CommentStatus.DELETED;
 
   @CreateDateColumn()
   created_at: Date;
@@ -69,25 +70,36 @@ export class Comment {
   deletedAt: Date;
 
   @OneToMany(
-    () => CommentMention,
-    (commentMention): Comment => commentMention.comment,
+    (): typeof CommentMention => CommentMention,
+    (commentMention: CommentMention): Comment => commentMention.comment,
   )
   comment_mentions: CommentMention[];
 
-  @ManyToOne(() => Post, (post) => post.comments, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @ManyToOne(
+    (): typeof Post => Post,
+    (post: Post): Comment[] => post.comments,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+  )
   @JoinColumn({ name: 'post_id' })
   post: Post;
 
-  @ManyToOne(() => Profile, (profile): Comment[] => profile.comments, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @ManyToOne(
+    (): typeof Profile => Profile,
+    (profile: Profile): Comment[] => profile.comments,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+  )
   @JoinColumn({ name: 'profile_id' })
   profile: Profile;
 
-  @OneToMany(() => CommentLike, (commentLike) => commentLike.comment)
+  @OneToMany(
+    (): typeof CommentLike => CommentLike,
+    (commentLike: CommentLike): Comment => commentLike.comment,
+  )
   commentLikes: CommentLike[];
 }

@@ -8,6 +8,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { Profile } from '../account/profile.entity';
 import { Message } from './message.entity';
+import { MessageReadStatus } from '../../enums/message.enum';
 
 @Entity('messages_receiver', { schema: 'main' })
 export class MessageReceiver {
@@ -38,11 +39,11 @@ export class MessageReceiver {
   })
   @Column({
     type: 'enum',
-    enum: ['read', 'unread'],
-    default: 'unread',
+    enum: MessageReadStatus,
+    default: MessageReadStatus.UNREAD,
     name: 'read_status',
   })
-  readStatus: 'read' | 'unread';
+  readStatus: MessageReadStatus.READ | MessageReadStatus.UNREAD;
 
   @ManyToOne(
     (): typeof Profile => Profile,

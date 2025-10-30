@@ -9,6 +9,7 @@ import {
 import { Account } from './account.entity';
 import { Profile } from './profile.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { UserRoles } from '../../enums/user-roles.enum';
 
 @Entity('users', { schema: 'main' })
 export class User {
@@ -23,8 +24,8 @@ export class User {
     example: 'admin',
     description: 'role of user in system',
   })
-  @Column({ type: 'enum', enum: ['admin', 'user'], default: 'user' })
-  role: string;
+  @Column({ type: 'enum', enum: UserRoles, default: 'user' })
+  role: UserRoles.USER | UserRoles.ADMIN;
 
   @ApiProperty({
     example: 'false',
@@ -46,9 +47,15 @@ export class User {
   updated_by: string;
 
   // Relations
-  @OneToMany(() => Account, (account) => account.user)
+  @OneToMany(
+    (): typeof Account => Account,
+    (account: Account): User => account.user,
+  )
   accounts: Account[];
 
-  @OneToMany(() => Profile, (profile) => profile.user)
+  @OneToMany(
+    (): typeof Profile => Profile,
+    (profile: Profile): User => profile.user,
+  )
   profiles: Profile[];
 }

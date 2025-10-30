@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Comment } from '../../../common/entities/comments/comment.entity';
 import { CreateCommentDto } from '../dto/crete-comment.dto';
+import { CommentStatus } from '../../../common/enums/comment.enum';
 
 @Injectable()
 export class CommentsRepository {
@@ -14,11 +15,11 @@ export class CommentsRepository {
     dto: CreateCommentDto,
     postId: string,
     profileId: string,
-  ) {
-    const createdComment = this.commentsRepository.create({
-      post_id: postId,
+  ): Promise<Comment> {
+    const createdComment: Comment = this.commentsRepository.create({
+      postId: postId,
       content: dto.content,
-      profile_id: profileId,
+      profileId: profileId,
     });
 
     await this.commentsRepository.save(createdComment);
@@ -26,38 +27,50 @@ export class CommentsRepository {
     return createdComment;
   }
 
-  async findAllCommentsOfPost(postId: string) {
+  async findAllCommentsOfPost(postId: string): Promise<Comment[]> {
     return await this.commentsRepository.find({
       relations: {
         commentLikes: true,
         comment_mentions: true,
       },
       where: {
-        post_id: postId,
-        status: 'active',
+        postId: postId,
+        status: CommentStatus.ACTIVE,
       },
     });
   }
 
-  async getCommentById(commentId: string) {
+  async getCommentById(commentId: string): Promise<Comment | null> {
     return await this.commentsRepository.findOne({
-      where: { id: commentId, status: 'active' },
+      where: { id: commentId, status: CommentStatus.ACTIVE },
     });
   }
 
-  async getCommentByIdAndProfile(commentId: string, profileId: string) {
+  async getCommentByIdAndProfile(
+    commentId: string,
+    profileId: string,
+  ): Promise<Comment | null> {
     return await this.commentsRepository.findOne({
-      where: { id: commentId, status: 'active', profile_id: profileId },
+      where: {
+        id: commentId,
+        status: CommentStatus.ACTIVE,
+        profileId: profileId,
+      },
     });
   }
 
-  async updateComment(commentId: string, dto: CreateCommentDto) {
+  async updateComment(
+    commentId: string,
+    dto: CreateCommentDto,
+  ): Promise<Comment | null> {
     await this.commentsRepository.update(commentId, { content: dto.content });
 
     return await this.getCommentById(commentId);
   }
 
   async deleteComment(commentId: string) {
-    await this.commentsRepository.update(commentId, { status: 'deleted' });
+    await this.commentsRepository.update(commentId, {
+      status: CommentStatus.DELETED,
+    });
   }
 }

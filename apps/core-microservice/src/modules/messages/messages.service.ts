@@ -77,6 +77,8 @@ export class MessagesService {
     } catch (e) {
       await queryRunner.rollbackTransaction();
       throw e;
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -90,13 +92,19 @@ export class MessagesService {
       const fileData: { hashedFileName: string; type: string } =
         await this.minioService.uploadFile(file);
       queryRunner.manager.create(PostAsset, {
-        hashed_file_name: fileData.hashedFileName,
+        hashedFileName: fileData.hashedFileName,
       });
+
+      const fileType: string = fileData.type;
+      if (fileType !== 'image' && fileType !== 'video') {
+        throw new BadRequestException('Invalid type value');
+      }
+
       await this.messagesAssetRepository.createMessageAsset(
         fileData.hashedFileName,
         message.id,
         queryRunner,
-        fileData.type,
+        fileType,
         ++order,
       );
     }
@@ -128,7 +136,7 @@ export class MessagesService {
       await Promise.all(
         message.assets.map(async (messageAsset: MessageAsset) => {
           messageAsset.url = await this.minioService.getPublicUrl(
-            messageAsset.hashed_file_name,
+            messageAsset.hashedFileName,
           );
         }),
       );
@@ -173,7 +181,7 @@ export class MessagesService {
       if (files) {
         const existingFileNames: string[] =
           updatedMessage?.assets?.map(
-            (a: MessageAsset): string => a.hashed_file_name,
+            (a: MessageAsset): string => a.hashedFileName,
           ) ?? [];
         const newFileNames: string[] = files.map(
           (f: MulterFile) => f.originalname,
@@ -201,9 +209,9 @@ export class MessagesService {
         }
 
         if (namesToAdd.length > 0) {
-          const existingAssets =
+          const existingAssets: MessageAsset[] =
             await this.messagesAssetRepository.findAssetsByMessage(messageId);
-          let order = existingAssets.length;
+          let order: number = existingAssets.length;
 
           const filesToAdd: MulterFile[] = files.filter(
             (f: MulterFile): boolean => namesToAdd.includes(f.originalname),
@@ -228,6 +236,8 @@ export class MessagesService {
     } catch (e) {
       await queryRunner.rollbackTransaction();
       throw e;
+    } finally {
+      await queryRunner.release();
     }
   }
 

@@ -2,6 +2,8 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChatParticipant } from '../../../common/entities/chat/chat-participant.entity';
 import { QueryRunner, Repository } from 'typeorm';
+import { UserRoles } from '../../../common/enums/user-roles.enum';
+import { ChatParticipantRole } from '../../../common/enums/chat.enum';
 
 @Injectable()
 export class ChatParticipantRepository {
@@ -14,33 +16,42 @@ export class ChatParticipantRepository {
     chatId: string,
     chatParticipantId: string,
     queryRunner: QueryRunner,
-  ) {
-    const chatParticipant = queryRunner.manager.create(ChatParticipant, {
-      profile_id: chatParticipantId,
-      chatId: chatId,
-    });
+  ): Promise<ChatParticipant> {
+    const chatParticipant: ChatParticipant = queryRunner.manager.create(
+      ChatParticipant,
+      {
+        profileId: chatParticipantId,
+        chatId: chatId,
+      },
+    );
 
     await queryRunner.manager.save(chatParticipant);
 
     return chatParticipant;
   }
 
-  async foundAllChatsOfProfile(profileId: string) {
+  async foundAllChatsOfProfile(profileId: string): Promise<ChatParticipant[]> {
     return await this.chatParticipantRepository.find({
       relations: {
         chat: true,
       },
       where: {
-        profile_id: profileId,
+        profileId: profileId,
       },
     });
   }
 
-  async updateRole(participantId: string, newRole: string) {
-    if (newRole === 'participant' || newRole === 'admin') {
+  async updateRole(
+    participantId: string,
+    newRole: string,
+  ): Promise<ChatParticipant | null> {
+    if (
+      newRole === (UserRoles.USER as string) ||
+      newRole === (UserRoles.ADMIN as string)
+    ) {
       await this.chatParticipantRepository.update(
         { id: participantId },
-        { role: newRole },
+        { role: newRole as ChatParticipantRole },
       );
     } else throw new BadRequestException('There are no such role!');
 
@@ -53,12 +64,12 @@ export class ChatParticipantRepository {
     profileId: string,
     newRole: string,
     queryRunner: QueryRunner,
-  ) {
+  ): Promise<ChatParticipant | null> {
     if (newRole === 'participant' || newRole === 'admin') {
       await queryRunner.manager.update(
         ChatParticipant,
         { profile_id: profileId },
-        { role: newRole },
+        { role: newRole as ChatParticipantRole },
       );
     } else throw new BadRequestException('There are no such role!');
 
@@ -67,16 +78,19 @@ export class ChatParticipantRepository {
     });
   }
 
-  async findChatParticipant(profileId: string, chatId: string) {
+  async findChatParticipant(
+    profileId: string,
+    chatId: string,
+  ): Promise<ChatParticipant | null> {
     return await this.chatParticipantRepository.findOne({
-      where: { profile_id: profileId, chatId: chatId },
+      where: { profileId: profileId, chatId: chatId },
     });
   }
 
   async leaveChat(profileId: string, chatId: string) {
     await this.chatParticipantRepository.delete({
       chatId: chatId,
-      profile_id: profileId,
+      profileId: profileId,
     });
   }
 

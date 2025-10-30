@@ -7,20 +7,21 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Post } from './post.entity';
+import { AssetType } from '../../enums/message.enum';
 
 @Entity('post_assets', { schema: 'main' })
 export class PostAsset {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid' })
-  post_id: string;
+  @Column({ type: 'uuid', name: 'post_id' })
+  postId: string;
 
-  @Column({ type: 'enum', enum: ['image', 'video'] })
-  type: 'image' | 'video';
+  @Column({ type: 'enum', enum: AssetType })
+  type: AssetType.VIDEO | AssetType.IMAGE;
 
-  @Column({ type: 'text' })
-  hashed_file_name: string;
+  @Column({ type: 'text', name: 'hashed_file_name' })
+  hashedFileName: string;
 
   @Column({ type: 'int' })
   order: number;
@@ -29,10 +30,14 @@ export class PostAsset {
   created_at: Date;
 
   // Relations
-  @ManyToOne(() => Post, (post) => post.postAssets, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @ManyToOne(
+    (): typeof Post => Post,
+    (post: Post): PostAsset[] => post.postAssets,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+  )
   @JoinColumn({ name: 'post_id' })
   post: Post;
 

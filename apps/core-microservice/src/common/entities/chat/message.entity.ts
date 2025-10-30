@@ -14,6 +14,7 @@ import { Profile } from '../account/profile.entity';
 import { MessageAsset } from './message_asset.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { MessageReceiver } from './Message-Receiver.entity';
+import { MessageVisibilityStatus } from '../../enums/message.enum';
 
 @Entity('messages', { schema: 'main' })
 export class Message {
@@ -58,11 +59,14 @@ export class Message {
   })
   @Column({
     type: 'enum',
-    enum: ['active', 'edited', 'deleted'],
-    default: 'active',
+    enum: MessageVisibilityStatus,
+    default: MessageVisibilityStatus.ACTIVE,
     name: 'visible_status',
   })
-  visibleStatus: 'active' | 'edited' | 'deleted';
+  visibleStatus:
+    | MessageVisibilityStatus.ACTIVE
+    | MessageVisibilityStatus.EDITED
+    | MessageVisibilityStatus.DELETED;
 
   @CreateDateColumn()
   created_at: Date;

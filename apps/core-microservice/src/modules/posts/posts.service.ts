@@ -25,11 +25,11 @@ export class PostsService {
     dto: CreatePostDto,
     files,
   ): Promise<Post> {
-    const queryRunner = this.dataSource.createQueryRunner();
+    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const post = await this.postsRepository.createPost(
+      const post: Post = await this.postsRepository.createPost(
         profile_id,
         dto,
         queryRunner,
@@ -44,6 +44,8 @@ export class PostsService {
     } catch (e) {
       await queryRunner.rollbackTransaction();
       throw e;
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -56,7 +58,7 @@ export class PostsService {
     for (const file of files) {
       const fileData = await this.minioService.uploadFile(file);
       queryRunner.manager.create(PostAsset, {
-        hashed_file_name: fileData.hashedFileName,
+        hashedFileName: fileData.hashedFileName,
       });
       await this.postAssetRepository.createPostAsset(
         fileData.hashedFileName,
@@ -73,11 +75,10 @@ export class PostsService {
 
     for (const post of foundPosts) {
       await Promise.all(
-        post.postAssets.map(async (postAsset) => {
-          const url = await this.minioService.getPublicUrl(
-            postAsset.hashed_file_name,
+        post.postAssets.map(async (postAsset: PostAsset) => {
+          postAsset.url = await this.minioService.getPublicUrl(
+            postAsset.hashedFileName,
           );
-          postAsset.url = url;
         }),
       );
     }
@@ -90,7 +91,7 @@ export class PostsService {
     dto: CreatePostDto,
     files: MulterFile[],
   ) {
-    const queryRunner = this.dataSource.createQueryRunner();
+    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
@@ -107,15 +108,15 @@ export class PostsService {
         queryRunner,
       );
 
-      const existingFileNames =
-        updatedPost?.postAssets?.map((a) => a.hashed_file_name) ?? [];
-      const newFileNames = files.map((f) => f.originalname);
+      const existingFileNames: string[] =
+        updatedPost?.postAssets?.map((a) => a.hashedFileName) ?? [];
+      const newFileNames: string[] = files.map((f) => f.originalname);
 
       const namesToAdd = newFileNames.filter(
-        (name) => !existingFileNames.includes(name),
+        (name: string) => !existingFileNames.includes(name),
       );
       const namesToRemove = existingFileNames.filter(
-        (name) => !newFileNames.includes(name),
+        (name: string) => !newFileNames.includes(name),
       );
 
       if (namesToRemove.length > 0) {
@@ -156,6 +157,8 @@ export class PostsService {
     } catch (e) {
       await queryRunner.rollbackTransaction();
       throw e;
+    } finally {
+      await queryRunner.release();
     }
   }
 

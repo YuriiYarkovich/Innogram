@@ -2,6 +2,7 @@ import redisClient from '../config/redis.init.ts';
 import { RedisNote, RedisSessionData } from '../types/redis.type.ts';
 import { RefreshTokenObj } from '../types/tokens.type.ts';
 import { JwtService } from './jwt.service.ts';
+import { requireEnv } from '../validation/env.validation.ts';
 
 export class RedisService {
   readonly jwtService: JwtService = new JwtService();
@@ -14,7 +15,7 @@ export class RedisService {
   ) {
     await redisClient.setEx(
       sessionKey,
-      parseInt(process.env.JWT_REFRESH_EXPIRES_IN || '10080') * 60,
+      parseInt(requireEnv(`JWT_REFRESH_EXPIRES_IN`)) * 60,
       JSON.stringify({ refreshToken, email, role }),
     );
   }

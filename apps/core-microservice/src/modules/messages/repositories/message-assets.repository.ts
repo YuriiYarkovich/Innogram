@@ -1,7 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MessageAsset } from '../../../common/entities/chat/message_asset.entity';
 import { QueryRunner, Repository } from 'typeorm';
+import { AssetType } from '../../../common/enums/message.enum';
 
 @Injectable()
 export class MessageAssetsRepository {
@@ -16,17 +17,16 @@ export class MessageAssetsRepository {
     queryRunner: QueryRunner,
     fileType: string,
     order: number,
-  ) {
-    if (fileType !== 'image' && fileType !== 'video') {
-      throw new BadRequestException('Invalid type value');
-    }
-
-    const createdAsset = queryRunner.manager.create(MessageAsset, {
-      message_id: messageId,
-      type: fileType,
-      order,
-      hashed_file_name: fileName,
-    });
+  ): Promise<MessageAsset> {
+    const createdAsset: MessageAsset = queryRunner.manager.create(
+      MessageAsset,
+      {
+        messageId: messageId,
+        type: fileType as AssetType,
+        order,
+        hashedFileName: fileName,
+      },
+    );
 
     await queryRunner.manager.save(createdAsset);
 
@@ -37,15 +37,15 @@ export class MessageAssetsRepository {
     await queryRunner.manager.delete(MessageAsset, { id: assetId });
   }
 
-  async findAssetByName(filename: string) {
+  async findAssetByName(filename: string): Promise<MessageAsset | null> {
     return await this.messageAssetRepository.findOne({
-      where: { hashed_file_name: filename },
+      where: { hashedFileName: filename },
     });
   }
 
-  async findAssetsByMessage(messageId: string) {
+  async findAssetsByMessage(messageId: string): Promise<MessageAsset[]> {
     return await this.messageAssetRepository.find({
-      where: { message_id: messageId },
+      where: { messageId: messageId },
     });
   }
 }

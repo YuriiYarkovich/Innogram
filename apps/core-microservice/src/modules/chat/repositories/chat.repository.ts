@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { QueryRunner, Repository } from 'typeorm';
 import { Chat } from '../../../common/entities/chat/chat.entity';
 import { CreateChatDto } from '../dto/create-chat.dto';
+import { ChatStatus, ChatTypes } from '../../../common/enums/chat.enum';
 
 @Injectable()
 export class ChatRepository {
@@ -10,17 +11,20 @@ export class ChatRepository {
     @InjectRepository(Chat) private chatRepository: Repository<Chat>,
   ) {}
 
-  async createChat(dto: CreateChatDto, queryRunner: QueryRunner) {
-    const chat = queryRunner.manager.create(Chat, {
+  async createChat(
+    dto: CreateChatDto,
+    queryRunner: QueryRunner,
+  ): Promise<Chat> {
+    const chat: Chat = queryRunner.manager.create(Chat, {
       title: dto.title,
       description: dto.description,
-      chat_type: dto.chatType,
+      chatType: dto.chatType as ChatTypes,
     });
     await queryRunner.manager.save(chat);
     return chat;
   }
 
-  async getChatInfo(chatId: string) {
+  async getChatInfo(chatId: string): Promise<Chat | null> {
     return await this.chatRepository.findOne({
       relations: {
         chatParticipants: true,
@@ -41,10 +45,10 @@ export class ChatRepository {
     await this.chatRepository.delete({ id: chatId });
   }
 
-  async archiveChat(chatId: string) {
+  async archiveChat(chatId: string): Promise<Chat | null> {
     await this.chatRepository.update(
       { id: chatId },
-      { chat_status: 'archived' },
+      { chatStatus: ChatStatus.ARCHIVED },
     );
 
     return await this.getChatInfo(chatId);

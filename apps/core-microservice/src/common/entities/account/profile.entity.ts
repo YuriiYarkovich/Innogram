@@ -32,8 +32,8 @@ export class Profile {
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
     description: 'reference to user',
   })
-  @Column({ type: 'uuid' })
-  user_id: string;
+  @Column({ type: 'uuid', name: 'user_id' })
+  userId: string;
 
   @ApiProperty({
     example: 'Ceclik',
@@ -47,8 +47,8 @@ export class Profile {
     example: 'Ceclik',
     description: 'Nick, that other users will see',
   })
-  @Column({ type: 'varchar', length: 100 })
-  display_name: string;
+  @Column({ type: 'varchar', length: 100, name: 'display_name' })
+  displayName: string;
 
   @ApiProperty({
     example: '2003-06-30',
@@ -68,15 +68,15 @@ export class Profile {
     example: 'Hello, I am ceclik, I am 34 y.o.',
     description: 'Description of users profile',
   })
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  avatar_url: string;
+  @Column({ type: 'varchar', length: 500, nullable: true, name: 'avatar_url' })
+  avatarUrl: string;
 
   @ApiProperty({
     example: 'true',
     description: 'Status of the publicity of account',
   })
-  @Column({ type: 'boolean', default: true })
-  is_public: boolean;
+  @Column({ type: 'boolean', default: true, name: 'is_public' })
+  isPublic: boolean;
 
   @CreateDateColumn()
   created_at: Date;
@@ -91,43 +91,65 @@ export class Profile {
   deleted: boolean;
 
   // Relations
-  @ManyToOne(() => User, (user): Profile[] => user.profiles, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @ManyToOne(
+    (): typeof User => User,
+    (user: User): Profile[] => user.profiles,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+  )
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @OneToMany(() => ProfileFollow, (follow) => follow.followerProfile)
+  @OneToMany(
+    (): typeof ProfileFollow => ProfileFollow,
+    (follow: ProfileFollow): Profile => follow.followerProfile,
+  )
   following: ProfileFollow[];
 
-  @OneToMany(() => ProfileFollow, (follow) => follow.followedProfile)
+  @OneToMany(
+    (): typeof ProfileFollow => ProfileFollow,
+    (follow: ProfileFollow): Profile => follow.followedProfile,
+  )
   followers: ProfileFollow[];
 
-  @OneToMany(() => Post, (post) => post.profile)
+  @OneToMany((): typeof Post => Post, (post: Post): Profile => post.profile)
   posts: Post[];
 
-  @OneToMany(() => Comment, (comment): Profile => comment.profile)
+  @OneToMany(
+    (): typeof Comment => Comment,
+    (comment: Comment): Profile => comment.profile,
+  )
   comments: Comment[];
 
   @OneToMany(
-    () => ChatParticipant,
-    (chatParticipant): Profile => chatParticipant.profile,
+    (): typeof ChatParticipant => ChatParticipant,
+    (chatParticipant: ChatParticipant): Profile => chatParticipant.profile,
   )
   chatParticipants: ChatParticipant[];
 
-  @OneToMany(() => Message, (message) => message.sender)
+  @OneToMany(
+    (): typeof Message => Message,
+    (message: Message): Profile => message.sender,
+  )
   messages: Message[];
 
-  @OneToMany(() => PostLike, (postLike) => postLike.profile)
+  @OneToMany(
+    (): typeof PostLike => PostLike,
+    (postLike: PostLike): Profile => postLike.profile,
+  )
   postLikes: PostLike[];
 
-  @OneToMany(() => CommentLike, (commentLike) => commentLike.profile)
+  @OneToMany(
+    (): typeof CommentLike => CommentLike,
+    (commentLike: CommentLike): Profile => commentLike.profile,
+  )
   commentLikes: CommentLike[];
 
   @OneToMany(
-    () => MessageReceiver,
-    (messageReceiver) => messageReceiver.receiver,
+    (): typeof MessageReceiver => MessageReceiver,
+    (messageReceiver: MessageReceiver): Profile => messageReceiver.receiver,
   )
   messageReceivers: MessageReceiver[];
 }

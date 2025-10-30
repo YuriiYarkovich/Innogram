@@ -4,6 +4,7 @@ import { Message } from '../../../common/entities/chat/message.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { CreateMessageDto } from '../dto/create-message.dto';
 import { EditMessageDto } from '../dto/edit-message.dto';
+import { MessageVisibilityStatus } from '../../../common/enums/message.enum';
 
 @Injectable()
 export class MessagesRepository {
@@ -24,24 +25,24 @@ export class MessagesRepository {
     return createdMessage;
   }
 
-  async getAllMessagesOfChat(chatId: string) {
+  async getAllMessagesOfChat(chatId: string): Promise<Message[]> {
     return await this.messageRepository.find({
       relations: {
         assets: true,
       },
       where: [
-        { chatId: chatId, visibleStatus: 'active' },
-        { chatId: chatId, visibleStatus: 'edited' },
+        { chatId: chatId, visibleStatus: MessageVisibilityStatus.ACTIVE },
+        { chatId: chatId, visibleStatus: MessageVisibilityStatus.EDITED },
       ],
     });
   }
 
-  async getMessageById(messageId: string) {
+  async getMessageById(messageId: string): Promise<Message | null> {
     return await this.messageRepository.findOne({
       relations: { assets: true },
       where: [
-        { id: messageId, visibleStatus: 'active' },
-        { id: messageId, visibleStatus: 'edited' },
+        { id: messageId, visibleStatus: MessageVisibilityStatus.ACTIVE },
+        { id: messageId, visibleStatus: MessageVisibilityStatus.EDITED },
       ],
     });
   }
@@ -50,11 +51,11 @@ export class MessagesRepository {
     messageId: string,
     dto: EditMessageDto,
     queryRunner: QueryRunner,
-  ) {
+  ): Promise<Message | null> {
     await queryRunner.manager.update(
       Message,
       { id: messageId },
-      { content: dto.content, visibleStatus: 'edited' },
+      { content: dto.content, visibleStatus: MessageVisibilityStatus.EDITED },
     );
     return await this.getMessageById(messageId);
   }
@@ -62,7 +63,7 @@ export class MessagesRepository {
   async deleteMessage(messageId: string) {
     await this.messageRepository.update(
       { id: messageId },
-      { visibleStatus: 'deleted' },
+      { visibleStatus: MessageVisibilityStatus.DELETED },
     );
   }
 }

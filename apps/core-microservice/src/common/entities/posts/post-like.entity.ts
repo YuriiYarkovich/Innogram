@@ -13,23 +13,31 @@ export class PostLike {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid' })
-  post_id: string;
+  @Column({ type: 'uuid', name: 'post_id' })
+  postId: string;
 
-  @Column({ type: 'uuid' })
-  profile_id: string;
+  @Column({ type: 'uuid', name: 'profile_id' })
+  profileId: string;
 
-  @ManyToOne(() => Profile, (profile): PostLike[] => profile.postLikes, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @ManyToOne(
+    (): typeof Profile => Profile,
+    (profile: Profile): PostLike[] => profile.postLikes,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+  )
   @JoinColumn({ name: 'profile_id' })
   profile: Profile;
 
-  @ManyToOne(() => Post, (post): PostLike[] => post.postLikes, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @ManyToOne(
+    (): typeof Post => Post,
+    (post: Post): PostLike[] => post.postLikes,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+  )
   @JoinColumn({ name: 'post_id' })
   post: Post;
 }

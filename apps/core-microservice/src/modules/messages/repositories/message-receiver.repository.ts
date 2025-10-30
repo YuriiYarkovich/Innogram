@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { QueryRunner, Repository } from 'typeorm';
 import { MessageReceiver } from '../../../common/entities/chat/Message-Receiver.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { MessageReadStatus } from '../../../common/enums/message.enum';
 
 @Injectable()
 export class MessageReceiverRepository {
@@ -31,7 +32,7 @@ export class MessageReceiverRepository {
   ): Promise<MessageReceiver> {
     const messageReceiver: MessageReceiver = queryRunner.manager.create(
       MessageReceiver,
-      { messageId, receiverId, readStatus: 'read' },
+      { messageId, receiverId, readStatus: MessageReadStatus.READ },
     );
 
     await queryRunner.manager.save(messageReceiver);
@@ -46,7 +47,7 @@ export class MessageReceiverRepository {
         select: ['messageId'],
         where: {
           receiverId: receiverProfileId,
-          readStatus: 'unread',
+          readStatus: MessageReadStatus.UNREAD,
         },
       });
     return messages.map((m: MessageReceiver): string => m.messageId);
@@ -57,7 +58,7 @@ export class MessageReceiverRepository {
       {
         messageId,
       },
-      { readStatus: 'read' },
+      { readStatus: MessageReadStatus.READ },
     );
   }
 }

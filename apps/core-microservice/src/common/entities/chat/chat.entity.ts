@@ -9,6 +9,7 @@ import {
 import { ChatParticipant } from './chat-participant.entity';
 import { Message } from './message.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { ChatStatus, ChatTypes } from '../../enums/chat.enum';
 
 @Entity('chats', { schema: 'main' })
 export class Chat {
@@ -23,8 +24,13 @@ export class Chat {
     example: 'private',
     description: 'Type of the chat',
   })
-  @Column({ type: 'enum', enum: ['private', 'group'], default: 'private' })
-  chat_type: 'private' | 'group';
+  @Column({
+    type: 'enum',
+    enum: ChatTypes,
+    default: ChatTypes.PRIVATE,
+    name: 'chat_type',
+  })
+  chatType: ChatTypes.PRIVATE | ChatTypes.GROUP;
 
   @ApiProperty({
     example: 'active',
@@ -32,10 +38,11 @@ export class Chat {
   })
   @Column({
     type: 'enum',
-    enum: ['active', 'archived', 'deleted'],
-    default: 'active',
+    enum: ChatStatus,
+    default: ChatStatus.ACTIVE,
+    name: 'chat_status',
   })
-  chat_status: 'active' | 'archived' | 'deleted';
+  chatStatus: ChatStatus.ACTIVE | ChatStatus.ARCHIVED | ChatStatus.DELETED;
 
   @ApiProperty({
     example: 'The best chat',
@@ -57,9 +64,15 @@ export class Chat {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => ChatParticipant, (chatParticipant) => chatParticipant.chat)
+  @OneToMany(
+    (): typeof ChatParticipant => ChatParticipant,
+    (chatParticipant: ChatParticipant): Chat => chatParticipant.chat,
+  )
   chatParticipants: ChatParticipant[];
 
-  @OneToMany(() => Message, (message) => message.chat)
+  @OneToMany(
+    (): typeof Message => Message,
+    (message: Message): Chat => message.chat,
+  )
   messages: Message[];
 }

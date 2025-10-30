@@ -23,8 +23,8 @@ export class Account {
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
     description: 'Reference to user',
   })
-  @Column({ type: 'uuid' })
-  user_id: string;
+  @Column({ type: 'uuid', name: 'user_id' })
+  userId: string;
 
   @ApiProperty({
     example: 'CeclikG@gmail.com',
@@ -37,8 +37,13 @@ export class Account {
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
     description: `Hash of user's password`,
   })
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  password_hash: string;
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    name: 'password_hash',
+  })
+  passwordHash: string;
 
   @ApiProperty({
     example: 'Google',
@@ -51,29 +56,33 @@ export class Account {
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
     description: 'ID of authentification provider',
   })
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  provider_id: string;
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'provider_id' })
+  providerId: string;
 
-  @Column({ type: 'timestamp', nullable: true })
-  last_login_at: Date;
+  @Column({ type: 'timestamp', nullable: true, name: 'last_login_at' })
+  lastLoginAt: Date;
 
   @CreateDateColumn()
   created_at: Date;
 
-  @Column({ type: 'uuid' })
-  created_by: string;
+  @Column({ type: 'uuid', name: 'created_by' })
+  createdBy: string;
 
   @UpdateDateColumn()
   updated_at: Date;
 
-  @Column({ type: 'uuid', nullable: true })
-  updated_by: string;
+  @Column({ type: 'uuid', nullable: true, name: 'updated_by' })
+  updatedBy: string;
 
   // Relations
-  @ManyToOne(() => User, (user) => user.accounts, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @ManyToOne(
+    (): typeof User => User,
+    (user: User): Account[] => user.accounts,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+  )
   @JoinColumn({ name: 'user_id' })
   user: User;
 }

@@ -14,6 +14,7 @@ import { PostAsset } from './post-asset.entity';
 import { Comment } from '../comments/comment.entity';
 import { PostLike } from './post-like.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { PostStatus } from '../../enums/post.enum';
 
 @Entity('posts', { schema: 'main' })
 export class Post {
@@ -28,8 +29,8 @@ export class Post {
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
     description: `Reference to the author's profile`,
   })
-  @Column({ type: 'uuid' })
-  profile_id: string;
+  @Column({ type: 'uuid', name: 'profile_id' })
+  profileId: string;
 
   @ApiProperty({
     example: 'Today in Paris ;-)',
@@ -44,10 +45,10 @@ export class Post {
   })
   @Column({
     type: 'enum',
-    enum: ['active', 'archived', 'deleted'],
-    default: 'active',
+    enum: PostStatus,
+    default: PostStatus.ACTIVE,
   })
-  status: 'active' | 'archived' | 'deleted';
+  status: PostStatus.ACTIVE | PostStatus.ARCHIVED | PostStatus.DELETED;
 
   @CreateDateColumn()
   created_at: Date;
@@ -62,19 +63,32 @@ export class Post {
   deleted_at: Date;
 
   // Relations
-  @ManyToOne(() => Profile, (profile) => profile.posts, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @ManyToOne(
+    (): typeof Profile => Profile,
+    (profile: Profile): Post[] => profile.posts,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+  )
   @JoinColumn({ name: 'profile_id' })
   profile: Profile;
 
-  @OneToMany(() => PostAsset, (postAsset) => postAsset.post)
+  @OneToMany(
+    (): typeof PostAsset => PostAsset,
+    (postAsset: PostAsset): Post => postAsset.post,
+  )
   postAssets: PostAsset[];
 
-  @OneToMany(() => Comment, (comment) => comment.post)
+  @OneToMany(
+    (): typeof Comment => Comment,
+    (comment: Comment): Post => comment.post,
+  )
   comments: Comment[];
 
-  @OneToMany(() => PostLike, (postLike) => postLike.post)
+  @OneToMany(
+    (): typeof PostLike => PostLike,
+    (postLike: PostLike): Post => postLike.post,
+  )
   postLikes: PostLike[];
 }

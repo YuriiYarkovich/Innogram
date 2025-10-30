@@ -13,23 +13,31 @@ export class CommentLike {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid' })
-  comment_id: string;
+  @Column({ type: 'uuid', name: 'comment_id' })
+  commentId: string;
 
-  @Column({ type: 'uuid' })
-  profile_id: string;
+  @Column({ type: 'uuid', name: 'profile_id' })
+  profileId: string;
 
-  @ManyToOne(() => Profile, (profile): CommentLike[] => profile.commentLikes, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @ManyToOne(
+    (): typeof Profile => Profile,
+    (profile: Profile): CommentLike[] => profile.commentLikes,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+  )
   @JoinColumn({ name: 'profile_id' })
   profile: Profile;
 
-  @ManyToOne(() => Comment, (comment): CommentLike[] => comment.commentLikes, {
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @ManyToOne(
+    (): typeof Comment => Comment,
+    (comment: Comment): CommentLike[] => comment.commentLikes,
+    {
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE',
+    },
+  )
   @JoinColumn({ name: 'comment_id' })
   comment: Comment;
 }

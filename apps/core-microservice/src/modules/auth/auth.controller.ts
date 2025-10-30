@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiExcludeEndpoint,
@@ -44,33 +44,27 @@ export class AuthController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    try {
-      const url: string = `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/login`;
-      const options = {
-        method: 'POST',
-        data: dto,
-        withCredentials: true,
-        headers: { 'x-device-id': req.headers['x-device-id'] },
-      };
+    const url: string = `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/login`;
+    const options = {
+      method: 'POST',
+      data: dto,
+      withCredentials: true,
+      headers: { 'x-device-id': req.headers['x-device-id'] },
+    };
 
-      const response = await this.httpService.forwardRequest<{
-        accessToken: string;
-        refreshToken: string;
-      }>(url, options);
+    const response = await this.httpService.forwardRequest<{
+      accessToken: string;
+      refreshToken: string;
+    }>(url, options);
 
-      const setCookie = response.headers['set-cookie'];
-      if (setCookie) {
-        res.setHeader('Set-Cookie', setCookie);
-      }
-
-      return res.json({
-        accessToken: response.data.accessToken,
-        refreshToken: response.data.refreshToken,
-      });
-    } catch (e) {
-      console.error(e.response?.data);
-      throw e;
+    const setCookie: string[] | undefined = response.headers['set-cookie'];
+    if (setCookie) {
+      res.setHeader('Set-Cookie', setCookie);
     }
+
+    return res.json({
+      result: 'success!',
+    });
   }
 
   @ApiOperation({ summary: 'Registers users in system' })
@@ -109,14 +103,13 @@ export class AuthController {
       refreshToken: string;
     }>(url, options);
 
-    const setCookie = response.headers?.['set-cookie'];
+    const setCookie: string[] | undefined = response.headers?.['set-cookie'];
     if (setCookie) {
       res.setHeader('Set-Cookie', setCookie);
     }
 
     return res.json({
-      accessToken: response.data.accessToken,
-      refreshToken: response.data.refreshToken,
+      result: `Success!`,
     });
   }
 
@@ -137,7 +130,6 @@ export class AuthController {
   })
   @Get('/google')
   authenticateGoogleUser(@Res() res: Response) {
-    console.log(`In google start point`);
     const authUrl = `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/google`;
     return res.redirect(authUrl);
   }
@@ -145,21 +137,13 @@ export class AuthController {
   @ApiExcludeEndpoint()
   @Get('/google/success')
   googleSuccessCallback(@Req() req: Request, @Res() res: Response) {
-    try {
-      console.log('In success endpoint');
+    const accessToken: string = req.cookies['accessToken'];
 
-      const accessToken: string = req.cookies['accessToken'];
-
-      if (!accessToken) {
-        console.warn('No access token in cookies');
-        return res.status(401).json({ message: 'Access token missing' });
-      }
-
-      return res.json({});
-    } catch (e) {
-      console.log(e.message);
-      throw e;
+    if (!accessToken) {
+      return res.status(401).json({ message: 'Access token missing' });
     }
+
+    return res.json({});
   }
 
   @ApiOperation({ summary: 'Registers users using google OAuth2' })
@@ -195,8 +179,7 @@ export class AuthController {
         message: response.data.message,
       });
     } catch (error) {
-      console.error('Logout error:', error.message);
-      return res.status(500).json({ message: 'Logout failed' });
+      return res.status(500).json({ message: 'Logout failed' + error.message });
     }
   }
 
