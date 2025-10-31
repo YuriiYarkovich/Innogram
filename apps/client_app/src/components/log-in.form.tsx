@@ -10,6 +10,7 @@ export default function LogInForm() {
   const router: AppRouterInstance = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +26,10 @@ export default function LogInForm() {
     });
 
     if (!response.ok) {
-      throw new Error(`Auth error: ${JSON.stringify(await response.json())}`);
+      const err: any = await response.json();
+      setError(err.message || 'Authentication error');
+      return;
+      //throw new Error(`Auth error: ${JSON.stringify(await response.json())}`);
     }
 
     if (response.status === 201) {
@@ -58,6 +62,7 @@ export default function LogInForm() {
       >
         Log in
       </button>
+      {error && <div className="text-red-600 text-sm mt-2">{error}</div>}
     </form>
   );
 }
