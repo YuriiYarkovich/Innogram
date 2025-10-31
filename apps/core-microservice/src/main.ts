@@ -49,7 +49,7 @@ async function bootstrap() {
   app.enableCors({
     origin: isDev ? [frontendUrl, 'http://localhost:3000'] : frontendUrl,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-device-id'],
     credentials: true,
   });
   app.use(cookieParser());

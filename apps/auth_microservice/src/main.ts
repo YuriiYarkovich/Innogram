@@ -34,16 +34,16 @@ app.use(
 );
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000', // разрешённый источник
+    origin: requireEnv('CLIENT_URL'), // разрешённый источник
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-device-id'],
   }),
 );
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(cookieParser());
-app.use(morgan('common'));
+app.use(morgan('dev'));
 //app.use(deviceIdMiddleware);
 app.use(`/api`, router);
 app.use(errorHandlingMiddleware);

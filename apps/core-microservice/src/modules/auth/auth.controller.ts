@@ -143,7 +143,8 @@ export class AuthController {
       return res.status(401).json({ message: 'Access token missing' });
     }
 
-    return res.json({});
+    const feedUrl: string = `${this.configService.get<string>('CLIENT_URL')}/feed`;
+    return res.redirect(feedUrl);
   }
 
   @ApiOperation({ summary: 'Registers users using google OAuth2' })
