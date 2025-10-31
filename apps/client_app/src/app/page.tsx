@@ -2,15 +2,15 @@ import Image from "next/image";
 
 export default function Home() {
     return (
-        <div className="flex flex-row min-h-screen justify-center">
+        <div className="flex flex-row min-h-screen justify-center gap-[220px]">
             {/* Левая картинка */}
-           {/* <div className="flex-1 hidden md:block">
+             {/*<div className="flex flex-col justify-center items-center">
                  Вставь ссылку на левую картинку
                 <Image
-                    src="/path-to-left-image.jpg"
+                    src="/images/left.png"
                     alt="Left side"
-                    fill
-                    className="w-full h-full"
+                    width={380}
+                    height={460}
                 />
             </div>*/}
 
@@ -22,7 +22,7 @@ export default function Home() {
                     {/* Логотип */}
                     <div className="mb-6">
                         {/* Вставь ссылку на логотип */}
-                        <Image src="/path-to-logo.png" alt="Logo" width={380} height={90}/>
+                        <Image src="/images/logo.png" alt="Logo" width={340} height={70}/>
                     </div>
 
                     {/* Поля ввода */}
@@ -39,7 +39,7 @@ export default function Home() {
                         />
                         <button
                             type="submit"
-                            className="bg-[#4f378a] text-white py-2 rounded-[20px]"
+                            className="bg-[#4f378a] text-white py-2 rounded-[20px] hover:bg-[#d0bcff]"
                         >
                             Log in
                         </button>
@@ -56,7 +56,7 @@ export default function Home() {
                     {/* Кнопки входа */}
                     <div className="flex flex-col gap-3 w-full items-center">
                         <button
-                            className="flex flex-row items-center justify-center gap-[25px] md:w-[285px] md:h-[50px] border-[#eaddff] border-3 rounded-[20px]">
+                            className="flex flex-row items-center justify-center gap-[25px] md:w-[285px] md:h-[50px] border-[#eaddff] border-3 rounded-[20px] hover:border-[#79747e]">
                             {/* Лого Google */}
                             <Image
                                 src="/images/google-logo.svg"
@@ -66,7 +66,8 @@ export default function Home() {
                             />
                             <span className="text-[20px]">Sign in with Google</span>
                         </button>
-                        <button className="flex items-center justify-center md:w-[285px] md:h-[50px] border-[#eaddff] border-3 rounded-[20px] py-2">
+                        <button
+                            className="flex items-center justify-center md:w-[285px] md:h-[50px] border-[#eaddff] border-3 rounded-[20px] py-2 hover:border-[#79747e]">
                             <span className="text-[22px]">Sign up using email</span>
                         </button>
                     </div>
@@ -74,13 +75,13 @@ export default function Home() {
             </div>
 
             {/* Правая картинка */}
-            {/*<div className="flex-1 hidden md:block bg-red-600">
-                Вставь ссылку на правую картинку
+            {/*<div className="flex flex-col justify-center items-center">
+                Вставь ссылку на левую картинку
                 <Image
-                    src="/path-to-right-image.jpg"
-                    alt="Right side"
-                    fill
-                    className="object-cover"
+                    src="/images/right.png"
+                    alt="right side"
+                    width={380}
+                    height={460}
                 />
             </div>*/}
         </div>
