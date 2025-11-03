@@ -26,17 +26,34 @@ export default function LogInForm() {
     });
 
     if (!response.ok) {
-      const err: any = await response.json();
-      setError(err.message || 'Authentication error');
+      const err: unknown = await response.json();
+
+      if (typeof err === 'object' && err !== null && 'message' in err) {
+        const message: string | string[] | undefined = (
+          err as { message?: string | string[] }
+        ).message;
+
+        let finalMessage: string;
+        if (typeof message === 'string') {
+          finalMessage = message;
+        } else if (Array.isArray(message)) {
+          finalMessage = message.join(',\n');
+        } else {
+          finalMessage = 'Authentication error';
+        }
+        setError(finalMessage);
+      } else {
+        setError('Authentication error');
+      }
+
       return;
-      //throw new Error(`Auth error: ${JSON.stringify(await response.json())}`);
     }
 
     if (response.status === 201) {
       router.push(`/feed`);
     }
 
-    const data = await response.json();
+    const data: { message: string } = await response.json();
     console.log(`Received data: ${data}`);
   };
 

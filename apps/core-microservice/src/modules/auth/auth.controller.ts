@@ -63,7 +63,7 @@ export class AuthController {
     }
 
     return res.json({
-      result: 'success!',
+      message: 'success!',
     });
   }
 
