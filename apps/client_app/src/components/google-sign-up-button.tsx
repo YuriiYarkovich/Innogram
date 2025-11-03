@@ -5,7 +5,7 @@ import { getDeviceId } from '@/utils/device';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useRouter } from 'next/navigation';
 
-export default function GoogleSignInButton() {
+export default function GoogleSignUpButton() {
   const router: AppRouterInstance = useRouter();
 
   const handleGoogleSignIn = async () => {
@@ -15,7 +15,7 @@ export default function GoogleSignInButton() {
   return (
     <button
       onClick={handleGoogleSignIn}
-      className="flex flex-row items-center justify-center bg-white gap-[25px] md:w-[285px] md:h-[50px] border-[#eaddff] border-3 rounded-[20px] hover:border-[#79747e]"
+      className="flex flex-row items-center justify-center bg-white gap-[25px] md:w-[285px] md:h-[50px] border-[#79747e] border-3 rounded-[20px] hover:border-[#79747e]"
     >
       <Image
         src="/images/google-logo.svg"
@@ -23,7 +23,7 @@ export default function GoogleSignInButton() {
         width={28}
         height={28}
       />
-      <span className="text-[20px]">Sign in with Google</span>
+      <span className="text-[20px]">Sign up with Google</span>
     </button>
   );
 }
