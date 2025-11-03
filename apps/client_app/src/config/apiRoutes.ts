@@ -5,5 +5,6 @@ export const CONFIG = {
   API: {
     GOOGLE_AUTH: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/google`,
     LOG_IN: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/login`,
+    REGISTRATION: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/registration`,
   },
 };

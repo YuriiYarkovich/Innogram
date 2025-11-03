@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { getDeviceId } from '@/utils/device';
 import { useRouter } from 'next/navigation';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import returnErrorMessage from '@/utils/showAuthError';
 
 export default function LogInForm() {
   const router: AppRouterInstance = useRouter();
@@ -26,26 +27,9 @@ export default function LogInForm() {
     });
 
     if (!response.ok) {
-      const err: unknown = await response.json();
-
-      if (typeof err === 'object' && err !== null && 'message' in err) {
-        const message: string | string[] | undefined = (
-          err as { message?: string | string[] }
-        ).message;
-
-        let finalMessage: string;
-        if (typeof message === 'string') {
-          finalMessage = message;
-        } else if (Array.isArray(message)) {
-          finalMessage = message.join(',\n');
-        } else {
-          finalMessage = 'Authentication error';
-        }
-        setError(finalMessage);
-      } else {
-        setError('Authentication error');
-      }
-
+      const finalMessage: string | undefined =
+        await returnErrorMessage(response);
+      if (finalMessage) setError(finalMessage);
       return;
     }
 

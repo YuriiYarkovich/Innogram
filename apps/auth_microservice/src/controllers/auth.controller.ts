@@ -19,9 +19,9 @@ export class AuthController {
     next: NextFunction,
   ) => {
     try {
-      const { email, bio, displayName, username, password, birthday } =
-        req.body;
+      const { email, bio, username, password, birthday } = req.body;
 
+      const displayName: string = username;
       const deviceId: string | undefined = req.headers['x-device-id'] as string; // = req.deviceId;
 
       if (!deviceId) {

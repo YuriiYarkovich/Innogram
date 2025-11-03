@@ -3,21 +3,11 @@ const router: Router = Router();
 import { AuthController } from '../controllers/auth.controller.ts';
 import passport from 'passport';
 import '../strategies/google-oauth.strategy.ts';
-import { validateRegistrationData } from '../middleware/registration-data-validation.middleware.ts';
-import { validateLoginData } from '../middleware/login-data-validation.middleware.ts';
 import '../config/load-env.config.ts';
 
 const authController = new AuthController();
-router.post(
-  `/registration`,
-  validateRegistrationData,
-  authController.registerUsingEmailPassword,
-);
-router.post(
-  `/login`,
-  validateLoginData,
-  authController.loginUsingEmailPassword,
-);
+router.post(`/registration`, authController.registerUsingEmailPassword);
+router.post(`/login`, authController.loginUsingEmailPassword);
 router.post('/logout', authController.logout);
 router.post('/refresh', authController.refreshToken);
 router.post('/validate', authController.validateToken);

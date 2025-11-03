@@ -1,11 +1,11 @@
 'use client';
 
-import Image from 'next/image';
-import GoogleSignUpButton from '@/components/google-sign-up-button';
-import Separator from '@/components/separator';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { getDeviceId } from '@/utils/device';
+import { CONFIG } from '@/config/apiRoutes';
+import returnErrorMessage from '@/utils/showAuthError';
 
 export default function RegistrationForm() {
   const router: AppRouterInstance = useRouter();
@@ -14,18 +14,45 @@ export default function RegistrationForm() {
   const [username, setUsername] = useState('');
   const [birthday, setBirthday] = useState('');
   const [bio, setBio] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const deviceId: string = getDeviceId();
+    console.log(`Birthday string: ${birthday}`);
+    const response: Response = await fetch(CONFIG.API.REGISTRATION, {
+      method: 'POST',
+      headers: {
+        'Content-type': 'application/json',
+        'x-device-id': deviceId,
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        username,
+        birthday,
+        bio,
+      }),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const finalMessage: string | undefined =
+        await returnErrorMessage(response);
+      if (finalMessage) setError(finalMessage);
+      return;
+    }
+
+    if (response.status === 201) {
+      router.push('/feed');
+    }
+
+    const data: { message: string } = await response.json();
+    console.log(`Received data: ${data}`);
+  };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full md:h-[800px] bg-[#eaddff] pr-[30px] pl-[30px] rounded-[50px] gap-2">
-      <div className="mb-6 my-3">
-        {/* Вставь ссылку на логотип */}
-        <Image src="/images/logo.png" alt="Logo" width={340} height={70} />
-      </div>
-      <span className="text-[24px] text-[#625b71] font-regular text-justify flex mb-5">
-        Sign up to unlock all functionality
-      </span>
-      <GoogleSignUpButton />
-      <Separator stripColor={`bg-[#624b98]`} />
+    <form onSubmit={handleSubmit} className={`w-full flex flex-col gap-2`}>
       <input
         type="email"
         placeholder="Email"
@@ -47,7 +74,7 @@ export default function RegistrationForm() {
         onChange={(e) => setUsername(e.target.value)}
         className="border-2 border-[#bcb8b8] rounded-[6px] px-3 py-2 w-full bg-white"
       />
-      <span className={`mb-[-10px] ml-[-370px] text-[#625b71]`}>Birthday</span>
+      <span className={`mb-[-10px] text-[#625b71]`}>Birthday</span>
       <input
         type="date"
         title="Birthday"
@@ -63,10 +90,11 @@ export default function RegistrationForm() {
       />
       <button
         type="submit"
-        className="bg-[#4f378a] text-white rounded-[20px] my-[25px] md:h-[45px] hover:bg-[#d0bcff] w-full"
+        className="bg-[#4f378a] text-white rounded-[20px] my-[25px] mb-[-1px] md:h-[45px] hover:bg-[#d0bcff] w-full"
       >
         Sign up
       </button>
-    </div>
+      {error && <div className={`text-red-600 text-sm mt-2 mb-7`}>{error}</div>}
+    </form>
   );
 }
