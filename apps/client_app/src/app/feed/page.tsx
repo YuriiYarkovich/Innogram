@@ -1,4 +1,5 @@
 import PostTile from '@/components/feedPage/postTile';
+import PostCreationWindow from '@/components/feedPage/postCreationWindow';
 
 const Page = () => {
   return (
@@ -11,6 +12,7 @@ const Page = () => {
         likesCount={2238}
         postContent={'Cool post asdasdasdasd bla bla bla'}
       />*/}
+      <PostCreationWindow />
     </div>
   );
 };
