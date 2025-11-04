@@ -35,7 +35,7 @@ export default function PostTile({
         />
         <span className={`text-black, text-[18px] ml-[15px]`}>{username}</span>
         <span className={`text-[#79747e] text-[14px] ml-[7px]`}>
-          {timePast}
+          {timePast}h
         </span>
       </div>
       <div className={`flex flex-row justify-center w-full mt-5`}>

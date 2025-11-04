@@ -9,6 +9,8 @@ import { PostLikeRepository } from './repositories/post-like.repository';
 import { File as MulterFile } from 'multer';
 import { CreatePostDto } from './dto/create-post.dto';
 import { WrongUserException } from '../../common/exceptions/wrong-user.exception';
+import { ProfileFollowRepository } from '../follows/profile-follow.repository';
+import { ReturningPostData } from '../../common/types/posts.type';
 
 @Injectable()
 export class PostsService {
@@ -18,6 +20,7 @@ export class PostsService {
     private minioService: MinioService,
     private postAssetRepository: PostAssetRepository,
     private postLikeRepository: PostLikeRepository,
+    private profileFollowRepository: ProfileFollowRepository,
   ) {}
 
   async createPost(
@@ -47,6 +50,16 @@ export class PostsService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async getAllPostsOfSubscribedOn(
+    profileId: string,
+  ): Promise<ReturningPostData> {
+    const followedProfilesIds: string[] =
+      await this.profileFollowRepository.getAllSubscribedOnUsersIds(profileId);
+    followedProfilesIds.push(profileId);
+
+    return await this.postsRepository.getAllOfProfileList(followedProfilesIds);
   }
 
   async uploadFilesArray(

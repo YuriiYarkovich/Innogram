@@ -10,6 +10,7 @@ import { PostAsset } from '../../common/entities/posts/post-asset.entity';
 import { PostLikeRepository } from './repositories/post-like.repository';
 import { PostLike } from '../../common/entities/posts/post-like.entity';
 import { AuthModule } from '../auth/auth.module';
+import { FollowsModule } from '../follows/follows.module';
 
 @Module({
   controllers: [PostsController],
@@ -23,6 +24,7 @@ import { AuthModule } from '../auth/auth.module';
     TypeOrmModule.forFeature([Post, PostAsset, PostLike]),
     MinioModule,
     AuthModule,
+    FollowsModule,
   ],
   exports: [PostsRepository],
 })

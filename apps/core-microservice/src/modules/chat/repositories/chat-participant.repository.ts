@@ -68,7 +68,7 @@ export class ChatParticipantRepository {
     if (newRole === 'participant' || newRole === 'admin') {
       await queryRunner.manager.update(
         ChatParticipant,
-        { profile_id: profileId },
+        { profileId: profileId },
         { role: newRole as ChatParticipantRole },
       );
     } else throw new BadRequestException('There are no such role!');

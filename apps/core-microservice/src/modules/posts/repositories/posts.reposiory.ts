@@ -4,6 +4,7 @@ import { Post } from '../../../common/entities/posts/post.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { PostStatus } from '../../../common/enums/post.enum';
+import { ReturningPostData } from '../../../common/types/posts.type';
 
 @Injectable()
 export class PostsRepository {
@@ -100,5 +101,29 @@ export class PostsRepository {
       { status: PostStatus.ARCHIVED },
     );
     return await this.findPostById(postId);
+  }
+
+  async getAllOfProfileList(profileIds: string[]): Promise<ReturningPostData> {
+    return await this.postRepository.query(
+      `
+      SELECT p.id AS postId,
+             p.profile_id AS "profileId",
+             pr.username,
+             p.content,
+             CASE
+               WHEN EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 < 10
+                 THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
+               ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
+               END AS "timePast",
+             (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount"
+      FROM main.posts AS p
+             LEFT JOIN main.profiles AS pr ON p.profile_id = pr.id
+             LEFT JOIN main.post_likes AS l ON p.id = l.post_id
+             LEFT JOIN main.post_assets AS a ON p.id = a.post_id
+      WHERE p.profile_id = ANY($1)
+        AND status=$2
+    `,
+      [profileIds, PostStatus.ACTIVE],
+    );
   }
 }
