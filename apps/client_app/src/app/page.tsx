@@ -1,8 +1,8 @@
 import Image from 'next/image';
-import GoogleSignInButton from '@/components/google-sign-in-button';
-import LogInForm from '@/components/log-in.form';
-import Separator from '@/components/separator';
-import SignUpButton from '@/components/signUp.button';
+import GoogleSignInButton from '@/components/auth/google-sign-in-button';
+import LogInForm from '@/components/auth/log-in.form';
+import Separator from '@/components/auth/separator';
+import SignUpButton from '@/components/auth/signUp.button';
 
 export default function Home() {
   return (

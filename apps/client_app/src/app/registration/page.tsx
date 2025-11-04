@@ -1,7 +1,7 @@
-import RegistrationForm from '@/components/registration.form';
+import RegistrationForm from '@/components/auth/registration.form';
 import Image from 'next/image';
-import GoogleSignUpButton from '@/components/google-sign-up-button';
-import Separator from '@/components/separator';
+import GoogleSignUpButton from '@/components/auth/google-sign-up-button';
+import Separator from '@/components/auth/separator';
 import React from 'react';
 
 export default function Registration() {
