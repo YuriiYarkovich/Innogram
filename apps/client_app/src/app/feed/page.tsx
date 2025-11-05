@@ -8,10 +8,17 @@ import { CONFIG } from '@/config/apiRoutes';
 type Post = {
   postId: string;
   profileId: string;
+  profileAvatarUrl?: string;
   username: string;
   content: string;
   timePast: string;
   likesCount: number;
+  assets: AssetData[];
+};
+
+type AssetData = {
+  order: number;
+  url: string;
 };
 
 const Page = () => {
@@ -99,6 +106,7 @@ const Page = () => {
                 timePast={post.timePast}
                 likesCount={post.likesCount}
                 postContent={post.content}
+                contentUrl={post.assets[0].url}
               />
             ))
           )}

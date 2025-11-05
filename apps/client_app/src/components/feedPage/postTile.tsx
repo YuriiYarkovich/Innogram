@@ -32,6 +32,7 @@ export default function PostTile({
           width={512}
           height={512}
           draggable={false}
+          unoptimized //TODO delete on prod
         />
         <span className={`text-black, text-[18px] ml-[15px]`}>{username}</span>
         <span className={`text-[#79747e] text-[14px] ml-[7px]`}>
@@ -46,6 +47,7 @@ export default function PostTile({
           height={512}
           draggable={false}
           className={`md:w-[440px] md:h-[440px]`}
+          unoptimized //TODO delete on prod
         />
       </div>
       <div className={`flex flex-row ml-[15px] mt-[10px]`}>

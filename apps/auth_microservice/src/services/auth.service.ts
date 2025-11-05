@@ -219,6 +219,7 @@ export class AuthService {
       profileId: profileId,
       role: redisNote.role,
     };
+
     return { user, newAccessToken };
   }
 

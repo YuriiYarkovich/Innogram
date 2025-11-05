@@ -24,7 +24,10 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { context, CONTEXT_KEYS } from '../../common/cls/request-context';
 import { PostsRepository } from './repositories/posts.reposiory';
-import { ReturningPostData } from '../../common/types/posts.type';
+import {
+  FoundPostData,
+  ReturningPostData,
+} from '../../common/types/posts.type';
 
 @ApiTags('Operations with posts')
 @ApiBearerAuth('access-token')
@@ -57,7 +60,7 @@ export class PostsController {
   @ApiConsumes('multipart/form-data')
   @Get(`/allOfSubscribedOn/`)
   @UseGuards(AuthGuard)
-  async getAllPostsOfSubscribedOnUsers(): Promise<ReturningPostData> {
+  async getAllPostsOfSubscribedOnUsers(): Promise<ReturningPostData[]> {
     const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.postsService.getAllPostsOfSubscribedOn(profileId);
   }

@@ -10,7 +10,11 @@ import { File as MulterFile } from 'multer';
 import { CreatePostDto } from './dto/create-post.dto';
 import { WrongUserException } from '../../common/exceptions/wrong-user.exception';
 import { ProfileFollowRepository } from '../follows/profile-follow.repository';
-import { ReturningPostData } from '../../common/types/posts.type';
+import {
+  FoundPostData,
+  ReturningAssetData,
+  ReturningPostData,
+} from '../../common/types/posts.type';
 
 @Injectable()
 export class PostsService {
@@ -38,8 +42,7 @@ export class PostsService {
         queryRunner,
       );
 
-      let order = 0;
-      await this.uploadFilesArray(files, queryRunner, post, order);
+      await this.uploadFilesArray(files, queryRunner, post);
 
       await queryRunner.commitTransaction();
 
@@ -54,22 +57,54 @@ export class PostsService {
 
   async getAllPostsOfSubscribedOn(
     profileId: string,
-  ): Promise<ReturningPostData> {
+  ): Promise<ReturningPostData[]> {
     const followedProfilesIds: string[] =
       await this.profileFollowRepository.getAllSubscribedOnUsersIds(profileId);
     followedProfilesIds.push(profileId);
 
-    return await this.postsRepository.getAllOfProfileList(followedProfilesIds);
+    const foundData: FoundPostData[] =
+      await this.postsRepository.getAllOfProfileList(followedProfilesIds);
+
+    const returningPostsData: ReturningPostData[] = [];
+    for (const postData of foundData) {
+      const assetsOfPost: PostAsset[] =
+        await this.postAssetRepository.findAssetsByPost(postData.postId);
+      const returningAssetsData: ReturningAssetData[] = [];
+      for (const asset of assetsOfPost) {
+        const assetData: ReturningAssetData = {
+          url: '',
+          order: 0,
+        };
+        const url: string = await this.minioService.getPublicUrl(
+          asset.hashedFileName,
+        );
+        assetData.url = url;
+        assetData.order = asset.order;
+        returningAssetsData.push(assetData);
+      }
+      const returningPostData: ReturningPostData = {
+        postId: postData.postId,
+        profileId: postData.profileId,
+        //TODO find avatar of user
+        username: postData.username,
+        content: postData.content,
+        timePast: postData.timePast,
+        likesCount: postData.likesCount,
+        assets: returningAssetsData,
+      };
+      returningPostsData.push(returningPostData);
+    }
+    return returningPostsData;
   }
 
   async uploadFilesArray(
-    files,
+    files: MulterFile[],
     queryRunner: QueryRunner,
     post: Post,
-    order: number,
   ) {
-    for (const file of files) {
-      const fileData = await this.minioService.uploadFile(file);
+    for (let i: number = 0; i < files.length; i++) {
+      const fileData: { hashedFileName: string; type: string } =
+        await this.minioService.uploadFile(files[i]);
       queryRunner.manager.create(PostAsset, {
         hashedFileName: fileData.hashedFileName,
       });
@@ -78,7 +113,7 @@ export class PostsService {
         post.id,
         queryRunner,
         fileData.type,
-        ++order,
+        i + 1,
       );
     }
   }

@@ -4,7 +4,7 @@ import { Post } from '../../../common/entities/posts/post.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { PostStatus } from '../../../common/enums/post.enum';
-import { ReturningPostData } from '../../../common/types/posts.type';
+import { FoundPostData } from '../../../common/types/posts.type';
 
 @Injectable()
 export class PostsRepository {
@@ -103,7 +103,7 @@ export class PostsRepository {
     return await this.findPostById(postId);
   }
 
-  async getAllOfProfileList(profileIds: string[]): Promise<ReturningPostData> {
+  async getAllOfProfileList(profileIds: string[]): Promise<FoundPostData[]> {
     return await this.postRepository.query(
       `
       SELECT p.id AS "postId",

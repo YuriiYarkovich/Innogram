@@ -20,7 +20,7 @@ export class PostAsset {
   @Column({ type: 'enum', enum: AssetType })
   type: AssetType.VIDEO | AssetType.IMAGE;
 
-  @Column({ type: 'text', name: 'hashed_file_name' })
+  @Column({ type: 'text', name: 'hashed_filename' })
   hashedFileName: string;
 
   @Column({ type: 'int' })

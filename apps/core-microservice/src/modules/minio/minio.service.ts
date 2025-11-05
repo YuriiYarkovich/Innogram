@@ -64,8 +64,8 @@ export class MinioService {
     file: MulterFile,
   ): Promise<{ hashedFileName: string; type: string }> {
     let type: string;
-    const fileExtension = extname(file.originalname).toLowerCase();
-    const mimeType = file.mimetype;
+    const fileExtension: string = extname(file.originalname).toLowerCase();
+    const mimeType: string = file.mimetype;
 
     const isImage: boolean = mimeType.startsWith('image/');
     const isVideo: boolean = mimeType.startsWith('video/');

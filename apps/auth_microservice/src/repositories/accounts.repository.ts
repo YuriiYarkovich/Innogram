@@ -21,7 +21,7 @@ export class AccountsRepository {
     const createAccountQueryResult: QueryResult<Account> = await pool.query(
       `INSERT INTO main.accounts (user_id, email, password_hash, created_by)
          VALUES($1, $2, $3, $1)
-         RETURNING id, password_hash AS passwordHash, user_id AS userId, email, provider;
+         RETURNING id, password_hash AS "passwordHash", user_id AS "userId", email, provider;
         `,
       [createdUser.id, email, hashPassword],
     );
@@ -56,8 +56,8 @@ export class AccountsRepository {
       `
         INSERT INTO main.profiles (user_id, username, display_name, birthday, bio)
         VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, user_id AS userId, username, display_name AS displayName, 
-          birthday, bio, avatar_url AS avatarUrl, is_public AS isPublic, deleted;
+        RETURNING id, user_id AS "userId", username, display_name AS "displayName", 
+          birthday, bio, avatar_url AS "avatarUrl", is_public AS "isPublic", deleted;
       `,
       [createdUser.id, username, displayName, birthday, bio],
     );
@@ -72,8 +72,8 @@ export class AccountsRepository {
       `
         INSERT INTO main.profiles (user_id, username, display_name)
         VALUES ($1, $2, $2)
-        RETURNING id, user_id AS userId, username, display_name AS displayName,
-          birthday, bio, avatar_url AS avatarUrl, is_public AS isPublic, deleted;
+        RETURNING id, user_id AS "userId", username, display_name AS "displayName",
+          birthday, bio, avatar_url AS "avatarUrl", is_public AS "isPublic", deleted;
       `,
       [createdUser.id, displayName],
     );
@@ -100,7 +100,7 @@ export class AccountsRepository {
   ): Promise<{ profileId: string }> {
     const result: QueryResult<{ profileId: string }> = await pool.query(
       `
-       SELECT id AS profileId
+       SELECT id AS "profileId"
        FROM main.profiles
        WHERE user_id=(SELECT user_id FROM main.accounts WHERE id=$1)
       `,
