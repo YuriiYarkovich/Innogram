@@ -15,6 +15,7 @@ import {
   ReturningAssetData,
   ReturningPostData,
 } from '../../common/types/posts.type';
+import { PostLike } from '../../common/entities/posts/post-like.entity';
 
 @Injectable()
 export class PostsService {
@@ -82,6 +83,10 @@ export class PostsService {
         assetData.order = asset.order;
         returningAssetsData.push(assetData);
       }
+      const like: PostLike | null = await this.postLikeRepository.findLike(
+        postData.postId,
+        profileId,
+      );
       const returningPostData: ReturningPostData = {
         postId: postData.postId,
         profileId: postData.profileId,
@@ -90,6 +95,7 @@ export class PostsService {
         content: postData.content,
         timePast: postData.timePast,
         likesCount: postData.likesCount,
+        liked: !!like,
         assets: returningAssetsData,
       };
       returningPostsData.push(returningPostData);

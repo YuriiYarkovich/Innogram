@@ -15,6 +15,7 @@ export interface ReturningPostData {
   content: string;
   timePast: string;
   likesCount: number;
+  liked: boolean;
   assets: ReturningAssetData[];
 }
 

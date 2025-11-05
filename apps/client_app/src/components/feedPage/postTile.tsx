@@ -1,25 +1,75 @@
 'use client';
 
 import Image from 'next/image';
-import React from 'react';
+import React, { FormEvent, useState } from 'react';
+import { CONFIG } from '@/config/apiRoutes';
 
 type PostTileProps = {
+  postId?: string;
   avatarUrl?: string;
   username?: string;
   timePast?: string;
   contentUrl?: string;
   likesCount?: number;
   postContent?: string;
+  liked?: boolean;
 };
 
 export default function PostTile({
+  postId = 'bbf4554a-0fc3-4b69-bcf2-7b30f67413e4',
   avatarUrl = `/images/avaTest.png`,
   username = 'Username',
   timePast = '15h',
   contentUrl = `/images/avaTest.png`,
-  likesCount = 228,
+  likesCount: likesCountFromProps = 228,
   postContent = 'Cool post bla bla bla',
+  liked: likedFromProps = false,
 }: PostTileProps) {
+  const [liked, setLiked] = useState(likedFromProps);
+  const [likesCount, setLikesCount] = useState<number>(
+    Number(likesCountFromProps),
+  );
+
+  const likeOrUnlikePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!liked) {
+      const response: Response = await fetch(
+        `${CONFIG.API.LIKE_POST}${postId}`,
+        {
+          method: 'POST',
+          credentials: 'include',
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      if (response.ok) {
+        setLiked((prev) => !prev);
+        setLikesCount((prev) => prev + 1);
+      }
+    } else {
+      const response: Response = await fetch(
+        `${CONFIG.API.UNLIKE_POST}${postId}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      if (response.ok) {
+        setLiked((prev) => !prev);
+        setLikesCount((prev) => prev - 1);
+      }
+    }
+  };
+
   return (
     <div className={`flex flex-col md:w-[470px] bg-[#e7e0ec]`}>
       <div
@@ -54,9 +104,13 @@ export default function PostTile({
         <div
           className={'flex items-center justify-center md:w-[45px] md:h-[45px]'}
         >
-          <button>
+          <button onClick={likeOrUnlikePost}>
             <Image
-              src={`/images/icons/emptyHeart.png`}
+              src={
+                liked
+                  ? `/images/icons/heart.png`
+                  : `/images/icons/emptyHeart.png`
+              }
               alt={`Like icon`}
               width={33}
               height={33}

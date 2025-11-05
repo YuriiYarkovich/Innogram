@@ -13,6 +13,7 @@ type Post = {
   content: string;
   timePast: string;
   likesCount: number;
+  liked: boolean;
   assets: AssetData[];
 };
 
@@ -127,11 +128,13 @@ const Page = () => {
             posts.map((post) => (
               <PostTile
                 key={post.postId}
+                postId={post.postId}
                 username={post.username}
                 timePast={post.timePast}
                 likesCount={post.likesCount}
                 postContent={post.content}
                 contentUrl={post.assets[0].url}
+                liked={post.liked}
               />
             ))
           )}
