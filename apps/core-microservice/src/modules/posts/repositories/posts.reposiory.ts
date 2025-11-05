@@ -106,7 +106,7 @@ export class PostsRepository {
   async getAllOfProfileList(profileIds: string[]): Promise<ReturningPostData> {
     return await this.postRepository.query(
       `
-      SELECT p.id AS postId,
+      SELECT p.id AS "postId",
              p.profile_id AS "profileId",
              pr.username,
              p.content,

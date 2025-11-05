@@ -57,7 +57,7 @@ const Page = () => {
         className={`flex flex-row min-h-screen w-full justify-center items-center`}
       >
         <aside
-          className={`fixed left-0 w-64 bg-[#eaddff] rounded-3xl p-4 mt-[-150px]`}
+          className={`fixed left-0 w-64 top-1/2 -translate-y-1/2 bg-[#eaddff] rounded-3xl p-4`}
         >
           <ul className="space-y-2">
             <li>
