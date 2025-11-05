@@ -8,5 +8,6 @@ export const CONFIG = {
     REGISTRATION: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/registration`,
     GET_POSTS_OF_SUBSCRIBED_ON: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/posts/allOfSubscribedOn`,
     GET_CURRENT_PROFILE_INFO: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/profiles/info`,
+    CREATE_POST: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/posts/create`,
   },
 };

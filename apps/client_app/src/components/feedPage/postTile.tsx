@@ -14,14 +14,14 @@ type PostTileProps = {
 
 export default function PostTile({
   avatarUrl = `/images/avaTest.png`,
-  username = 'LolekBolek',
+  username = 'Username',
   timePast = '15h',
   contentUrl = `/images/avaTest.png`,
   likesCount = 228,
   postContent = 'Cool post bla bla bla',
 }: PostTileProps) {
   return (
-    <div className={`flex flex-col md:w-[470px] md:h-[650px] bg-[#e7e0ec]`}>
+    <div className={`flex flex-col md:w-[470px] bg-[#e7e0ec]`}>
       <div
         className={`flex flex-row items-center md:w-full md:h-[40px] mt-[15px] ml-[15px]`}
       >
@@ -101,7 +101,7 @@ export default function PostTile({
         <span className={`text-[16px] font-bold`}>{username}</span>
         <span className={`text-[14px] mt-[1px]`}>{postContent}</span>
       </div>
-      <div className="flex items-center my-6 w-full">
+      <div className="flex items-center mt-3 w-full">
         <div className={`flex-grow h-[2px] bg-[#624b98]`}></div>
       </div>
     </div>

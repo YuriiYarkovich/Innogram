@@ -30,7 +30,7 @@ export class PostsService {
   async createPost(
     profile_id: string,
     dto: CreatePostDto,
-    files,
+    files: MulterFile[],
   ): Promise<Post> {
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();

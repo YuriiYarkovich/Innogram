@@ -2,6 +2,8 @@
 
 import Image from 'next/image';
 import React, { useState } from 'react';
+import { CONFIG } from '@/config/apiRoutes';
+import returnErrorMessage from '@/utils/showAuthError';
 
 type CreatePostModalProps = {
   userAvatarUrl?: string;
@@ -19,6 +21,7 @@ export default function PostCreationModal({
   if (!isOpen) return null;
 
   const [file, setFile] = useState<File | null>(null);
+  const [content, setContent] = useState('');
 
   const handleChangeFileInPlaceholder = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -28,7 +31,30 @@ export default function PostCreationModal({
     }
   };
 
-  const createPost = () => {};
+  const createPost = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append('content', content);
+    if (file) {
+      formData.append('files', file);
+    }
+
+    const response: Response = await fetch(CONFIG.API.CREATE_POST, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+
+    if (response.status === 201) {
+      onClose();
+      location.reload();
+    }
+  };
 
   return (
     <div
@@ -113,11 +139,14 @@ export default function PostCreationModal({
         </div>
 
         <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
           placeholder={`What do you think?`}
           className={`flex md:w-[400px] md:h-[122px] bg-white mt-5`}
         ></textarea>
         <button
           className={`cursor-pointer bg-[#4f378a] text-white text-center rounded-[20px] px-4 py-2 hover:bg-[#d0bcff] md:w-[400px] mt-6 mb-5`}
+          type={`submit`}
         >
           Create post
         </button>
