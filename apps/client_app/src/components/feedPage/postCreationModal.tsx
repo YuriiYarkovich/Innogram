@@ -81,10 +81,12 @@ export default function PostCreationModal({
             // Превью файла
             <div className="w-full h-full flex justify-center items-center bg-transparent">
               {file.type.startsWith('image/') ? (
-                <img
+                <Image
                   src={URL.createObjectURL(file)}
                   draggable={false}
                   alt="preview"
+                  width={400}
+                  height={400}
                   className="object-contain w-full h-full"
                 />
               ) : (
@@ -105,6 +107,7 @@ export default function PostCreationModal({
             alt={'User avatar url'}
             width={30}
             height={30}
+            unoptimized
           />
           <span className={`font-bold text-[14px]`}>{username}</span>
         </div>

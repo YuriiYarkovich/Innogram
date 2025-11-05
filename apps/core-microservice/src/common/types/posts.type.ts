@@ -20,5 +20,5 @@ export interface ReturningPostData {
 
 export interface ReturningAssetData {
   order: number;
-  url: string;
+  url: string | null;
 }

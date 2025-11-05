@@ -75,7 +75,7 @@ export class PostsService {
           url: '',
           order: 0,
         };
-        const url: string = await this.minioService.getPublicUrl(
+        const url: string | null = await this.minioService.getPublicUrl(
           asset.hashedFileName,
         );
         assetData.url = url;

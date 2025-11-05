@@ -41,5 +41,5 @@ export class PostAsset {
   @JoinColumn({ name: 'post_id' })
   post: Post;
 
-  url?: string;
+  url: string | null;
 }

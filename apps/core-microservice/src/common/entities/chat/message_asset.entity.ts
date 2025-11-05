@@ -40,5 +40,5 @@ export class MessageAsset {
   @JoinColumn({ name: 'message_id' })
   message: Message;
 
-  url: string;
+  url: string | null;
 }

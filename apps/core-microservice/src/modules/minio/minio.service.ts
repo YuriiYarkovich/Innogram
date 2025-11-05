@@ -95,7 +95,8 @@ export class MinioService {
     return { hashedFileName, type };
   }
 
-  async getPublicUrl(fileKey: string): Promise<string> {
+  async getPublicUrl(fileKey: string): Promise<string | null> {
+    if (!fileKey) return null;
     const command = new GetObjectCommand({
       Bucket: this.bucketName,
       Key: fileKey,

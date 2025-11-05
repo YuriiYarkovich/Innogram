@@ -21,9 +21,19 @@ type AssetData = {
   url: string;
 };
 
+type ReceivingProfileInfo = {
+  profileId: string;
+  username: string;
+  birthday: string;
+  bio: string;
+  avatarUrl: string;
+  isPublic: boolean;
+};
+
 const Page = () => {
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [profile, setProfile] = useState<ReceivingProfileInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,6 +43,19 @@ const Page = () => {
       document.body.style.overflow = '';
     }
   }, [isCreatePostModalOpen]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const res: Response = await fetch(CONFIG.API.GET_CURRENT_PROFILE_INFO, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      const profileData: ReceivingProfileInfo = await res.json();
+      console.log(`Received profile data: ${JSON.stringify(profileData)}`);
+      setProfile(profileData);
+    };
+    fetchProfile();
+  }, []);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -58,6 +81,8 @@ const Page = () => {
     <div>
       <PostCreationModal
         isOpen={isCreatePostModalOpen}
+        username={profile?.username}
+        userAvatarUrl={profile?.avatarUrl}
         onClose={() => setIsCreatePostModalOpen(false)}
       />
       <div

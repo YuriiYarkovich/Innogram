@@ -68,8 +68,13 @@ export class Profile {
     example: 'Hello, I am ceclik, I am 34 y.o.',
     description: 'Description of users profile',
   })
-  @Column({ type: 'varchar', length: 500, nullable: true, name: 'avatar_url' })
-  avatarUrl: string;
+  @Column({
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+    name: 'avatar_filename',
+  })
+  avatarFileName: string;
 
   @ApiProperty({
     example: 'true',
