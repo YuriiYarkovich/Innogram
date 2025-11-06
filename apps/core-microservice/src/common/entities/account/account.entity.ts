@@ -10,7 +10,7 @@ import {
 import { User } from './user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
-@Entity('accounts', { schema: 'main' })
+@Entity('accounts', { schema: 'auth' })
 export class Account {
   @ApiProperty({
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',

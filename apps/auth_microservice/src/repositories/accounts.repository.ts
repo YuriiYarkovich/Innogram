@@ -7,7 +7,7 @@ import { Profile } from '../types/profile.type.ts';
 export class AccountsRepository {
   async createUser(): Promise<User> {
     const createUserQueryResult: QueryResult<User> = await pool.query(`
-        INSERT INTO main.users DEFAULT VALUES 
+        INSERT INTO auth.users DEFAULT VALUES 
         RETURNING id, role;
     `);
     return createUserQueryResult.rows[0];
@@ -19,7 +19,7 @@ export class AccountsRepository {
     hashPassword: string,
   ): Promise<Account> {
     const createAccountQueryResult: QueryResult<Account> = await pool.query(
-      `INSERT INTO main.accounts (user_id, email, password_hash, created_by)
+      `INSERT INTO auth.accounts (user_id, email, password_hash, created_by)
          VALUES($1, $2, $3, $1)
          RETURNING id, password_hash AS "passwordHash", user_id AS "userId", email, provider;
         `,
@@ -35,7 +35,7 @@ export class AccountsRepository {
     provider: string,
   ): Promise<Account> {
     const createAccountQueryResult: QueryResult<Account> = await pool.query(
-      `INSERT INTO main.accounts (user_id, email, provider, created_by)
+      `INSERT INTO auth.accounts (user_id, email, provider, created_by)
        VALUES ($1, $2, $3, $1)
        RETURNING *;
       `,
@@ -57,7 +57,7 @@ export class AccountsRepository {
         INSERT INTO main.profiles (user_id, username, display_name, birthday, bio)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING id, user_id AS "userId", username, display_name AS "displayName", 
-          birthday, bio, avatar_url AS "avatarUrl", is_public AS "isPublic", deleted;
+          birthday, bio, avatar_filename AS "avatarFilename", is_public AS "isPublic", deleted;
       `,
       [createdUser.id, username, displayName, birthday, bio],
     );
@@ -73,7 +73,7 @@ export class AccountsRepository {
         INSERT INTO main.profiles (user_id, username, display_name)
         VALUES ($1, $2, $2)
         RETURNING id, user_id AS "userId", username, display_name AS "displayName",
-          birthday, bio, avatar_url AS "avatarUrl", is_public AS "isPublic", deleted;
+          birthday, bio, avatar_filename AS "avatarFilename", is_public AS "isPublic", deleted;
       `,
       [createdUser.id, displayName],
     );
@@ -85,8 +85,8 @@ export class AccountsRepository {
       await pool.query<AccountWithProfileId>(
         `
         SELECT a.id, a.email, a.password_hash AS "passwordHash", a.user_id AS "userId", u.role, p.id AS "profileId"
-        FROM main.accounts AS a
-               LEFT JOIN main.users AS u ON a.user_id = u.id
+        FROM auth.accounts AS a
+               LEFT JOIN auth.users AS u ON a.user_id = u.id
                LEFT JOIN main.profiles AS p ON a.user_id = p.user_id
         WHERE email = $1
       `,
@@ -102,7 +102,7 @@ export class AccountsRepository {
       `
        SELECT id AS "profileId"
        FROM main.profiles
-       WHERE user_id=(SELECT user_id FROM main.accounts WHERE id=$1)
+       WHERE user_id=(SELECT user_id FROM auth.accounts WHERE id=$1)
       `,
       [account_id],
     );
@@ -113,7 +113,7 @@ export class AccountsRepository {
   async updateLastLogin(accountId: string) {
     await pool.query(
       `
-       UPDATE main.accounts
+       UPDATE auth.accounts
        SET last_login_at=NOW()
        WHERE id=$1
       `,

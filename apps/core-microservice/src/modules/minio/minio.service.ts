@@ -19,8 +19,15 @@ import { ConfigService } from '@nestjs/config';
 import * as ffmpeg from 'fluent-ffmpeg';
 import * as ffprobeStatic from 'ffprobe-static';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { Worker } from 'worker_threads';
+import path from 'node:path';
 
 ffmpeg.setFfprobePath(ffprobeStatic.path);
+
+interface VideoWorkerMessage {
+  duration?: number;
+  error?: string;
+}
 
 @Injectable()
 export class MinioService {
@@ -31,8 +38,8 @@ export class MinioService {
 
   constructor(private readonly config: ConfigService) {
     this.s3Client = new S3Client({
-      region: 'us-east-1',
-      endpoint: 'http://localhost:9000',
+      region: this.config.get<string>('MINIO_REGION'),
+      endpoint: this.config.get<string>('S3_ENDPOINT'),
       credentials: {
         accessKeyId:
           this.config.get<string>('MINIO_ROOT_USER') ?? 'innogram_user', //TODO переделать без вставки строк
@@ -48,14 +55,23 @@ export class MinioService {
 
   private getVideoDuration(buffer: Buffer): Promise<number> {
     return new Promise((resolve, reject) => {
-      const tempPath = `/tmp/${uuid.v4()}.mp4`;
-      import('fs').then((fs) => {
-        fs.writeFileSync(tempPath, buffer);
-        ffmpeg.ffprobe(tempPath, (err, metadata) => {
-          fs.unlinkSync(tempPath);
-          if (err) return reject(err);
-          resolve(metadata.format.duration || 0);
-        });
+      const worker = new Worker(
+        path.resolve(__dirname, 'video_duration.worker.ts'),
+        {
+          workerData: { buffer },
+          execArgv: ['-r', 'ts-node/register'],
+        },
+      );
+
+      worker.on('message', (msg: VideoWorkerMessage) => {
+        if (msg.error) return reject(new Error(msg.error));
+        resolve(msg.duration ?? 0);
+      });
+
+      worker.on('error', reject);
+      worker.on('exit', (code) => {
+        if (code !== 0)
+          reject(new Error(`Worker stopped with exit code ${code}`));
       });
     });
   }

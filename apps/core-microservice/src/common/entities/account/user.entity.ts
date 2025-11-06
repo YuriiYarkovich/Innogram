@@ -11,7 +11,7 @@ import { Profile } from './profile.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { UserRoles } from '../../enums/user-roles.enum';
 
-@Entity('users', { schema: 'main' })
+@Entity('users', { schema: 'auth' })
 export class User {
   @ApiProperty({
     example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',

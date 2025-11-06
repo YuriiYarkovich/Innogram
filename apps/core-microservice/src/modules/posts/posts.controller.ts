@@ -23,11 +23,7 @@ import { PostLike } from '../../common/entities/posts/post-like.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { context, CONTEXT_KEYS } from '../../common/cls/request-context';
-import { PostsRepository } from './repositories/posts.reposiory';
-import {
-  FoundPostData,
-  ReturningPostData,
-} from '../../common/types/posts.type';
+import { ReturningPostData } from '../../common/types/posts.type';
 
 @ApiTags('Operations with posts')
 @ApiBearerAuth('access-token')

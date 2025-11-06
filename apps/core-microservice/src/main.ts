@@ -3,10 +3,9 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-import helmet from 'helmet';
-import { HttpExceptionFilter } from './common/global-filters/http-exception.filter';
 import cookieParser from 'cookie-parser';
 import { ContextMiddleware } from './common/middleware/context.middleware';
+import { helmetConfig } from './config/helmet.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,35 +14,7 @@ async function bootstrap() {
   const frontendUrl = configService.get<string>('CLIENT_URL');
   const isDev = configService.get<string>('NODE_ENV') === 'development';
 
-  app.use(
-    helmet({
-      contentSecurityPolicy: {
-        useDefaults: true,
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: [
-            "'self'",
-            "'unsafe-inline'",
-            'https://cdn.jsdelivr.net',
-            'https://unpkg.com',
-          ],
-          styleSrc: [
-            "'self'",
-            "'unsafe-inline'",
-            'https://fonts.googleapis.com',
-          ],
-          fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-          imgSrc: ["'self'", 'data:', 'https:'],
-          connectSrc: ["'self'", '*'],
-        },
-      },
-      crossOriginEmbedderPolicy: false,
-      crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
-      crossOriginResourcePolicy: { policy: 'cross-origin' },
-      referrerPolicy: { policy: 'no-referrer' },
-    }),
-  );
-  //app.useGlobalFilters(new HttpExceptionFilter(configService));
+  app.use(helmetConfig);
   app.use(new ContextMiddleware().use);
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors({

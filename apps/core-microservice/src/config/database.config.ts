@@ -16,6 +16,7 @@ import { Message } from '../common/entities/chat/message.entity';
 import { PostLike } from '../common/entities/posts/post-like.entity';
 import { CommentLike } from '../common/entities/comments/comment-like.entity';
 import { MessageReceiver } from '../common/entities/chat/Message-Receiver.entity';
+import path from 'node:path';
 
 @Injectable()
 export class DatabaseConfig implements TypeOrmOptionsFactory {
@@ -30,21 +31,14 @@ export class DatabaseConfig implements TypeOrmOptionsFactory {
       password: this.config.get<string>('POSTGRES_PASSWORD'),
       database: this.config.get<string>('POSTGRES_DB'),
       entities: [
-        User,
-        Profile,
-        Account,
-        Post,
-        PostAsset,
-        ProfileFollow,
-        Comment,
-        CommentMention,
-        Chat,
-        ChatParticipant,
-        Message,
-        MessageAsset,
-        PostLike,
-        CommentLike,
-        MessageReceiver,
+        path.join(
+          __dirname,
+          '..',
+          'common',
+          'entities',
+          '**',
+          '*.entity.{ts,js}',
+        ),
       ],
       autoLoadEntities: true,
       synchronize: true,
