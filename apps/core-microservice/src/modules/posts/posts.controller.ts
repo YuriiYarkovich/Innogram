@@ -45,7 +45,7 @@ export class PostsController {
   @ApiOperation({ summary: 'Returns all posts of profile' })
   @ApiResponse({ status: 200, type: Post })
   @Get('/allOfProfile/:profileId')
-  async getByAccount(@Param('profileId') profileId: string) {
+  async getByProfile(@Param('profileId') profileId: string) {
     return await this.postsService.getByProfile(profileId);
   }
 

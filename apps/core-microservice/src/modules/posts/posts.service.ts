@@ -56,16 +56,10 @@ export class PostsService {
     }
   }
 
-  async getAllPostsOfSubscribedOn(
+  private async createReturningPostsArray(
+    foundData: FoundPostData[],
     profileId: string,
-  ): Promise<ReturningPostData[]> {
-    const followedProfilesIds: string[] =
-      await this.profileFollowRepository.getAllSubscribedOnUsersIds(profileId);
-    followedProfilesIds.push(profileId);
-
-    const foundData: FoundPostData[] =
-      await this.postsRepository.getAllOfProfileList(followedProfilesIds);
-
+  ) {
     const returningPostsData: ReturningPostData[] = [];
     for (const postData of foundData) {
       const assetsOfPost: PostAsset[] =
@@ -100,7 +94,21 @@ export class PostsService {
       };
       returningPostsData.push(returningPostData);
     }
+
     return returningPostsData;
+  }
+
+  async getAllPostsOfSubscribedOn(
+    profileId: string,
+  ): Promise<ReturningPostData[]> {
+    const followedProfilesIds: string[] =
+      await this.profileFollowRepository.getAllSubscribedOnUsersIds(profileId);
+    followedProfilesIds.push(profileId);
+
+    const foundData: FoundPostData[] =
+      await this.postsRepository.getAllOfProfileList(followedProfilesIds);
+
+    return await this.createReturningPostsArray(foundData, profileId);
   }
 
   async uploadFilesArray(
@@ -124,19 +132,11 @@ export class PostsService {
     }
   }
 
-  async getByProfile(profileId: string) {
-    const foundPosts = await this.postsRepository.getByProfile(profileId);
+  async getByProfile(profileId: string): Promise<ReturningPostData[]> {
+    const foundData: FoundPostData[] =
+      await this.postsRepository.getAllOfProfileList([profileId]);
 
-    for (const post of foundPosts) {
-      await Promise.all(
-        post.postAssets.map(async (postAsset: PostAsset) => {
-          postAsset.url = await this.minioService.getPublicUrl(
-            postAsset.hashedFileName,
-          );
-        }),
-      );
-    }
-    return foundPosts;
+    return await this.createReturningPostsArray(foundData, profileId);
   }
 
   async updatePost(

@@ -1,19 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import React, { FormEvent, useState } from 'react';
+import React, { useState } from 'react';
 import { CONFIG } from '@/config/apiRoutes';
-
-type PostTileProps = {
-  postId?: string;
-  avatarUrl?: string;
-  username?: string;
-  timePast?: string;
-  contentUrl?: string;
-  likesCount?: number;
-  postContent?: string;
-  liked?: boolean;
-};
 
 export default function PostTile({
   postId = 'bbf4554a-0fc3-4b69-bcf2-7b30f67413e4',

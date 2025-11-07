@@ -3,14 +3,6 @@
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { CONFIG } from '@/config/apiRoutes';
-import returnErrorMessage from '@/utils/showAuthError';
-
-type CreatePostModalProps = {
-  userAvatarUrl?: string;
-  username?: string;
-  isOpen: boolean;
-  onClose: () => void;
-};
 
 export default function PostCreationModal({
   userAvatarUrl = `/images/avaTest.png`,
