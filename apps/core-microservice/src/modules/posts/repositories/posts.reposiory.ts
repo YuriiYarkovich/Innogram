@@ -122,6 +122,7 @@ export class PostsRepository {
              LEFT JOIN main.post_assets AS a ON p.id = a.post_id
       WHERE p.profile_id = ANY($1)
         AND status=$2
+      ORDER BY p.created_at DESC
     `,
       [profileIds, PostStatus.ACTIVE],
     );
