@@ -5,6 +5,7 @@ export const CONFIG = {
   API: {
     GOOGLE_AUTH: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/google`,
     LOG_IN: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/login`,
+    LOG_OUT: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/logout`,
     REGISTRATION: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/registration`,
     GET_POSTS_OF_SUBSCRIBED_ON: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/posts/allOfSubscribedOn`,
     GEL_ALL_POSTS_OF_PROFILE: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/posts/allOfProfile/`,

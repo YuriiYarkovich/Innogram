@@ -6,8 +6,11 @@ import React, { useEffect, useState } from 'react';
 import PostPreviewImage from '@/components/profilePage/post-preview-image';
 import { CONFIG } from '@/config/apiRoutes';
 import EditProfileModal from '@/components/profilePage/edit-profile.modal';
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { useRouter } from 'next/navigation';
 
 const Page = () => {
+  const router: AppRouterInstance = useRouter();
   const [profile, setProfile] = useState<Profile>({
     avatarUrl: '',
     bio: '',
@@ -23,6 +26,21 @@ const Page = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+
+  const handleLogout = async () => {
+    console.log(`In handle logout method!`);
+
+    const response: Response = await fetch(CONFIG.API.LOG_OUT, {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    if (response.ok) {
+      router.push(`/`);
+    } else {
+      console.log(`Message: ${JSON.stringify(response.json())}`);
+    }
+  };
 
   useEffect(() => {
     if (isEditProfileModalOpen) {
@@ -99,8 +117,8 @@ const Page = () => {
           ) : profile === null ? (
             <p>Error while loading profile info</p>
           ) : (
-            <div className={`flex flex-col w-full {/*bg-blue-600*/}`}>
-              <div className={`flex flex-row w-full {/*bg-green-600*/} gap-10`}>
+            <div className={`flex flex-col w-full`}>
+              <div className={`flex flex-row w-full gap-10`}>
                 <Image
                   className={`rounded-[270px] md:w-[155px] md:h-[155px] mt-15 ml-15`}
                   src={profile.avatarUrl || `/images/avaTest.png`}
@@ -139,6 +157,16 @@ const Page = () => {
                   </div>
                   <span className={`text-[#79747e]`}>{profile.bio}</span>
                 </div>
+                <button className={`ml-50`} onClick={handleLogout}>
+                  <Image
+                    src={`/images/icons/logout.svg`}
+                    alt={`logout button`}
+                    height={40}
+                    width={40}
+                    draggable={false}
+                    className={`md:w-[40px] md:h-[40px] hover:md:w-[47px] hover:md:h-[47px] cursor-pointer`}
+                  />
+                </button>
               </div>
               <div
                 className={`flex flex-row w-full justify-center gap-20 mt-10 mb-10`}
