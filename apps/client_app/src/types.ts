@@ -33,6 +33,12 @@ type CreatePostModalProps = {
   onClose: () => void;
 };
 
+type EditProfileModalProps = {
+  profile: Profile;
+  isOpen: boolean;
+  onClose: () => void;
+};
+
 type Profile = {
   profileId: string;
   username: string;

@@ -67,6 +67,7 @@ const Page = () => {
                 postContent={post.content}
                 contentUrl={post.assets[0].url} //TODO add possibility to see all the pictures
                 liked={post.liked}
+                avatarUrl={post.profileAvatarUrl}
               />
             ))
           )}

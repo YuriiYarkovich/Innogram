@@ -1,8 +1,9 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Profile } from '../../../common/entities/account/profile.entity';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { FindingProfileInfo } from '../../../common/types/profile.type';
+import { EditProfileDto } from '../dto/edit-profile.dto';
 
 @Injectable()
 export class ProfilesRepository {
@@ -28,5 +29,39 @@ export class ProfilesRepository {
     );
 
     return result[0];
+  }
+
+  async findById(profileId: string) {
+    return await this.profileRepository.findOne({ where: { id: profileId } });
+  }
+
+  async updateProfile(
+    queryRunner: QueryRunner,
+    profileId: string,
+    dto: EditProfileDto,
+    avatarFileName: string | null = null,
+  ) {
+    if (!avatarFileName) {
+      await queryRunner.manager.update(
+        Profile,
+        { id: profileId },
+        {
+          username: dto.username,
+          bio: dto.bio,
+          birthday: dto.birthday,
+        },
+      );
+    } else {
+      await queryRunner.manager.update(
+        Profile,
+        { id: profileId },
+        {
+          username: dto.username,
+          bio: dto.bio,
+          birthday: dto.birthday,
+          avatarFileName,
+        },
+      );
+    }
   }
 }

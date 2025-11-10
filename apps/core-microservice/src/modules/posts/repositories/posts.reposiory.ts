@@ -106,24 +106,25 @@ export class PostsRepository {
   async getAllOfProfileList(profileIds: string[]): Promise<FoundPostData[]> {
     return await this.postRepository.query(
       `
-      SELECT p.id AS "postId",
-             p.profile_id AS "profileId",
-             pr.username,
-             p.content,
-             CASE
-               WHEN EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 < 10
-                 THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
-               ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
-               END AS "timePast",
-             (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount"
-      FROM main.posts AS p
-             LEFT JOIN main.profiles AS pr ON p.profile_id = pr.id
-             LEFT JOIN main.post_likes AS l ON p.id = l.post_id
-             LEFT JOIN main.post_assets AS a ON p.id = a.post_id
-      WHERE p.profile_id = ANY($1)
-        AND status=$2
-      ORDER BY p.created_at DESC
-    `,
+        SELECT p.id                                                            AS "postId",
+               p.profile_id                                                    AS "profileId",
+               pr.username,
+               pr.avatar_filename                                              AS "profileAvatarFilename",
+               p.content,
+               CASE
+                 WHEN EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 < 10
+                   THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
+                 ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
+                 END                                                           AS "timePast",
+               (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount"
+        FROM main.posts AS p
+               LEFT JOIN main.profiles AS pr ON p.profile_id = pr.id
+               LEFT JOIN main.post_likes AS l ON p.id = l.post_id
+               LEFT JOIN main.post_assets AS a ON p.id = a.post_id
+        WHERE p.profile_id = ANY ($1)
+          AND status = $2
+        ORDER BY p.created_at DESC
+      `,
       [profileIds, PostStatus.ACTIVE],
     );
   }

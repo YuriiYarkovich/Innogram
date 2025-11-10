@@ -2,6 +2,7 @@ export interface FoundPostData {
   postId: string;
   profileId: string;
   username: string;
+  profileAvatarFilename: string;
   content: string;
   timePast: string;
   likesCount: number;
@@ -10,7 +11,7 @@ export interface FoundPostData {
 export interface ReturningPostData {
   postId: string;
   profileId: string;
-  profileAvatarUrl?: string;
+  profileAvatarUrl?: string | null;
   username: string;
   content: string;
   timePast: string;

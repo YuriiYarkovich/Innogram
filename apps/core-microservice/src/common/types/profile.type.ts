@@ -14,7 +14,7 @@ export interface FindingProfileInfo {
   username: string;
   birthday: string;
   bio: string;
-  avatarFileName?: string;
+  avatarFilename?: string;
   isPublic: boolean;
   postsAmount: number;
   subscribersAmount: number;

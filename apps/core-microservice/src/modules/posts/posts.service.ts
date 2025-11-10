@@ -59,7 +59,7 @@ export class PostsService {
   private async createReturningPostsArray(
     foundData: FoundPostData[],
     profileId: string,
-  ) {
+  ): Promise<ReturningPostData[]> {
     const returningPostsData: ReturningPostData[] = [];
     for (const postData of foundData) {
       const assetsOfPost: PostAsset[] =
@@ -81,10 +81,14 @@ export class PostsService {
         postData.postId,
         profileId,
       );
+
+      const profileAvatarUrl: string | null =
+        await this.minioService.getPublicUrl(postData.profileAvatarFilename);
+
       const returningPostData: ReturningPostData = {
         postId: postData.postId,
         profileId: postData.profileId,
-        //TODO find avatar of user
+        profileAvatarUrl,
         username: postData.username,
         content: postData.content,
         timePast: postData.timePast,

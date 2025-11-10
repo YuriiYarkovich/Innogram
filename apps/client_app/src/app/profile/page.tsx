@@ -5,12 +5,32 @@ import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import PostPreviewImage from '@/components/profilePage/post-preview-image';
 import { CONFIG } from '@/config/apiRoutes';
+import EditProfileModal from '@/components/profilePage/edit-profile.modal';
 
 const Page = () => {
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<Profile>({
+    avatarUrl: '',
+    bio: '',
+    birthday: '',
+    isPublic: false,
+    postsAmount: 0,
+    profileId: '',
+    subscribersAmount: 0,
+    subscriptionsAmount: 0,
+    username: '',
+  });
   const [profileLoading, setProfileLoading] = useState(true);
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (isEditProfileModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [isEditProfileModalOpen]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,95 +78,107 @@ const Page = () => {
   });
 
   return (
-    <div
-      className={`flex flex-row min-h-screen w-full justify-center items-center`}
-    >
-      <SidePanel username={profile?.username} avatarUrl={profile?.avatarUrl} />
-      <main
-        className={`flex flex-col min-h-screen md:w-[900px] {/*bg-red-600*/}`}
+    <div>
+      <EditProfileModal
+        profile={profile}
+        isOpen={isEditProfileModalOpen}
+        onClose={() => setIsEditProfileModalOpen(false)}
+      />
+      <div
+        className={`flex flex-row min-h-screen w-full justify-center items-center`}
       >
-        {profileLoading ? (
-          <p>loading...</p>
-        ) : profile === null ? (
-          <p>Error while loading profile info</p>
-        ) : (
-          <div className={`flex flex-col w-full {/*bg-blue-600*/}`}>
-            <div className={`flex flex-row w-full {/*bg-green-600 gap-10*/}`}>
-              <Image
-                className={`rounded-[270px] md:w-[155px] md:h-[155px] mt-15 ml-15`}
-                src={profile.avatarUrl || `/images/avaTest.png`}
-                alt={'User avatar'}
-                width={30}
-                height={30}
-                unoptimized
-              />
-              <div className={`flex flex-col mt-20 gap-8`}>
-                <span className={`font-bold text-[32px]`}>
-                  {profile.username}
-                </span>
-                <div className={`flex flex-row gap-3`}>
-                  <div className={`flex flex-row gap-1`} /*posts count text*/>
-                    <span className={`font-bold text-[20px]`}>
-                      {profile.postsAmount}
-                    </span>
-                    <span className={`text-[20px]`}>posts</span>
+        <SidePanel
+          username={profile?.username}
+          avatarUrl={profile?.avatarUrl}
+        />
+        <main
+          className={`flex flex-col min-h-screen md:w-[900px] {/*bg-red-600*/}`}
+        >
+          {profileLoading ? (
+            <p>loading...</p>
+          ) : profile === null ? (
+            <p>Error while loading profile info</p>
+          ) : (
+            <div className={`flex flex-col w-full {/*bg-blue-600*/}`}>
+              <div className={`flex flex-row w-full {/*bg-green-600*/} gap-10`}>
+                <Image
+                  className={`rounded-[270px] md:w-[155px] md:h-[155px] mt-15 ml-15`}
+                  src={profile.avatarUrl || `/images/avaTest.png`}
+                  alt={'User avatar'}
+                  width={30}
+                  height={30}
+                  unoptimized
+                />
+                <div className={`flex flex-col mt-20 gap-8`}>
+                  <span className={`font-bold text-[32px]`}>
+                    {profile.username}
+                  </span>
+                  <div className={`flex flex-row gap-3`}>
+                    <div className={`flex flex-row gap-1`} /*posts count text*/>
+                      <span className={`font-bold text-[20px]`}>
+                        {profile.postsAmount}
+                      </span>
+                      <span className={`text-[20px]`}>posts</span>
+                    </div>
+                    <div
+                      className={`flex flex-row gap-1`} /*subscribers count text*/
+                    >
+                      <span className={`font-bold text-[20px]`}>
+                        {profile.subscribersAmount}
+                      </span>
+                      <span className={`text-[20px]`}>subscribers</span>
+                    </div>
+                    <div
+                      className={`flex flex-row gap-1`} /*subscriptions count text*/
+                    >
+                      <span className={`font-bold text-[20px]`}>
+                        {profile.subscriptionsAmount}
+                      </span>
+                      <span className={`text-[20px]`}>subscriptions</span>
+                    </div>
                   </div>
-                  <div
-                    className={`flex flex-row gap-1`} /*subscribers count text*/
-                  >
-                    <span className={`font-bold text-[20px]`}>
-                      {profile.subscribersAmount}
-                    </span>
-                    <span className={`text-[20px]`}>subscribers</span>
-                  </div>
-                  <div
-                    className={`flex flex-row gap-1`} /*subscriptions count text*/
-                  >
-                    <span className={`font-bold text-[20px]`}>
-                      {profile.subscriptionsAmount}
-                    </span>
-                    <span className={`text-[20px]`}>subscriptions</span>
-                  </div>
+                  <span className={`text-[#79747e]`}>{profile.bio}</span>
                 </div>
               </div>
-            </div>
-            <div
-              className={`flex flex-row w-full justify-center gap-20 mt-10 mb-10`}
-            >
-              <button
-                className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+              <div
+                className={`flex flex-row w-full justify-center gap-20 mt-10 mb-10`}
               >
-                Edit profile
-              </button>
-              <button
-                className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-              >
-                View archive
-              </button>
+                <button
+                  className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                  onClick={() => setIsEditProfileModalOpen(true)}
+                >
+                  Edit profile
+                </button>
+                <button
+                  className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                >
+                  View archive
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-
-        <div className="flex items-center mt-3 w-full">
-          <div className={`flex-grow h-[2px] bg-[#624b98]`}></div>
-        </div>
-        <div
-          className={`{/*bg-blue-600*/} grid grid-cols-5 md:w-[900px] mt-7 gap-1`}
-        >
-          {postsLoading ? (
-            <p>loading</p>
-          ) : posts.length === 0 ? (
-            <p>There are no posts</p>
-          ) : (
-            posts.map((post) => (
-              <PostPreviewImage
-                imageUrl={post.assets[0].url}
-                key={post.postId}
-              />
-            ))
           )}
-        </div>
-      </main>
+
+          <div className="flex items-center mt-3 w-full">
+            <div className={`flex-grow h-[2px] bg-[#624b98]`}></div>
+          </div>
+          <div
+            className={`{/*bg-blue-600*/} grid grid-cols-5 md:w-[900px] mt-7 gap-1`}
+          >
+            {postsLoading ? (
+              <p>loading</p>
+            ) : posts.length === 0 ? (
+              <p>There are no posts</p>
+            ) : (
+              posts.map((post) => (
+                <PostPreviewImage
+                  imageUrl={post.assets[0].url}
+                  key={post.postId}
+                />
+              ))
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
