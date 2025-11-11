@@ -3,8 +3,9 @@ import GoogleSignInButton from '@/components/auth/google-sign-in-button';
 import LogInForm from '@/components/auth/log-in.form';
 import Separator from '@/components/auth/separator';
 import SignUpButton from '@/components/auth/signUp.button';
+import { NextRequest } from 'next/server';
 
-export default function Home() {
+export default function Home(req: NextRequest) {
   return (
     <div className="flex flex-row min-h-screen justify-center gap-[220px]">
       {/* Центральная форма */}

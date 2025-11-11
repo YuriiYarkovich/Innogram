@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { CONFIG } from '@/config/apiRoutes';
-import { responseCookiesToRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 import returnErrorMessage from '@/utils/showAuthError';
 
 export default function EditProfileModal({

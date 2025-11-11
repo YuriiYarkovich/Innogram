@@ -8,6 +8,7 @@ import { CONFIG } from '@/config/apiRoutes';
 import EditProfileModal from '@/components/profilePage/edit-profile.modal';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useRouter } from 'next/navigation';
+import PostPreviewModal from '@/components/profilePage/post-preview.modal';
 
 const Page = () => {
   const router: AppRouterInstance = useRouter();
@@ -26,6 +27,8 @@ const Page = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [postOfPostModal, setPostOfPostModal] = useState(posts[0]);
+  const [isPostPreviewModalOpen, setIsPostPreviewModalOpen] = useState(false);
 
   const handleLogout = async () => {
     console.log(`In handle logout method!`);
@@ -40,6 +43,26 @@ const Page = () => {
     } else {
       console.log(`Message: ${JSON.stringify(response.json())}`);
     }
+  };
+
+  const openPostPreviewModal = (postId: string) => {
+    const index: number | undefined = findPostIndex(postId);
+    if (index === undefined) {
+      console.error(`post id not found!`);
+      return;
+    }
+
+    setPostOfPostModal(posts[index]);
+    setIsPostPreviewModalOpen(true);
+  };
+
+  const findPostIndex = (postId: string): number | undefined => {
+    for (let i = 0; i < posts.length; i++) {
+      if (postId === posts[i].postId) {
+        return i;
+      }
+    }
+    return undefined;
   };
 
   useEffect(() => {
@@ -65,7 +88,7 @@ const Page = () => {
         );
         setProfile(profileData);
 
-        const resPosts: Response = await fetch(
+        /*const resPosts: Response = await fetch(
           `${CONFIG.API.GEL_ALL_POSTS_OF_PROFILE}${profileData?.profileId}`,
           {
             credentials: 'include',
@@ -73,7 +96,8 @@ const Page = () => {
         );
         const postsData: Post[] = await resPosts.json();
         console.log(`Received posts data: ${JSON.stringify(postsData)}`);
-        setPosts(postsData);
+        setPosts(postsData);*/
+        await updatePostsArray(profileData?.profileId);
       } finally {
         setProfileLoading(false);
         setPostsLoading(false);
@@ -82,18 +106,17 @@ const Page = () => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    if (!profile) return;
-
-    const fetchPosts = async () => {
-      try {
-      } finally {
-        setPostsLoading(false);
-      }
-    };
-
-    fetchPosts();
-  });
+  const updatePostsArray = async (profileId: string) => {
+    const resPosts: Response = await fetch(
+      `${CONFIG.API.GEL_ALL_POSTS_OF_PROFILE}${profileId}`,
+      {
+        credentials: 'include',
+      },
+    );
+    const postsData: Post[] = await resPosts.json();
+    console.log(`Received posts data: ${JSON.stringify(postsData)}`);
+    setPosts(postsData);
+  };
 
   return (
     <div>
@@ -101,6 +124,14 @@ const Page = () => {
         profile={profile}
         isOpen={isEditProfileModalOpen}
         onClose={() => setIsEditProfileModalOpen(false)}
+      />
+      <PostPreviewModal
+        post={postOfPostModal}
+        isOpen={isPostPreviewModalOpen}
+        onClose={async () => {
+          await updatePostsArray(profile.profileId);
+          setIsPostPreviewModalOpen(false);
+        }}
       />
       <div
         className={`flex flex-row min-h-screen w-full justify-center items-center`}
@@ -126,6 +157,7 @@ const Page = () => {
                   width={30}
                   height={30}
                   unoptimized
+                  draggable={false}
                 />
                 <div className={`flex flex-col mt-20 gap-8`}>
                   <span className={`font-bold text-[32px]`}>
@@ -200,6 +232,7 @@ const Page = () => {
               posts.map((post) => (
                 <PostPreviewImage
                   imageUrl={post.assets[0].url}
+                  onClick={() => openPostPreviewModal(post.postId)}
                   key={post.postId}
                 />
               ))

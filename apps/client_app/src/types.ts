@@ -39,6 +39,12 @@ type EditProfileModalProps = {
   onClose: () => void;
 };
 
+type PostPreviewModalProps = {
+  post: Post;
+  isOpen: boolean;
+  onClose: () => void;
+};
+
 type Profile = {
   profileId: string;
   username: string;
