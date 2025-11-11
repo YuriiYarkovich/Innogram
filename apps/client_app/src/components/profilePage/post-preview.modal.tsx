@@ -57,6 +57,25 @@ export default function PostPreviewModal({
     }
   };
 
+  const deletePost = async () => {
+    const response: Response = await fetch(
+      `${CONFIG.API.DELETE_POST}${post.postId}`,
+      {
+        method: 'DELETE',
+        credentials: 'include',
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+
+    if (response.ok) {
+      onClose();
+      location.reload();
+    }
+  };
+
   return (
     <div
       className={`fixed inset-0 z-50 flex justify-center items-center backdrop-blur-xs bg-black/50 min-h-screen`}
@@ -102,6 +121,19 @@ export default function PostPreviewModal({
               <span className={`font-bold text-[20px] mt-4`}>
                 {post.username}
               </span>
+              <button
+                className={`ml-auto mr-9 cursor-pointer`}
+                onClick={async () => deletePost()}
+              >
+                <Image
+                  src={`/images/icons/delete.svg`}
+                  alt={'Delete post'}
+                  width={30}
+                  height={30}
+                  draggable={false}
+                  className={`hover:md:w-[37px] hover:md:h-[37px]`}
+                />
+              </button>
             </div>
             <span className={`p-5 text-[18px]`}>{post.content}</span>
             <div className={`flex flex-row ml-[15px] mt-[10px]`}>
