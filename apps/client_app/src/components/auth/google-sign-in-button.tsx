@@ -21,6 +21,7 @@ export default function GoogleSignInButton() {
         alt="Google"
         width={28}
         height={28}
+        draggable={false}
       />
       <span className="text-[20px]">Sign in with Google</span>
     </button>

@@ -15,7 +15,13 @@ export default function Home(req: NextRequest) {
           {/* Логотип */}
           <div className="mb-6">
             {/* Вставь ссылку на логотип */}
-            <Image src="/images/logo.png" alt="Logo" width={340} height={70} />
+            <Image
+              src={'/images/logo.png'}
+              alt="Logo"
+              width={340}
+              height={70}
+              draggable={false}
+            />
           </div>
 
           {/* Поля ввода */}
