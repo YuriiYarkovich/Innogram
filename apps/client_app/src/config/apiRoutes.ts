@@ -11,6 +11,8 @@ export const CONFIG = {
     GEL_ALL_POSTS_OF_PROFILE: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/posts/allOfProfile/`,
     DELETE_POST: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/posts/delete/`,
     GET_CURRENT_PROFILE_INFO: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/profiles/info`,
+    FOLLOW: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/profiles/follow/`,
+    UNFOLLOW: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/profiles/unfollow/`,
     CREATE_POST: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/posts/create`,
     LIKE_POST: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/posts/like/`,
     UNLIKE_POST: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/posts/unlike/`,

@@ -15,6 +15,7 @@ export class ProfilesRepository {
   ) {}
 
   async getProfileInfo(
+    currentProfileId: string,
     profileId: string,
   ): Promise<FindingProfileInfoById | null> {
     const result: FindingProfileInfoById[] = await this.profileRepository.query(
@@ -22,38 +23,51 @@ export class ProfilesRepository {
         SELECT p.username,
                p.birthday,
                p.bio,
-               p.avatar_filename                                                             AS "avatarFilename",
-               p.is_public                                                                   AS "isPublic",
-               (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id)                     AS "postsAmount",
-               (SELECT COUNT(*) FROM main.profiles_follows WHERE follower_profile_id = p.id) AS "subscriptionsAmount",
-               (SELECT COUNT(*) FROM main.profiles_follows WHERE followed_profile_id = p.id) AS "subscribersAmount"
+               p.avatar_filename                                         AS "avatarFilename",
+               p.is_public                                               AS "isPublic",
+               (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id) AS "postsAmount",
+               (SELECT COUNT(*)
+                FROM main.profiles_follows
+                WHERE follower_profile_id = p.id)                        AS "subscriptionsAmount",
+               (SELECT COUNT(*)
+                FROM main.profiles_follows
+                WHERE followed_profile_id = p.id)                        AS "subscribersAmount",
+               (SELECT EXISTS (SELECT 1
+                               FROM main.profiles_follows
+                               WHERE follower_profile_id = $1
+                                 AND followed_profile_id = $2))          AS "isSubscribed"
         FROM main.profiles AS p
         WHERE p.id = $1
       `,
-      [profileId],
+      [profileId, currentProfileId],
     );
 
     return result[0];
   }
 
   async getProfileInfoByUsername(
+    currentProfileId: string,
     username: string,
   ): Promise<FindingProfileInfoByUsername | null> {
     const result: FindingProfileInfoByUsername[] =
       await this.profileRepository.query(
         `
-        SELECT p.id                                                                          AS "profileId",
-               p.birthday,
-               p.bio,
-               p.avatar_filename                                                             AS "avatarFilename",
-               p.is_public                                                                   AS "isPublic",
-               (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id)                     AS "postsAmount",
-               (SELECT COUNT(*) FROM main.profiles_follows WHERE follower_profile_id = p.id) AS "subscriptionsAmount",
-               (SELECT COUNT(*) FROM main.profiles_follows WHERE followed_profile_id = p.id) AS "subscribersAmount"
-        FROM main.profiles AS p
-        WHERE p.username = $1
-      `,
-        [username],
+          SELECT p.id                                                                          AS "profileId",
+                 p.birthday,
+                 p.bio,
+                 p.avatar_filename                                                             AS "avatarFilename",
+                 p.is_public                                                                   AS "isPublic",
+                 (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id)                     AS "postsAmount",
+                 (SELECT COUNT(*) FROM main.profiles_follows WHERE follower_profile_id = p.id) AS "subscriptionsAmount",
+                 (SELECT COUNT(*) FROM main.profiles_follows WHERE followed_profile_id = p.id) AS "subscribersAmount",
+                 (SELECT EXISTS (SELECT 1
+                                 FROM main.profiles_follows
+                                 WHERE follower_profile_id = $2
+                                   AND followed_profile_id = p.id))                            AS "isSubscribed"
+          FROM main.profiles AS p
+          WHERE p.username = $1
+        `,
+        [username, currentProfileId],
       );
 
     return result[0];

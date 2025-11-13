@@ -10,11 +10,13 @@ import { EditProfileDto } from './dto/edit-profile.dto';
 import { File as MulterFile } from 'multer';
 import { Profile } from '../../common/entities/account/profile.entity';
 import { DataSource, QueryRunner } from 'typeorm';
+import { ProfileFollowRepository } from '../follows/profile-follow.repository';
 
 @Injectable()
 export class ProfilesService {
   constructor(
     private profilesRepository: ProfilesRepository,
+    private profileFollowRepository: ProfileFollowRepository,
     private minioService: MinioService,
     private dataSource: DataSource,
   ) {}
@@ -23,7 +25,7 @@ export class ProfilesService {
     profileId: string,
   ): Promise<ReturningProfileInfo | undefined> {
     const profile: FindingProfileInfoById | null =
-      await this.profilesRepository.getProfileInfo(profileId);
+      await this.profilesRepository.getProfileInfo(profileId, profileId);
 
     if (!profile)
       throw new BadRequestException('There is no profile with provided ID');
@@ -46,6 +48,7 @@ export class ProfilesService {
         subscribersAmount: profile.subscribersAmount,
         subscriptionsAmount: profile.subscriptionsAmount,
         isCurrent: true,
+        isSubscribed: profile.isSubscribed,
       };
     } else {
       returningProfileInfo = {
@@ -58,6 +61,7 @@ export class ProfilesService {
         subscribersAmount: profile.subscribersAmount,
         subscriptionsAmount: profile.subscriptionsAmount,
         isCurrent: true,
+        isSubscribed: profile.isSubscribed,
       };
     }
 
@@ -66,7 +70,10 @@ export class ProfilesService {
 
   async getProfileInfoByUsername(username: string, currentProfileId: string) {
     const profile: FindingProfileInfoByUsername | null =
-      await this.profilesRepository.getProfileInfoByUsername(username);
+      await this.profilesRepository.getProfileInfoByUsername(
+        currentProfileId,
+        username,
+      );
 
     if (!profile)
       throw new BadRequestException(
@@ -92,6 +99,7 @@ export class ProfilesService {
         subscribersAmount: profile.subscribersAmount,
         subscriptionsAmount: profile.subscriptionsAmount,
         isCurrent,
+        isSubscribed: profile.isSubscribed,
       };
     } else {
       returningProfileInfo = {
@@ -104,6 +112,7 @@ export class ProfilesService {
         subscribersAmount: profile.subscribersAmount,
         subscriptionsAmount: profile.subscriptionsAmount,
         isCurrent,
+        isSubscribed: profile.isSubscribed,
       };
     }
 
@@ -163,5 +172,28 @@ export class ProfilesService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async followProfile(
+    currentProfileId: string,
+    followingProfileId: string,
+  ): Promise<{ message: string }> {
+    await this.profileFollowRepository.createSubscription(
+      currentProfileId,
+      followingProfileId,
+    );
+
+    return { message: 'Success' };
+  }
+
+  async unfollowProfile(
+    currentProfileId: string,
+    followingProfileId: string,
+  ): Promise<{ message: string }> {
+    await this.profileFollowRepository.deleteSubscription(
+      currentProfileId,
+      followingProfileId,
+    );
+    return { message: 'Success' };
   }
 }

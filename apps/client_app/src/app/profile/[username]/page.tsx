@@ -24,6 +24,7 @@ const Page = () => {
     subscriptionsAmount: 0,
     username: '',
     isCurrent: false,
+    isSubscribed: false,
   });
   const [profileLoading, setProfileLoading] = useState(true);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -31,6 +32,10 @@ const Page = () => {
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [postOfPostModal, setPostOfPostModal] = useState(posts[0]);
   const [isPostPreviewModalOpen, setIsPostPreviewModalOpen] = useState(false);
+  const [isFollowed, setIsFollowed] = useState(profile.isSubscribed);
+  const [followersAmount, setFollowersAmount] = useState<number>(
+    Number(profile.subscribersAmount),
+  );
 
   const { username } = useParams<{ username?: string }>();
 
@@ -43,7 +48,7 @@ const Page = () => {
     if (response.ok) {
       router.push(`/`);
     } else {
-      console.log(`Message: ${JSON.stringify(response.json())}`);
+      console.error(`Message: ${JSON.stringify(response.json())}`);
     }
   };
 
@@ -77,8 +82,8 @@ const Page = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      let profileData: Profile;
       try {
-        let profileData: Profile;
         if (!username) {
           const resProfile: Response = await fetch(
             CONFIG.API.GET_CURRENT_PROFILE_INFO,
@@ -96,6 +101,8 @@ const Page = () => {
           );
           profileData = await resProfile.json();
         }
+        setFollowersAmount(profileData.subscribersAmount);
+        setIsFollowed(profileData.isSubscribed);
         setProfile(profileData);
         await updatePostsArray(profileData?.profileId);
       } finally {
@@ -117,6 +124,36 @@ const Page = () => {
     setPosts(postsData);
   };
 
+  const handleFollowing = async () => {
+    const response: Response = await fetch(
+      `${CONFIG.API.FOLLOW}${profile.profileId}`,
+      {
+        method: 'POST',
+        credentials: 'include',
+      },
+    );
+
+    if (!response.ok) console.error(response.json());
+
+    setFollowersAmount((prev: number): number => prev + 1);
+    setIsFollowed(true);
+  };
+
+  const handleUnfollow = async () => {
+    const response: Response = await fetch(
+      `${CONFIG.API.UNFOLLOW}${profile.profileId}`,
+      {
+        method: 'DELETE',
+        credentials: 'include',
+      },
+    );
+
+    if (!response.ok) console.error(response.json());
+
+    setFollowersAmount((prev: number): number => prev - 1);
+    setIsFollowed(false);
+  };
+
   return (
     <div>
       <EditProfileModal
@@ -135,10 +172,7 @@ const Page = () => {
       <div
         className={`flex flex-row min-h-screen w-full justify-center items-center`}
       >
-        <SidePanel
-          username={profile?.username}
-          avatarUrl={profile?.avatarUrl}
-        />
+        <SidePanel />
         <main
           className={`flex flex-col min-h-screen md:w-[900px] {/*bg-red-600*/}`}
         >
@@ -173,7 +207,7 @@ const Page = () => {
                       className={`flex flex-row gap-1`} /*subscribers count text*/
                     >
                       <span className={`font-bold text-[20px]`}>
-                        {profile.subscribersAmount}
+                        {followersAmount}
                       </span>
                       <span className={`text-[20px]`}>subscribers</span>
                     </div>
@@ -224,9 +258,13 @@ const Page = () => {
                   <>
                     <button
                       className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                      onClick={() => setIsEditProfileModalOpen(true)}
+                      onClick={
+                        isFollowed
+                          ? () => handleUnfollow()
+                          : () => handleFollowing()
+                      }
                     >
-                      Follow
+                      {isFollowed ? 'Unfollow' : 'Follow'}
                     </button>
                     <button
                       className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}

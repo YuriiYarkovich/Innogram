@@ -16,7 +16,6 @@ const Page = () => {
         credentials: 'include',
       });
       const data: Profile = await res.json();
-      console.log(`received profile data: ${JSON.stringify(data)}`);
       setCurProfile(data);
     };
     fetchProfile();
@@ -32,7 +31,6 @@ const Page = () => {
           },
         );
         const data: Post[] = await res.json();
-        console.log(`received data: ${JSON.stringify(data)}`);
         setPosts(data);
       } finally {
         setLoading(false);
@@ -47,10 +45,7 @@ const Page = () => {
       <div
         className={`flex flex-row min-h-screen w-full justify-center items-center`}
       >
-        <SidePanel
-          username={curProfile?.username}
-          avatarUrl={curProfile?.avatarUrl}
-        />
+        <SidePanel />
         <main className={'flex flex-col ml-72 gap-[2px] w-full max-w-2xl'}>
           {loading ? (
             <p>loading...</p>
@@ -67,7 +62,7 @@ const Page = () => {
                 postContent={post.content}
                 contentUrl={post.assets[0].url} //TODO add possibility to see all the pictures
                 liked={post.liked}
-                avatarUrl={post.profileAvatarUrl}
+                avatarUrl={post.profileAvatarUrl || `/images/avaTest.png`}
               />
             ))
           )}

@@ -45,15 +45,6 @@ export class ProfileFollow {
   @CreateDateColumn()
   created_at: Date;
 
-  @Column({ type: 'uuid' })
-  created_by: string;
-
-  @UpdateDateColumn()
-  updated_at: Date;
-
-  @Column({ type: 'uuid', nullable: true })
-  updated_by: string;
-
   // Relations
   @ManyToOne(
     (): typeof Profile => Profile,

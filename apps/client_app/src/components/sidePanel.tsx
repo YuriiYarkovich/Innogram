@@ -2,11 +2,28 @@ import React, { useEffect, useState } from 'react';
 import PostCreationModal from '@/components/feedPage/postCreationModal';
 import { CONFIG } from '@/config/apiRoutes';
 
-const SidePanel = ({
-  username = 'Username',
-  avatarUrl = `/images/avaTest.png`,
-}) => {
+const SidePanel = ({}) => {
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
+  const [username, setUsername] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+
+  useEffect(() => {
+    const fetchCurrentProfile = async () => {
+      const response: Response = await fetch(
+        CONFIG.API.GET_CURRENT_PROFILE_INFO,
+        {
+          credentials: 'include',
+        },
+      );
+
+      const data: Profile = await response.json();
+
+      setAvatarUrl(data.avatarUrl);
+      setUsername(data.username);
+    };
+
+    fetchCurrentProfile();
+  }, []);
 
   useEffect(() => {
     if (isCreatePostModalOpen) {

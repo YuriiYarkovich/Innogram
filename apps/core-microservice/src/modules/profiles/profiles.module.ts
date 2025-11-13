@@ -7,12 +7,14 @@ import { Account } from '../../common/entities/account/account.entity';
 import { MinioModule } from '../minio/minio.module';
 import { Profile } from '../../common/entities/account/profile.entity';
 import { AuthModule } from '../auth/auth.module';
+import { FollowsModule } from '../follows/follows.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Profile, Account]),
     MinioModule,
     AuthModule,
+    FollowsModule,
   ],
   controllers: [ProfilesController],
   providers: [ProfilesService, ProfilesRepository],

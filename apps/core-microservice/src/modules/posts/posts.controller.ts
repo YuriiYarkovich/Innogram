@@ -45,8 +45,10 @@ export class PostsController {
   @ApiOperation({ summary: 'Returns all posts of profile' })
   @ApiResponse({ status: 200, type: Post })
   @Get('/allOfProfile/:profileId')
+  @UseGuards(AuthGuard)
   async getByProfile(@Param('profileId') profileId: string) {
-    return await this.postsService.getByProfile(profileId);
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.postsService.getByProfile(profileId, currentProfileId);
   }
 
   @ApiOperation({

@@ -9,6 +9,7 @@ export interface ReturningProfileInfo {
   subscribersAmount: number;
   subscriptionsAmount: number;
   isCurrent: boolean;
+  isSubscribed: boolean;
 }
 
 export interface FindingProfileInfoById {
@@ -20,6 +21,7 @@ export interface FindingProfileInfoById {
   postsAmount: number;
   subscribersAmount: number;
   subscriptionsAmount: number;
+  isSubscribed: boolean;
 }
 
 export interface FindingProfileInfoByUsername {
@@ -31,4 +33,5 @@ export interface FindingProfileInfoByUsername {
   postsAmount: number;
   subscribersAmount: number;
   subscriptionsAmount: number;
+  isSubscribed: boolean;
 }

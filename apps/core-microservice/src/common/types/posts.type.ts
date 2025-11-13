@@ -18,6 +18,7 @@ export interface ReturningPostData {
   likesCount: number;
   liked: boolean;
   assets: ReturningAssetData[];
+  isCreator: boolean;
 }
 
 export interface ReturningAssetData {

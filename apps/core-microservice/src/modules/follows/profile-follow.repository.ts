@@ -21,4 +21,24 @@ export class ProfileFollowRepository {
       (f: ProfileFollow): string => f.followed_profile_id,
     );
   }
+
+  async createSubscription(
+    currentProfileId: string,
+    followingProfileId: string,
+  ) {
+    return await this.profileFollowRepository.save({
+      follower_profile_id: currentProfileId,
+      followed_profile_id: followingProfileId,
+    });
+  }
+
+  async deleteSubscription(
+    currentProfileId: string,
+    followingProfileId: string,
+  ) {
+    return await this.profileFollowRepository.delete({
+      follower_profile_id: currentProfileId,
+      followed_profile_id: followingProfileId,
+    });
+  }
 }

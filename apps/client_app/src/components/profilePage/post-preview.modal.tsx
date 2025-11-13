@@ -121,19 +121,23 @@ export default function PostPreviewModal({
               <span className={`font-bold text-[20px] mt-4`}>
                 {post.username}
               </span>
-              <button
-                className={`ml-auto mr-9 cursor-pointer`}
-                onClick={async () => deletePost()}
-              >
-                <Image
-                  src={`/images/icons/delete.svg`}
-                  alt={'Delete post'}
-                  width={30}
-                  height={30}
-                  draggable={false}
-                  className={`hover:md:w-[37px] hover:md:h-[37px]`}
-                />
-              </button>
+              {post.isCreator ? (
+                <button
+                  className={`ml-auto mr-9 cursor-pointer`}
+                  onClick={async () => deletePost()}
+                >
+                  <Image
+                    src={`/images/icons/delete.svg`}
+                    alt={'Delete post'}
+                    width={30}
+                    height={30}
+                    draggable={false}
+                    className={`hover:md:w-[37px] hover:md:h-[37px]`}
+                  />
+                </button>
+              ) : (
+                <></>
+              )}
             </div>
             <span className={`p-5 text-[18px]`}>{post.content}</span>
             <div className={`flex flex-row ml-[15px] mt-[10px]`}>

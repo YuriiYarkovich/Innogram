@@ -19,6 +19,7 @@ type Post = {
   likesCount: number;
   liked: boolean;
   assets: AssetData[];
+  isCreator: boolean;
 };
 
 type AssetData = {
@@ -56,4 +57,5 @@ type Profile = {
   subscribersAmount: number;
   subscriptionsAmount: number;
   isCurrent: boolean;
+  isSubscribed: boolean;
 };

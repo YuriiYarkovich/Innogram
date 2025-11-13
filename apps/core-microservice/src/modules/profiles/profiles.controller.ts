@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Post,
   Put,
   UploadedFiles,
   UseGuards,
@@ -63,5 +65,33 @@ export class ProfilesController {
   ): Promise<string> {
     const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.profilesService.updateProfileInfo(dto, profileId, file);
+  }
+
+  @ApiOperation({ summary: 'Creates subscription' })
+  @ApiResponse({ status: 200, type: String })
+  @Post('/follow/:followingProfileId')
+  @UseGuards(AuthGuard)
+  async followProfile(
+    @Param('followingProfileId') followingProfileId: string,
+  ): Promise<{ message: string }> {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.profilesService.followProfile(
+      currentProfileId,
+      followingProfileId,
+    );
+  }
+
+  @ApiOperation({ summary: 'Deletes subscription' })
+  @ApiResponse({ status: 200, type: String })
+  @Delete('/unfollow/:followingProfileId')
+  @UseGuards(AuthGuard)
+  async unfollowProfile(
+    @Param('followingProfileId') followingProfileId: string,
+  ): Promise<{ message: string }> {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.profilesService.unfollowProfile(
+      currentProfileId,
+      followingProfileId,
+    );
   }
 }

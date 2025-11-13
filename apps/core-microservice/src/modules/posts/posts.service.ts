@@ -59,6 +59,7 @@ export class PostsService {
   private async createReturningPostsArray(
     foundData: FoundPostData[],
     profileId: string,
+    currentProfileId: string,
   ): Promise<ReturningPostData[]> {
     const returningPostsData: ReturningPostData[] = [];
     for (const postData of foundData) {
@@ -85,6 +86,8 @@ export class PostsService {
       const profileAvatarUrl: string | null =
         await this.minioService.getPublicUrl(postData.profileAvatarFilename);
 
+      const isCreator: boolean = currentProfileId === postData.profileId;
+
       const returningPostData: ReturningPostData = {
         postId: postData.postId,
         profileId: postData.profileId,
@@ -95,6 +98,7 @@ export class PostsService {
         likesCount: postData.likesCount,
         liked: !!like,
         assets: returningAssetsData,
+        isCreator,
       };
       returningPostsData.push(returningPostData);
     }
@@ -112,7 +116,11 @@ export class PostsService {
     const foundData: FoundPostData[] =
       await this.postsRepository.getAllOfProfileList(followedProfilesIds);
 
-    return await this.createReturningPostsArray(foundData, profileId);
+    return await this.createReturningPostsArray(
+      foundData,
+      profileId,
+      profileId,
+    );
   }
 
   async uploadFilesArray(
@@ -136,11 +144,18 @@ export class PostsService {
     }
   }
 
-  async getByProfile(profileId: string): Promise<ReturningPostData[]> {
+  async getByProfile(
+    profileId: string,
+    currentProfileId: string,
+  ): Promise<ReturningPostData[]> {
     const foundData: FoundPostData[] =
       await this.postsRepository.getAllOfProfileList([profileId]);
 
-    return await this.createReturningPostsArray(foundData, profileId);
+    return await this.createReturningPostsArray(
+      foundData,
+      profileId,
+      currentProfileId,
+    );
   }
 
   async updatePost(
