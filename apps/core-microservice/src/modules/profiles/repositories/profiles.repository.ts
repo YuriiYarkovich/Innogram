@@ -7,6 +7,7 @@ import {
   FindingProfileInfoByUsername,
 } from '../../../common/types/profile.type';
 import { EditProfileDto } from '../dto/edit-profile.dto';
+import { PostStatus } from '../../../common/enums/post.enum';
 
 @Injectable()
 export class ProfilesRepository {
@@ -23,23 +24,23 @@ export class ProfilesRepository {
         SELECT p.username,
                p.birthday,
                p.bio,
-               p.avatar_filename                                         AS "avatarFilename",
-               p.is_public                                               AS "isPublic",
-               (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id) AS "postsAmount",
+               p.avatar_filename                                                         AS "avatarFilename",
+               p.is_public                                                               AS "isPublic",
+               (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id AND status = $3) AS "postsAmount",
                (SELECT COUNT(*)
                 FROM main.profiles_follows
-                WHERE follower_profile_id = p.id)                        AS "subscriptionsAmount",
+                WHERE follower_profile_id = p.id)                                        AS "subscriptionsAmount",
                (SELECT COUNT(*)
                 FROM main.profiles_follows
-                WHERE followed_profile_id = p.id)                        AS "subscribersAmount",
+                WHERE followed_profile_id = p.id)                                        AS "subscribersAmount",
                (SELECT EXISTS (SELECT 1
                                FROM main.profiles_follows
                                WHERE follower_profile_id = $1
-                                 AND followed_profile_id = $2))          AS "isSubscribed"
+                                 AND followed_profile_id = $2))                          AS "isSubscribed"
         FROM main.profiles AS p
         WHERE p.id = $1
       `,
-      [profileId, currentProfileId],
+      [profileId, currentProfileId, PostStatus.ACTIVE],
     );
 
     return result[0];
@@ -57,7 +58,7 @@ export class ProfilesRepository {
                  p.bio,
                  p.avatar_filename                                                             AS "avatarFilename",
                  p.is_public                                                                   AS "isPublic",
-                 (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id)                     AS "postsAmount",
+                 (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id AND status = $3)     AS "postsAmount",
                  (SELECT COUNT(*) FROM main.profiles_follows WHERE follower_profile_id = p.id) AS "subscriptionsAmount",
                  (SELECT COUNT(*) FROM main.profiles_follows WHERE followed_profile_id = p.id) AS "subscribersAmount",
                  (SELECT EXISTS (SELECT 1
@@ -67,7 +68,7 @@ export class ProfilesRepository {
           FROM main.profiles AS p
           WHERE p.username = $1
         `,
-        [username, currentProfileId],
+        [username, currentProfileId, PostStatus.ACTIVE],
       );
 
     return result[0];

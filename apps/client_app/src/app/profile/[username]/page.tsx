@@ -26,6 +26,7 @@ const Page = () => {
     isCurrent: false,
     isSubscribed: false,
   });
+  const [curProfile, setCurProfile] = useState<Profile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
@@ -38,6 +39,17 @@ const Page = () => {
   );
 
   const { username } = useParams<{ username?: string }>();
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const res: Response = await fetch(CONFIG.API.GET_CURRENT_PROFILE_INFO, {
+        credentials: 'include',
+      });
+      const data: Profile = await res.json();
+      setCurProfile(data);
+    };
+    fetchProfile();
+  }, []);
 
   const handleLogout = async () => {
     const response: Response = await fetch(CONFIG.API.LOG_OUT, {
@@ -172,7 +184,7 @@ const Page = () => {
       <div
         className={`flex flex-row min-h-screen w-full justify-center items-center`}
       >
-        <SidePanel />
+        <SidePanel curProfile={curProfile} />
         <main
           className={`flex flex-col min-h-screen md:w-[900px] {/*bg-red-600*/}`}
         >

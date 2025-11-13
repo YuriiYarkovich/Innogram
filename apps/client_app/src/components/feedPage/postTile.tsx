@@ -76,7 +76,9 @@ export default function PostTile({
         />
         <span className={`text-black, text-[18px] ml-[15px]`}>{username}</span>
         <span className={`text-[#79747e] text-[14px] ml-[7px]`}>
-          {timePast}h
+          {Number(timePast) >= 24
+            ? `${Math.floor(Number(timePast) / 24)} d`
+            : `${timePast} h`}
         </span>
       </a>
       <div className={`flex flex-row justify-center w-full mt-5`}>

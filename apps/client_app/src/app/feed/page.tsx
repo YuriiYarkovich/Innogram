@@ -45,7 +45,7 @@ const Page = () => {
       <div
         className={`flex flex-row min-h-screen w-full justify-center items-center`}
       >
-        <SidePanel />
+        <SidePanel curProfile={curProfile} />
         <main className={'flex flex-col ml-72 gap-[2px] w-full max-w-2xl'}>
           {loading ? (
             <p>loading...</p>

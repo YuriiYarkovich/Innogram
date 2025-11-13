@@ -182,7 +182,9 @@ export default function PostPreviewModal({
               {likesCount} likes
             </span>
             <span className={`text-[15px] text-[#79747e] mt-2 ml-6`}>
-              {post.timePast} h
+              {Number(post.timePast) >= 24
+                ? `${Math.floor(Number(post.timePast) / 24)} d`
+                : `${post.timePast} h`}
             </span>
             {/*TODO add comments section when comments functionality would be ready*/}
           </div>
