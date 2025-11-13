@@ -46,7 +46,7 @@ const SidePanel = ({
           </li>
           <li>
             <a
-              href="/profile"
+              href={`/profile/${username}`}
               className="block hover:bg-[#d0bcff] p-2 rounded text-[#21005d]"
             >
               Profile

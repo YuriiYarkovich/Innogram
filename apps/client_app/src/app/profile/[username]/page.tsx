@@ -8,6 +8,7 @@ import { CONFIG } from '@/config/apiRoutes';
 import EditProfileModal from '@/components/profilePage/edit-profile.modal';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import PostPreviewModal from '@/components/profilePage/post-preview.modal';
 
 const Page = () => {
@@ -22,6 +23,7 @@ const Page = () => {
     subscribersAmount: 0,
     subscriptionsAmount: 0,
     username: '',
+    isCurrent: false,
   });
   const [profileLoading, setProfileLoading] = useState(true);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -30,9 +32,9 @@ const Page = () => {
   const [postOfPostModal, setPostOfPostModal] = useState(posts[0]);
   const [isPostPreviewModalOpen, setIsPostPreviewModalOpen] = useState(false);
 
-  const handleLogout = async () => {
-    console.log(`In handle logout method!`);
+  const { username } = useParams<{ username?: string }>();
 
+  const handleLogout = async () => {
     const response: Response = await fetch(CONFIG.API.LOG_OUT, {
       method: 'POST',
       credentials: 'include',
@@ -76,27 +78,25 @@ const Page = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const resProfile: Response = await fetch(
-          CONFIG.API.GET_CURRENT_PROFILE_INFO,
-          {
-            credentials: 'include',
-          },
-        );
-        const profileData: Profile = await resProfile.json();
-        console.log(
-          `received profile data in profile page: ${JSON.stringify(profileData)}`,
-        );
+        let profileData: Profile;
+        if (!username) {
+          const resProfile: Response = await fetch(
+            CONFIG.API.GET_CURRENT_PROFILE_INFO,
+            {
+              credentials: 'include',
+            },
+          );
+          profileData = await resProfile.json();
+        } else {
+          const resProfile: Response = await fetch(
+            `${CONFIG.API.GET_CURRENT_PROFILE_INFO}/${username}`,
+            {
+              credentials: 'include',
+            },
+          );
+          profileData = await resProfile.json();
+        }
         setProfile(profileData);
-
-        /*const resPosts: Response = await fetch(
-          `${CONFIG.API.GEL_ALL_POSTS_OF_PROFILE}${profileData?.profileId}`,
-          {
-            credentials: 'include',
-          },
-        );
-        const postsData: Post[] = await resPosts.json();
-        console.log(`Received posts data: ${JSON.stringify(postsData)}`);
-        setPosts(postsData);*/
         await updatePostsArray(profileData?.profileId);
       } finally {
         setProfileLoading(false);
@@ -104,7 +104,7 @@ const Page = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [username]);
 
   const updatePostsArray = async (profileId: string) => {
     const resPosts: Response = await fetch(
@@ -114,7 +114,6 @@ const Page = () => {
       },
     );
     const postsData: Post[] = await resPosts.json();
-    console.log(`Received posts data: ${JSON.stringify(postsData)}`);
     setPosts(postsData);
   };
 
@@ -189,31 +188,53 @@ const Page = () => {
                   </div>
                   <span className={`text-[#79747e]`}>{profile.bio}</span>
                 </div>
-                <button className={`ml-50`} onClick={handleLogout}>
-                  <Image
-                    src={`/images/icons/logout.svg`}
-                    alt={`logout button`}
-                    height={40}
-                    width={40}
-                    draggable={false}
-                    className={`md:w-[40px] md:h-[40px] hover:md:w-[47px] hover:md:h-[47px] cursor-pointer`}
-                  />
-                </button>
+                {profile.isCurrent ? (
+                  <button className={`ml-50`} onClick={handleLogout}>
+                    <Image
+                      src={`/images/icons/logout.svg`}
+                      alt={`logout button`}
+                      height={40}
+                      width={40}
+                      draggable={false}
+                      className={`md:w-[40px] md:h-[40px] hover:md:w-[47px] hover:md:h-[47px] cursor-pointer`}
+                    />
+                  </button>
+                ) : (
+                  <div />
+                )}
               </div>
               <div
                 className={`flex flex-row w-full justify-center gap-20 mt-10 mb-10`}
               >
-                <button
-                  className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                  onClick={() => setIsEditProfileModalOpen(true)}
-                >
-                  Edit profile
-                </button>
-                <button
-                  className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                >
-                  View archive
-                </button>
+                {profile.isCurrent ? (
+                  <>
+                    <button
+                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                      onClick={() => setIsEditProfileModalOpen(true)}
+                    >
+                      Edit profile
+                    </button>
+                    <button
+                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                    >
+                      View archive
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                      onClick={() => setIsEditProfileModalOpen(true)}
+                    >
+                      Follow
+                    </button>
+                    <button
+                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                    >
+                      Send message
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           )}

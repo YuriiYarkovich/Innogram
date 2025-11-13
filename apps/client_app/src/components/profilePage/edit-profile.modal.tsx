@@ -56,7 +56,7 @@ export default function EditProfileModal({
 
     if (res.ok) {
       onClose();
-      location.reload();
+      location.replace(`/profile/${username}`);
     }
   };
 

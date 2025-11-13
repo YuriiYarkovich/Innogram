@@ -2,14 +2,14 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ProfilesRepository } from './repositories/profiles.repository';
 import { MinioService } from '../minio/minio.service';
 import {
-  FindingProfileInfo,
+  FindingProfileInfoById,
+  FindingProfileInfoByUsername,
   ReturningProfileInfo,
 } from '../../common/types/profile.type';
 import { EditProfileDto } from './dto/edit-profile.dto';
 import { File as MulterFile } from 'multer';
 import { Profile } from '../../common/entities/account/profile.entity';
 import { DataSource, QueryRunner } from 'typeorm';
-import { configDotenv } from 'dotenv';
 
 @Injectable()
 export class ProfilesService {
@@ -22,14 +22,13 @@ export class ProfilesService {
   async getProfileInfo(
     profileId: string,
   ): Promise<ReturningProfileInfo | undefined> {
-    const profile: FindingProfileInfo | null =
+    const profile: FindingProfileInfoById | null =
       await this.profilesRepository.getProfileInfo(profileId);
 
     if (!profile)
       throw new BadRequestException('There is no profile with provided ID');
 
     let avatarUrl: string | null = null;
-    console.log(`Avatar filename: ${profile.avatarFilename}`);
     if (profile.avatarFilename) {
       avatarUrl = await this.minioService.getPublicUrl(profile.avatarFilename);
     }
@@ -46,6 +45,7 @@ export class ProfilesService {
         postsAmount: profile.postsAmount,
         subscribersAmount: profile.subscribersAmount,
         subscriptionsAmount: profile.subscriptionsAmount,
+        isCurrent: true,
       };
     } else {
       returningProfileInfo = {
@@ -57,6 +57,53 @@ export class ProfilesService {
         postsAmount: profile.postsAmount,
         subscribersAmount: profile.subscribersAmount,
         subscriptionsAmount: profile.subscriptionsAmount,
+        isCurrent: true,
+      };
+    }
+
+    return returningProfileInfo;
+  }
+
+  async getProfileInfoByUsername(username: string, currentProfileId: string) {
+    const profile: FindingProfileInfoByUsername | null =
+      await this.profilesRepository.getProfileInfoByUsername(username);
+
+    if (!profile)
+      throw new BadRequestException(
+        'There are no profile with provided username',
+      );
+
+    let avatarUrl: string | null = null;
+    if (profile.avatarFilename) {
+      avatarUrl = await this.minioService.getPublicUrl(profile.avatarFilename);
+    }
+
+    let returningProfileInfo: ReturningProfileInfo;
+    const isCurrent: boolean = currentProfileId === profile.profileId;
+    if (avatarUrl) {
+      returningProfileInfo = {
+        profileId: profile.profileId,
+        username,
+        birthday: profile.birthday,
+        bio: profile.bio,
+        avatarUrl,
+        isPublic: profile.isPublic,
+        postsAmount: profile.postsAmount,
+        subscribersAmount: profile.subscribersAmount,
+        subscriptionsAmount: profile.subscriptionsAmount,
+        isCurrent,
+      };
+    } else {
+      returningProfileInfo = {
+        profileId: profile.profileId,
+        username,
+        birthday: profile.birthday,
+        bio: profile.bio,
+        isPublic: profile.isPublic,
+        postsAmount: profile.postsAmount,
+        subscribersAmount: profile.subscribersAmount,
+        subscriptionsAmount: profile.subscriptionsAmount,
+        isCurrent,
       };
     }
 

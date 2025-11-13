@@ -55,4 +55,5 @@ type Profile = {
   postsAmount: number;
   subscribersAmount: number;
   subscriptionsAmount: number;
+  isCurrent: boolean;
 };

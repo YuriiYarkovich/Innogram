@@ -119,8 +119,6 @@ export class PostsRepository {
                (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount"
         FROM main.posts AS p
                LEFT JOIN main.profiles AS pr ON p.profile_id = pr.id
-               LEFT JOIN main.post_likes AS l ON p.id = l.post_id
-               LEFT JOIN main.post_assets AS a ON p.id = a.post_id
         WHERE p.profile_id = ANY ($1)
           AND status = $2
         ORDER BY p.created_at DESC

@@ -2,7 +2,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Profile } from '../../../common/entities/account/profile.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
-import { FindingProfileInfo } from '../../../common/types/profile.type';
+import {
+  FindingProfileInfoById,
+  FindingProfileInfoByUsername,
+} from '../../../common/types/profile.type';
 import { EditProfileDto } from '../dto/edit-profile.dto';
 
 @Injectable()
@@ -11,8 +14,10 @@ export class ProfilesRepository {
     @InjectRepository(Profile) private profileRepository: Repository<Profile>,
   ) {}
 
-  async getProfileInfo(profileId: string): Promise<FindingProfileInfo | null> {
-    const result: FindingProfileInfo[] = await this.profileRepository.query(
+  async getProfileInfo(
+    profileId: string,
+  ): Promise<FindingProfileInfoById | null> {
+    const result: FindingProfileInfoById[] = await this.profileRepository.query(
       `
         SELECT p.username,
                p.birthday,
@@ -27,6 +32,29 @@ export class ProfilesRepository {
       `,
       [profileId],
     );
+
+    return result[0];
+  }
+
+  async getProfileInfoByUsername(
+    username: string,
+  ): Promise<FindingProfileInfoByUsername | null> {
+    const result: FindingProfileInfoByUsername[] =
+      await this.profileRepository.query(
+        `
+        SELECT p.id                                                                          AS "profileId",
+               p.birthday,
+               p.bio,
+               p.avatar_filename                                                             AS "avatarFilename",
+               p.is_public                                                                   AS "isPublic",
+               (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id)                     AS "postsAmount",
+               (SELECT COUNT(*) FROM main.profiles_follows WHERE follower_profile_id = p.id) AS "subscriptionsAmount",
+               (SELECT COUNT(*) FROM main.profiles_follows WHERE followed_profile_id = p.id) AS "subscribersAmount"
+        FROM main.profiles AS p
+        WHERE p.username = $1
+      `,
+        [username],
+      );
 
     return result[0];
   }

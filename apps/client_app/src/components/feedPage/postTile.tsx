@@ -61,8 +61,9 @@ export default function PostTile({
 
   return (
     <div className={`flex flex-col md:w-[470px] bg-[#e7e0ec]`}>
-      <div
-        className={`flex flex-row items-center md:w-full md:h-[40px] mt-[15px] ml-[15px]`}
+      <a
+        className={`flex flex-row items-center md:w-full md:h-[40px] mt-[15px] ml-[15px] cursor-pointer`}
+        href={`profile/${username}`}
       >
         <Image
           className={`rounded-[210px] md:w-[40px] md:h-[40px]`}
@@ -77,7 +78,7 @@ export default function PostTile({
         <span className={`text-[#79747e] text-[14px] ml-[7px]`}>
           {timePast}h
         </span>
-      </div>
+      </a>
       <div className={`flex flex-row justify-center w-full mt-5`}>
         <Image
           src={contentUrl}

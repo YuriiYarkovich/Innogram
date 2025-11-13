@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Put,
   UploadedFiles,
   UseGuards,
@@ -35,6 +36,20 @@ export class ProfilesController {
   async getProfileInfo(): Promise<ReturningProfileInfo | undefined> {
     const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.profilesService.getProfileInfo(profileId);
+  }
+
+  @ApiOperation({
+    summary: 'Return information about requested by username profile',
+  })
+  @ApiResponse({ status: 200, type: Profile })
+  @Get('/info/:username')
+  @UseGuards(AuthGuard)
+  async getProfileInfoByUsername(@Param('username') username: string) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.profilesService.getProfileInfoByUsername(
+      username,
+      currentProfileId,
+    );
   }
 
   @ApiOperation({ summary: 'Updates profile info' })
