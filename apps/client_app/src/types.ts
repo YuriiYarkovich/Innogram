@@ -1,14 +1,3 @@
-type PostTileProps = {
-  postId?: string;
-  avatarUrl?: string;
-  username?: string;
-  timePast?: string;
-  contentUrl?: string;
-  likesCount?: number;
-  postContent?: string;
-  liked?: boolean;
-};
-
 type Post = {
   postId: string;
   profileId: string;

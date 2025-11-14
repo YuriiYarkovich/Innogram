@@ -52,19 +52,7 @@ const Page = () => {
           ) : posts.length === 0 ? (
             <p>There are no posts yet</p>
           ) : (
-            posts.map((post) => (
-              <PostTile
-                key={post.postId}
-                postId={post.postId}
-                username={post.username}
-                timePast={post.timePast}
-                likesCount={post.likesCount}
-                postContent={post.content}
-                contentUrl={post.assets[0].url} //TODO add possibility to see all the pictures
-                liked={post.liked}
-                avatarUrl={post.profileAvatarUrl || `/images/avaTest.png`}
-              />
-            ))
+            posts.map((post) => <PostTile post={post} key={post.postId} />)
           )}
         </main>
       </div>
