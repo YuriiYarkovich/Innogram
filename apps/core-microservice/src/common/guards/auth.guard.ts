@@ -6,17 +6,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { HttpArgumentsHost } from '@nestjs/common/interfaces';
-import { ConfigService } from '@nestjs/config';
 import { context, CONTEXT_KEYS } from '../cls/request-context';
 import { Request, Response } from 'express';
 import { AuthService } from '../../modules/auth/auth.service';
+import { UserInAccessToken } from '../types/user.type';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   async canActivate(exContext: ExecutionContext): Promise<boolean> {
     const ctx: HttpArgumentsHost = exContext.switchToHttp();
@@ -31,21 +28,9 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      console.log(`Sending access token on validation`);
-      const url: string = `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/validate`;
-      const options = {
-        method: 'POST',
-        data: { accessToken },
-      };
-      const response = await this.authService.forwardRequest<{
-        valid: boolean;
-        user: { profile_id: string; role: string };
-      }>(url, options);
-
-      console.log(
-        `Access token returned everything is fine. User: ${response.data.user}`,
-      );
-      context.set(CONTEXT_KEYS.USER, response.data.user);
+      const user: UserInAccessToken =
+        await this.authService.validateAccessToken(accessToken);
+      context.set(CONTEXT_KEYS.USER, user);
       return true;
     } catch (e) {
       console.warn('Access token invalid or expired:', e.response?.data);
@@ -58,18 +43,10 @@ export class AuthGuard implements CanActivate {
       }
 
       try {
-        const url: string = `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/refresh`;
-        const options = {
-          method: 'POST',
-          data: { refreshToken },
-          withCredentials: true,
-        };
-        const refreshData = await this.authService.forwardRequest<{
-          user: { profileId: string; role: string };
-          newAccessToken: string;
-        }>(url, options);
+        const refreshData: { newAccessToken: string; user: unknown } =
+          await this.authService.refreshAccessToken(refreshToken);
 
-        res.cookie('accessToken', refreshData.data.newAccessToken, {
+        res.cookie('accessToken', refreshData.newAccessToken, {
           httpOnly: true,
           secure: true,
           sameSite: 'strict',
@@ -77,10 +54,10 @@ export class AuthGuard implements CanActivate {
         });
 
         console.log(
-          `User before setting to context^ ${JSON.stringify(refreshData.data.user)}`,
+          `User before setting to context^ ${JSON.stringify(refreshData.user)}`,
         );
 
-        context.set(CONTEXT_KEYS.USER, refreshData.data.user);
+        context.set(CONTEXT_KEYS.USER, refreshData.user);
         return true;
       } catch (e) {
         throw new InternalServerErrorException(e.message);

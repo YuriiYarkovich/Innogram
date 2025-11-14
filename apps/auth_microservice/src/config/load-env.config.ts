@@ -3,15 +3,16 @@ import * as fs from 'fs';
 import * as dotenv from 'dotenv';
 
 function findRootEnv(startDir: string): string | null {
-  let dir = startDir;
+  let dir: string = startDir;
 
+  // eslint-disable-next-line no-constant-condition
   while (true) {
-    const envPath = path.join(dir, '.env');
+    const envPath: string = path.join(dir, '.env');
     if (fs.existsSync(envPath)) {
       return envPath;
     }
 
-    const parentDir = path.dirname(dir);
+    const parentDir: string = path.dirname(dir);
     if (parentDir === dir) {
       return null;
     }
@@ -20,7 +21,7 @@ function findRootEnv(startDir: string): string | null {
   }
 }
 
-const envPath = findRootEnv(__dirname);
+const envPath: string | null = findRootEnv(__dirname);
 
 if (envPath) {
   dotenv.config({ path: envPath });

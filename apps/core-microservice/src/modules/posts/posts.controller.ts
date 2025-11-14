@@ -19,10 +19,11 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { PostLike } from '../../common/entities/postsDedicated/post-like.entity';
+import { PostLike } from '../../common/entities/posts/post-like.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { context, CONTEXT_KEYS } from '../../common/cls/request-context';
+import { ReturningPostData } from '../../common/types/posts.type';
 
 @ApiTags('Operations with posts')
 @ApiBearerAuth('access-token')
@@ -37,15 +38,29 @@ export class PostsController {
   @UseGuards(AuthGuard)
   @UseInterceptors(FilesInterceptor('files'))
   async createPost(@Body() dto: CreatePostDto, @UploadedFiles() files) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.postsService.createPost(profileId, dto, files);
   }
 
   @ApiOperation({ summary: 'Returns all posts of profile' })
   @ApiResponse({ status: 200, type: Post })
   @Get('/allOfProfile/:profileId')
-  async getByAccount(@Param('profileId') profileId: string) {
-    return await this.postsService.getByProfile(profileId);
+  @UseGuards(AuthGuard)
+  async getByProfile(@Param('profileId') profileId: string) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.postsService.getByProfile(profileId, currentProfileId);
+  }
+
+  @ApiOperation({
+    summary: 'Return all posts of profiles that user is subscribed on',
+  })
+  @ApiResponse({ status: 200, type: Post })
+  @ApiConsumes('multipart/form-data')
+  @Get(`/allOfSubscribedOn/`)
+  @UseGuards(AuthGuard)
+  async getAllPostsOfSubscribedOnUsers(): Promise<ReturningPostData[]> {
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.postsService.getAllPostsOfSubscribedOn(profileId);
   }
 
   @ApiOperation({ summary: 'Updates posts' })
@@ -59,7 +74,7 @@ export class PostsController {
     @Body() dto: CreatePostDto,
     @UploadedFiles() files,
   ) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.postsService.updatePost(postId, profileId, dto, files);
   }
 
@@ -68,7 +83,7 @@ export class PostsController {
   @Delete('/delete/:postId')
   @UseGuards(AuthGuard)
   async deletePost(@Param('postId') postId: string) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.postsService.deletePost(postId, profileId);
   }
 
@@ -77,7 +92,7 @@ export class PostsController {
   @Post('like/:postId')
   @UseGuards(AuthGuard)
   async likePost(@Param('postId') postId: string) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return this.postsService.addLike(postId, profileId);
   }
 
@@ -86,7 +101,7 @@ export class PostsController {
   @Delete('unlike/:postId')
   @UseGuards(AuthGuard)
   async unlikePost(@Param('postId') postId: string) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return this.postsService.removeLike(postId, profileId);
   }
 
@@ -102,7 +117,7 @@ export class PostsController {
   @Put(`/archive/:postIs`)
   @UseGuards(AuthGuard)
   async archivePost(@Param(`postId`) postId: string) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.postsService.archivePost(postId, profileId);
   }
 }

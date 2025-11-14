@@ -9,7 +9,8 @@ import { CommentsModule } from './modules/comments/comments.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { AuthService } from './modules/auth/auth.service';
+import { ProfilesModule } from './modules/profiles/profiles.module';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
@@ -29,6 +30,22 @@ import { AuthService } from './modules/auth/auth.service';
     ChatModule,
     MessagesModule,
     AuthModule,
+    ProfilesModule,
+
+    LoggerModule.forRoot({
+      pinoHttp: {
+        transport: {
+          target: 'pino-pretty',
+          options: {
+            colorize: true,
+            translateTime: 'HH:MM:ss.l',
+            ignore: 'pid,hostname,req,res,context,responseTime', // убираем громоздкие поля
+            messageFormat:
+              '{req.method} {req.url} → {res.statusCode} ({responseTime}ms)',
+          },
+        },
+      },
+    }),
   ],
 })
 export class AppModule {}

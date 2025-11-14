@@ -32,8 +32,10 @@ export class ValidationPipe implements PipeTransform {
     }
 
     if (errors && errors.length) {
-      const messages = errors
-        .map((err) => Object.values(err.constraints ?? {}).join(', '))
+      const messages: string = errors
+        .map((err: ValidationError): string =>
+          Object.values(err.constraints ?? {}).join(', '),
+        )
         .join('; ');
 
       throw new ValidationException(`Validation failed: ${messages}`);
