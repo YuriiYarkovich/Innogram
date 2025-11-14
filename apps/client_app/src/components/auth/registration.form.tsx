@@ -90,7 +90,7 @@ export default function RegistrationForm() {
       />
       <button
         type="submit"
-        className="bg-[#4f378a] text-white rounded-[20px] my-[25px] mb-[-1px] md:h-[45px] hover:bg-[#d0bcff] w-full"
+        className="bg-[#4f378a] text-white rounded-[20px] my-[25px] mb-[-1px] md:h-[45px] hover:bg-[#d0bcff] hover:text-black w-full"
       >
         Sign up
       </button>

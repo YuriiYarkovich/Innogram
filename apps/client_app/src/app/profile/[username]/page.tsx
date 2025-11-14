@@ -3,13 +3,13 @@
 import SidePanel from '@/components/sidePanel';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
-import PostPreviewImage from '@/components/profilePage/post-preview-image';
+import PostPreviewImage from '@/components/post/post-preview-image';
 import { CONFIG } from '@/config/apiRoutes';
 import EditProfileModal from '@/components/profilePage/edit-profile.modal';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
-import PostPreviewModal from '@/components/profilePage/post-preview.modal';
+import PostPreviewModal from '@/components/post/post-preview.modal';
 
 const Page = () => {
   const router: AppRouterInstance = useRouter();

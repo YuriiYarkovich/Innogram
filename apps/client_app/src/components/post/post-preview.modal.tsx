@@ -3,6 +3,8 @@
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { CONFIG } from '@/config/apiRoutes';
+import PostComment from '@/components/post/post-comment';
+import Line from '@/components/line';
 
 export default function PostPreviewModal({
   post,
@@ -92,7 +94,7 @@ export default function PostPreviewModal({
       </button>
       <div className={`flex w-full md:h-[554px] justify-center`}>
         <div
-          className={`flex flex-row items-center md:w-[1054px] h-full bg-[#eaddff] rounded-4xl`}
+          className={`flex flex-row items-center md:w-[1054px] max-h-full bg-[#eaddff] rounded-4xl`}
         >
           <div
             className={`flex flex-col w-1/2 justify-center h-full bg-black rounded-l-4xl`}
@@ -107,8 +109,8 @@ export default function PostPreviewModal({
               draggable={false}
             />
           </div>
-          <div className={`flex flex-col w-1/2 h-full`}>
-            <div className={`flex flex-row h-1/6 gap-4 p-3.5`}>
+          <div className={`flex flex-col w-1/2 md:h-[554px]`}>
+            <div className={`flex flex-row h-1/6 gap-4 p-3.5 items-center`}>
               <Image
                 src={profileAvatarUrl}
                 alt={`Profile avatar url`}
@@ -118,8 +120,11 @@ export default function PostPreviewModal({
                 className={`rounded-full md:w-15 md:h-15`}
                 draggable={false}
               />
-              <span className={`font-bold text-[20px] mt-4`}>
-                {post.username}
+              <span className={`font-bold text-[20px]`}>{post.username}</span>
+              <span className={`text-[16px] text-[#79747e] ml-2`}>
+                {Number(post.timePast) >= 24
+                  ? `${Math.floor(Number(post.timePast) / 24)} d`
+                  : `${post.timePast} h`}
               </span>
               {post.isCreator ? (
                 <button
@@ -139,7 +144,7 @@ export default function PostPreviewModal({
                 <></>
               )}
             </div>
-            <span className={`p-5 text-[18px]`}>{post.content}</span>
+            <span className={`pl-5 pr-5 text-[18px]`}>{post.content}</span>
             <div className={`flex flex-row ml-[15px] mt-[10px]`}>
               <div
                 className={
@@ -178,15 +183,39 @@ export default function PostPreviewModal({
                 </button>
               </div>
             </div>
-            <span className={`font-bold text-[16px] mt-3.5 ml-6`}>
+            <span className={`font-bold text-[16px] ml-6`}>
               {likesCount} likes
             </span>
-            <span className={`text-[15px] text-[#79747e] mt-2 ml-6`}>
-              {Number(post.timePast) >= 24
-                ? `${Math.floor(Number(post.timePast) / 24)} d`
-                : `${post.timePast} h`}
-            </span>
-            {/*TODO add comments section when comments functionality would be ready*/}
+            <Line thickness={2} />
+            <div className={`flex flex-col h-2/3 pr-6 pb-2 gap-5`}>
+              <div
+                className={`flex flex-col h-2/3 overflow-y-scroll p-4 gap-2`}
+              >
+                {/*CREATE ARRAY MAP TO SHOW ALL COMMENTS HERE*/}
+                <PostComment />
+                <PostComment />
+                <PostComment />
+                <PostComment />
+                <PostComment />
+                <PostComment />
+                <PostComment />
+                <PostComment />
+                <PostComment />
+              </div>
+              <div className={`flex flex-row w-full h-1/5 pl-3 gap-2`}>
+                <textarea
+                  placeholder={`PostComment`}
+                  className={`w-3/4 border-2 border-[#bcb8b8] rounded-[6px] bg-white`}
+                />
+                <div className={`flex w-1/4 items-center`}>
+                  <button
+                    className={`rounded-3xl bg-[#4f378a] w-full h-1/3 text-white hover:bg-[#d0bcff] hover:text-black cursor-pointer`}
+                  >
+                    Submit
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

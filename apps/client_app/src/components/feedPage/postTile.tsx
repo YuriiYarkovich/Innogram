@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { CONFIG } from '@/config/apiRoutes';
-import PostPreviewModal from '@/components/profilePage/post-preview.modal';
+import PostPreviewModal from '@/components/post/post-preview.modal';
 
 export default function PostTile({ post }: { post: Post }) {
   const [liked, setLiked] = useState(post.liked);
@@ -118,7 +118,7 @@ export default function PostTile({ post }: { post: Post }) {
               'flex items-center justify-center md:w-[45px] md:h-[45px]'
             }
           >
-            <button>
+            <button onClick={() => setIsPostPreviewModalOpen(true)}>
               <Image
                 src={`/images/icons/comment.png`}
                 alt={`Like icon`}

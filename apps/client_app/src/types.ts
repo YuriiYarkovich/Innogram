@@ -48,3 +48,14 @@ type Profile = {
   isCurrent: boolean;
   isSubscribed: boolean;
 };
+
+type PostComment = {
+  commentId: string;
+  authorUsername: string;
+  authorAvatarUrl: string;
+  commentContent: string;
+  likesAmount: number;
+  timePast: string;
+  liked: boolean;
+  isAuthor: boolean;
+};
