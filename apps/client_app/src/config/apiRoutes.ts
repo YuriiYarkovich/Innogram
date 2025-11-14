@@ -17,5 +17,7 @@ export const CONFIG = {
     LIKE_POST: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/posts/like/`,
     UNLIKE_POST: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/posts/unlike/`,
     EDIT_PROFILE: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/profiles/update/`,
+    ADD_COMMENT: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/comments/add`,
+    GET_COMMENTS_OF_POST: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/comments/allOfPost/`,
   },
 };

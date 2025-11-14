@@ -111,14 +111,20 @@ export class MinioService {
     return { hashedFileName, type };
   }
 
-  async getPublicUrl(fileKey: string): Promise<string | null> {
-    if (!fileKey) return null;
+  async getPublicUrl(fileKey: string): Promise<string | undefined> {
+    if (!fileKey) return undefined;
     const command = new GetObjectCommand({
       Bucket: this.bucketName,
       Key: fileKey,
     });
 
-    return await getSignedUrl(this.s3Client, command, { expiresIn: 600 });
+    const url: string | null = await getSignedUrl(this.s3Client, command, {
+      expiresIn: 600,
+    });
+
+    if (!url) return undefined;
+
+    return url;
   }
 
   async getFile(key: string): Promise<Readable> {

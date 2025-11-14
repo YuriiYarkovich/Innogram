@@ -11,7 +11,7 @@ export interface FoundPostData {
 export interface ReturningPostData {
   postId: string;
   profileId: string;
-  profileAvatarUrl?: string | null;
+  profileAvatarUrl?: string;
   username: string;
   content: string;
   timePast: string;
@@ -23,5 +23,5 @@ export interface ReturningPostData {
 
 export interface ReturningAssetData {
   order: number;
-  url: string | null;
+  url?: string;
 }

@@ -30,42 +30,17 @@ export class ProfilesService {
     if (!profile)
       throw new BadRequestException('There is no profile with provided ID');
 
-    let avatarUrl: string | null = null;
+    let avatarUrl: string | undefined = undefined;
     if (profile.avatarFilename) {
       avatarUrl = await this.minioService.getPublicUrl(profile.avatarFilename);
     }
 
-    let returningProfileInfo: ReturningProfileInfo;
-    if (avatarUrl) {
-      returningProfileInfo = {
-        profileId,
-        username: profile.username,
-        birthday: profile.birthday,
-        bio: profile.bio,
-        avatarUrl,
-        isPublic: profile.isPublic,
-        postsAmount: profile.postsAmount,
-        subscribersAmount: profile.subscribersAmount,
-        subscriptionsAmount: profile.subscriptionsAmount,
-        isCurrent: true,
-        isSubscribed: profile.isSubscribed,
-      };
-    } else {
-      returningProfileInfo = {
-        profileId,
-        username: profile.username,
-        birthday: profile.birthday,
-        bio: profile.bio,
-        isPublic: profile.isPublic,
-        postsAmount: profile.postsAmount,
-        subscribersAmount: profile.subscribersAmount,
-        subscriptionsAmount: profile.subscriptionsAmount,
-        isCurrent: true,
-        isSubscribed: profile.isSubscribed,
-      };
-    }
-
-    return returningProfileInfo;
+    return {
+      ...profile,
+      profileId,
+      avatarUrl,
+      isCurrent: true,
+    };
   }
 
   async getProfileInfoByUsername(username: string, currentProfileId: string) {
@@ -80,41 +55,18 @@ export class ProfilesService {
         'There are no profile with provided username',
       );
 
-    let avatarUrl: string | null = null;
+    let avatarUrl: string | undefined = undefined;
     if (profile.avatarFilename) {
       avatarUrl = await this.minioService.getPublicUrl(profile.avatarFilename);
     }
 
-    let returningProfileInfo: ReturningProfileInfo;
     const isCurrent: boolean = currentProfileId === profile.profileId;
-    if (avatarUrl) {
-      returningProfileInfo = {
-        profileId: profile.profileId,
-        username,
-        birthday: profile.birthday,
-        bio: profile.bio,
-        avatarUrl,
-        isPublic: profile.isPublic,
-        postsAmount: profile.postsAmount,
-        subscribersAmount: profile.subscribersAmount,
-        subscriptionsAmount: profile.subscriptionsAmount,
-        isCurrent,
-        isSubscribed: profile.isSubscribed,
-      };
-    } else {
-      returningProfileInfo = {
-        profileId: profile.profileId,
-        username,
-        birthday: profile.birthday,
-        bio: profile.bio,
-        isPublic: profile.isPublic,
-        postsAmount: profile.postsAmount,
-        subscribersAmount: profile.subscribersAmount,
-        subscriptionsAmount: profile.subscriptionsAmount,
-        isCurrent,
-        isSubscribed: profile.isSubscribed,
-      };
-    }
+    const returningProfileInfo: ReturningProfileInfo = {
+      ...profile,
+      username,
+      avatarUrl,
+      isCurrent,
+    };
 
     return returningProfileInfo;
   }

@@ -1,10 +1,12 @@
 'use client';
 
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CONFIG } from '@/config/apiRoutes';
 import PostComment from '@/components/post/post-comment';
 import Line from '@/components/line';
+import returnErrorMessage from '@/utils/showAuthError';
+import addComment from '@/components/post/post-comment';
 
 export default function PostPreviewModal({
   post,
@@ -16,8 +18,12 @@ export default function PostPreviewModal({
   const [profileAvatarUrl] = useState<string>(
     post.profileAvatarUrl || `/images/avaTest.png`,
   );
+
   const [liked, setLiked] = useState(post.liked);
   const [likesCount, setLikesCount] = useState<number>(Number(post.likesCount));
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const [comments, setComments] = useState<PostComment[]>([]);
+  const [commentContent, setCommentContent] = useState<string>('');
 
   const likeOrUnlikePost = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +62,60 @@ export default function PostPreviewModal({
         setLiked((prev) => !prev);
         setLikesCount((prev) => prev - 1);
       }
+    }
+  };
+
+  useEffect(() => {
+    fetchComments();
+  }, []);
+
+  const addComment = async () => {
+    const response: Response = await fetch(CONFIG.API.ADD_COMMENT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        content: commentContent,
+        postId: post.postId,
+        isAnswer: false,
+        answerCommentId: '',
+      }),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const finalMessage: string | undefined =
+        await returnErrorMessage(response);
+      if (finalMessage) console.error(finalMessage);
+      return;
+    }
+
+    await fetchComments();
+  };
+
+  const fetchComments = async () => {
+    try {
+      setCommentsLoading(true);
+      const response: Response = await fetch(
+        `${CONFIG.API.GET_COMMENTS_OF_POST}${post.postId}`,
+        {
+          method: 'GET',
+          credentials: 'include',
+        },
+      );
+
+      if (!response.ok) {
+        console.error(response.status);
+      }
+
+      const commentsData: PostComment[] = await response.json();
+
+      console.log(`Received comments data: ${JSON.stringify(commentsData)}`);
+
+      setComments(commentsData);
+    } finally {
+      setCommentsLoading(false);
     }
   };
 
@@ -191,25 +251,29 @@ export default function PostPreviewModal({
               <div
                 className={`flex flex-col h-2/3 overflow-y-scroll p-4 gap-2`}
               >
-                {/*CREATE ARRAY MAP TO SHOW ALL COMMENTS HERE*/}
-                <PostComment />
-                <PostComment />
-                <PostComment />
-                <PostComment />
-                <PostComment />
-                <PostComment />
-                <PostComment />
-                <PostComment />
-                <PostComment />
+                {commentsLoading ? (
+                  <p>Loading...</p>
+                ) : comments.length > 0 ? (
+                  comments.map((comment) => (
+                    <PostComment
+                      key={comment.commentId}
+                      postComment={comment}
+                    />
+                  ))
+                ) : (
+                  <p>There are no comments yet</p>
+                )}
               </div>
               <div className={`flex flex-row w-full h-1/5 pl-3 gap-2`}>
                 <textarea
                   placeholder={`PostComment`}
                   className={`w-3/4 border-2 border-[#bcb8b8] rounded-[6px] bg-white`}
+                  onChange={(e) => setCommentContent(e.target.value)}
                 />
                 <div className={`flex w-1/4 items-center`}>
                   <button
                     className={`rounded-3xl bg-[#4f378a] w-full h-1/3 text-white hover:bg-[#d0bcff] hover:text-black cursor-pointer`}
+                    onClick={() => addComment()}
                   >
                     Submit
                   </button>

@@ -20,6 +20,7 @@ import { CreateCommentDto } from './dto/crete-comment.dto';
 import { Comment } from '../../common/entities/comments/comment.entity';
 import { context, CONTEXT_KEYS } from '../../common/cls/request-context';
 import { AuthGuard } from '../../common/guards/auth.guard';
+import { ReturningCommentData } from '../../common/types/comment';
 
 @ApiTags('Operations with comments')
 @ApiBearerAuth('access-token')
@@ -29,23 +30,25 @@ export class CommentsController {
 
   @ApiOperation({ summary: 'Adds comment to the post' })
   @ApiResponse({ status: 200, type: Comment })
-  @Post(`/add/:postId`)
+  @Post(`/add`)
   @UseGuards(AuthGuard)
-  async createComment(
-    @Body() dto: CreateCommentDto,
-    @Param('postId') postId: string,
-  ): Promise<Comment> {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
-    return await this.commentsService.createComment(dto, postId, profileId);
+  async createComment(@Body() dto: CreateCommentDto): Promise<Comment> {
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.commentsService.createComment(dto, profileId);
   }
 
   @ApiOperation({ summary: 'Returns all comments of posts' })
   @ApiResponse({ status: 200, type: Comment })
   @Get(`/allOfPost/:postId`)
+  @UseGuards(AuthGuard)
   async getAllCommentsOfPost(
     @Param('postId') postId: string,
-  ): Promise<Comment[]> {
-    return await this.commentsService.getAllCommentsOfPost(postId);
+  ): Promise<ReturningCommentData[]> {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.commentsService.getAllCommentsOfPost(
+      postId,
+      currentProfileId,
+    );
   }
 
   @ApiOperation({ summary: 'Edit comments' })
@@ -56,7 +59,7 @@ export class CommentsController {
     @Body() dto: CreateCommentDto,
     @Param('commentId') commentId: string,
   ): Promise<Comment | null> {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.commentsService.updateComment(commentId, profileId, dto);
   }
 
@@ -65,7 +68,7 @@ export class CommentsController {
   @Delete(`/delete/:commentId`)
   @UseGuards(AuthGuard)
   async deleteComment(@Param('commentId') commentId: string): Promise<Comment> {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.commentsService.deleteComment(commentId, profileId);
   }
 
@@ -76,7 +79,7 @@ export class CommentsController {
   async likeComment(
     @Param('commentId') commentId: string,
   ): Promise<CommentLike> {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.commentsService.likeComment(commentId, profileId);
   }
 
@@ -87,7 +90,7 @@ export class CommentsController {
   async unlikeComment(
     @Param('commentId') commentId: string,
   ): Promise<CommentLike> {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.commentsService.unlikeComment(commentId, profileId);
   }
 

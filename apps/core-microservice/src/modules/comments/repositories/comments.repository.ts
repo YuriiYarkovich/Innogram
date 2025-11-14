@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Comment } from '../../../common/entities/comments/comment.entity';
 import { CreateCommentDto } from '../dto/crete-comment.dto';
 import { CommentStatus } from '../../../common/enums/comment.enum';
+import { FindingCommentData } from '../../../common/types/comment';
 
 @Injectable()
 export class CommentsRepository {
@@ -13,12 +14,10 @@ export class CommentsRepository {
 
   async createComment(
     dto: CreateCommentDto,
-    postId: string,
     profileId: string,
   ): Promise<Comment> {
     const createdComment: Comment = this.commentsRepository.create({
-      postId: postId,
-      content: dto.content,
+      ...dto,
       profileId: profileId,
     });
 
@@ -27,17 +26,29 @@ export class CommentsRepository {
     return createdComment;
   }
 
-  async findAllCommentsOfPost(postId: string): Promise<Comment[]> {
-    return await this.commentsRepository.find({
-      relations: {
-        commentLikes: true,
-        comment_mentions: true,
-      },
-      where: {
-        postId: postId,
-        status: CommentStatus.ACTIVE,
-      },
-    });
+  async findAllCommentsOfPost(postId: string): Promise<FindingCommentData[]> {
+    return await this.commentsRepository.query(
+      `
+        SELECT c.id                                                                    AS "commentId",
+               p.id                                                                    AS "authorProfileId",
+               p.username                                                              AS "authorUsername",
+               p.avatar_filename                                                       AS "authorAvatarFilename",
+               c.content                                                               AS "commentContent",
+               (SELECT COUNT(*) FROM main.comment_likes cl WHERE cl.comment_id = c.id) AS "likesAmount",
+               CASE
+                 WHEN EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 < 10
+                   THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
+                 ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
+                 END                                                           AS "timePast",
+               c.parent_comment_id                                                     AS "parentCommentId"
+        FROM main.comments AS c
+               LEFT JOIN main.profiles AS p ON c.profile_id = p.id
+        WHERE c.post_id = $1
+          AND c.status = $2
+        ORDER BY c.created_at DESC
+      `,
+      [postId, CommentStatus.ACTIVE],
+    );
   }
 
   async getCommentById(commentId: string): Promise<Comment | null> {

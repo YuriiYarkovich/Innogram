@@ -58,4 +58,5 @@ type PostComment = {
   timePast: string;
   liked: boolean;
   isAuthor: boolean;
+  parentCommentId?: string;
 };

@@ -71,7 +71,7 @@ export class PostsService {
           url: '',
           order: 0,
         };
-        const url: string | null = await this.minioService.getPublicUrl(
+        const url: string | undefined = await this.minioService.getPublicUrl(
           asset.hashedFileName,
         );
         assetData.url = url;
@@ -83,19 +83,14 @@ export class PostsService {
         profileId,
       );
 
-      const profileAvatarUrl: string | null =
+      const profileAvatarUrl: string | undefined =
         await this.minioService.getPublicUrl(postData.profileAvatarFilename);
 
       const isCreator: boolean = currentProfileId === postData.profileId;
 
       const returningPostData: ReturningPostData = {
-        postId: postData.postId,
-        profileId: postData.profileId,
+        ...postData,
         profileAvatarUrl,
-        username: postData.username,
-        content: postData.content,
-        timePast: postData.timePast,
-        likesCount: postData.likesCount,
         liked: !!like,
         assets: returningAssetsData,
         isCreator,

@@ -38,8 +38,8 @@ const PostComment = ({ postComment }: { postComment?: PostComment | null }) => {
           {postComment?.commentContent ||
             `Comment content sdfhasdfhal ksdfhalskdjfh alskdjfhalskdjfh`}
         </span>
-        <div className={`flex items-center`}>
-          <button>
+        <div className={`w-max justify-right`}>
+          <button className={`flex items-center right-0`}>
             <Image
               src={
                 postComment?.liked || false

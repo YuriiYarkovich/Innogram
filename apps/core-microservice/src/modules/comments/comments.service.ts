@@ -6,7 +6,11 @@ import { CreateCommentDto } from './dto/crete-comment.dto';
 import { Comment } from '../../common/entities/comments/comment.entity';
 import { Post } from 'src/common/entities/posts/post.entity';
 import { CommentLike } from '../../common/entities/comments/comment-like.entity';
-import { exists } from 'node:fs';
+import {
+  FindingCommentData,
+  ReturningCommentData,
+} from '../../common/types/comment';
+import { MinioService } from '../minio/minio.service';
 
 @Injectable()
 export class CommentsService {
@@ -14,16 +18,17 @@ export class CommentsService {
     private commentsRepository: CommentsRepository,
     private postsRepository: PostsRepository,
     private commentLikeRepository: CommentLikeRepository,
+    private minioService: MinioService,
   ) {}
 
   async createComment(
     dto: CreateCommentDto,
-    postId: string,
     profileId: string,
   ): Promise<Comment> {
-    await this.checkIfPostExists(postId);
-
-    return await this.commentsRepository.createComment(dto, postId, profileId);
+    console.log(`Received dto: ${JSON.stringify(dto)}`);
+    await this.checkIfPostExists(dto.postId);
+    console.log(`profile id: ${profileId}`);
+    return await this.commentsRepository.createComment(dto, profileId);
   }
 
   private async checkIfPostExists(postId: string) {
@@ -31,10 +36,36 @@ export class CommentsService {
     if (!post) throw new BadRequestException('There is no such post!');
   }
 
-  async getAllCommentsOfPost(postId: string): Promise<Comment[]> {
+  async getAllCommentsOfPost(
+    postId: string,
+    currentProfileId: string,
+  ): Promise<ReturningCommentData[]> {
     await this.checkIfPostExists(postId);
 
-    return await this.commentsRepository.findAllCommentsOfPost(postId);
+    const foundCommentsData: FindingCommentData[] =
+      await this.commentsRepository.findAllCommentsOfPost(postId);
+    const returningComments: ReturningCommentData[] = [];
+
+    for (const comment of foundCommentsData) {
+      const liked: boolean = await this.checkIfLikeExist(
+        comment.commentId,
+        currentProfileId,
+      );
+      const isAuthor: boolean = currentProfileId === comment.authorProfileId;
+      const authorAvatarUrl: string | undefined =
+        await this.minioService.getPublicUrl(comment.authorAvatarFilename);
+
+      const returningCommentData: ReturningCommentData = {
+        ...comment,
+        authorAvatarUrl,
+        liked,
+        isAuthor,
+      };
+
+      returningComments.push(returningCommentData);
+    }
+
+    return returningComments;
   }
 
   async updateComment(
