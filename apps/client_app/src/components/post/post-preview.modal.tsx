@@ -18,7 +18,6 @@ export default function PostPreviewModal({
   const [profileAvatarUrl] = useState<string>(
     post.profileAvatarUrl || `/images/avaTest.png`,
   );
-
   const [liked, setLiked] = useState(post.liked);
   const [likesCount, setLikesCount] = useState<number>(Number(post.likesCount));
   const [commentsLoading, setCommentsLoading] = useState(true);
@@ -110,9 +109,6 @@ export default function PostPreviewModal({
       }
 
       const commentsData: PostComment[] = await response.json();
-
-      console.log(`Received comments data: ${JSON.stringify(commentsData)}`);
-
       setComments(commentsData);
     } finally {
       setCommentsLoading(false);

@@ -1,7 +1,6 @@
 'use client';
 import { CONFIG } from '@/config/apiRoutes';
 import Image from 'next/image';
-import { getDeviceId } from '@/utils/device';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useRouter } from 'next/navigation';
 

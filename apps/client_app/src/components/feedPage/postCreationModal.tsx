@@ -73,13 +73,10 @@ export default function PostCreationModal({
         <div className="flex items-center w-full">
           <div className={`flex-grow h-[1px] bg-[#624b98]`}></div>
         </div>
-
-        {/*Загрузка файла*/}
         <div
           className={`flex justify-center items-center md:h-[400px] md:w-[400px] border-black bg-[#d9d9d9] mt-5`}
         >
           {!file ? (
-            // Кнопка загрузки
             <div className="flex md:w-[120px]">
               <label
                 htmlFor="file-upload"
@@ -96,7 +93,6 @@ export default function PostCreationModal({
               />
             </div>
           ) : (
-            // Превью файла
             <div className="w-full h-full flex justify-center items-center bg-transparent">
               {file.type.startsWith('image/') ? (
                 <Image

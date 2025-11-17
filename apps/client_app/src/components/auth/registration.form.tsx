@@ -19,7 +19,6 @@ export default function RegistrationForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const deviceId: string = getDeviceId();
-    console.log(`Birthday string: ${birthday}`);
     const response: Response = await fetch(CONFIG.API.REGISTRATION, {
       method: 'POST',
       headers: {
@@ -46,9 +45,6 @@ export default function RegistrationForm() {
     if (response.status === 201) {
       router.push('/feed');
     }
-
-    const data: { message: string } = await response.json();
-    console.log(`Received data: ${data}`);
   };
 
   return (

@@ -36,9 +36,6 @@ export default function LogInForm() {
     if (response.status === 201) {
       router.push(`/feed`);
     }
-
-    const data: { message: string } = await response.json();
-    console.log(`Received data: ${data}`);
   };
 
   return (
