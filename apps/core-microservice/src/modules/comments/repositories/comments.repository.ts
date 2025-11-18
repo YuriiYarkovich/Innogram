@@ -36,10 +36,10 @@ export class CommentsRepository {
                c.content                                                               AS "commentContent",
                (SELECT COUNT(*) FROM main.comment_likes cl WHERE cl.comment_id = c.id) AS "likesAmount",
                CASE
-                 WHEN EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 < 10
-                   THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
-                 ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
-                 END                                                           AS "timePast",
+                 WHEN EXTRACT(EPOCH FROM (NOW() - c.created_at)) / 3600 < 10
+                   THEN ROUND(EXTRACT(EPOCH FROM (NOW() - c.created_at)) / 3600::numeric, 1)
+                 ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - c.created_at)) / 3600::numeric)
+                 END                                                                   AS "timePast",
                c.parent_comment_id                                                     AS "parentCommentId"
         FROM main.comments AS c
                LEFT JOIN main.profiles AS p ON c.profile_id = p.id

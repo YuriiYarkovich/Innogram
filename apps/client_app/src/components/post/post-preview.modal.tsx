@@ -6,7 +6,6 @@ import { CONFIG } from '@/config/apiRoutes';
 import PostComment from '@/components/post/post-comment';
 import Line from '@/components/line';
 import returnErrorMessage from '@/utils/showAuthError';
-import addComment from '@/components/post/post-comment';
 
 export default function PostPreviewModal({
   post,
@@ -109,6 +108,7 @@ export default function PostPreviewModal({
       }
 
       const commentsData: PostComment[] = await response.json();
+      console.log(`Comments data: ${JSON.stringify(commentsData)}`);
       setComments(commentsData);
     } finally {
       setCommentsLoading(false);
@@ -254,6 +254,7 @@ export default function PostPreviewModal({
                     <PostComment
                       key={comment.commentId}
                       postComment={comment}
+                      onDeleteComment={() => fetchComments()}
                     />
                   ))
                 ) : (
