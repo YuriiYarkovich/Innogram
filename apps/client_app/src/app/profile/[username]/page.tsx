@@ -4,7 +4,7 @@ import SidePanel from '@/components/sidePanel';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import PostPreviewImage from '@/components/post/post-preview-image';
-import { CONFIG } from '@/config/apiRoutes';
+import { SERVER } from '@/config/apiRoutes';
 import EditProfileModal from '@/components/profilePage/edit-profile.modal';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useRouter } from 'next/navigation';
@@ -42,7 +42,7 @@ const Page = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const res: Response = await fetch(CONFIG.API.GET_CURRENT_PROFILE_INFO, {
+      const res: Response = await fetch(SERVER.API.GET_CURRENT_PROFILE_INFO, {
         credentials: 'include',
       });
       const data: Profile = await res.json();
@@ -52,7 +52,7 @@ const Page = () => {
   }, []);
 
   const handleLogout = async () => {
-    const response: Response = await fetch(CONFIG.API.LOG_OUT, {
+    const response: Response = await fetch(SERVER.API.LOG_OUT, {
       method: 'POST',
       credentials: 'include',
     });
@@ -98,7 +98,7 @@ const Page = () => {
       try {
         if (!username) {
           const resProfile: Response = await fetch(
-            CONFIG.API.GET_CURRENT_PROFILE_INFO,
+            SERVER.API.GET_CURRENT_PROFILE_INFO,
             {
               credentials: 'include',
             },
@@ -106,7 +106,7 @@ const Page = () => {
           profileData = await resProfile.json();
         } else {
           const resProfile: Response = await fetch(
-            `${CONFIG.API.GET_CURRENT_PROFILE_INFO}/${username}`,
+            `${SERVER.API.GET_CURRENT_PROFILE_INFO}/${username}`,
             {
               credentials: 'include',
             },
@@ -127,7 +127,7 @@ const Page = () => {
 
   const updatePostsArray = async (profileId: string) => {
     const resPosts: Response = await fetch(
-      `${CONFIG.API.GEL_ALL_POSTS_OF_PROFILE}${profileId}`,
+      `${SERVER.API.GEL_ALL_POSTS_OF_PROFILE}${profileId}`,
       {
         credentials: 'include',
       },
@@ -138,7 +138,7 @@ const Page = () => {
 
   const handleFollowing = async () => {
     const response: Response = await fetch(
-      `${CONFIG.API.FOLLOW}${profile.profileId}`,
+      `${SERVER.API.FOLLOW}${profile.profileId}`,
       {
         method: 'POST',
         credentials: 'include',
@@ -153,7 +153,7 @@ const Page = () => {
 
   const handleUnfollow = async () => {
     const response: Response = await fetch(
-      `${CONFIG.API.UNFOLLOW}${profile.profileId}`,
+      `${SERVER.API.UNFOLLOW}${profile.profileId}`,
       {
         method: 'DELETE',
         credentials: 'include',

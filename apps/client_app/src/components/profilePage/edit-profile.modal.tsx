@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import React, { useState } from 'react';
-import { CONFIG } from '@/config/apiRoutes';
+import { SERVER } from '@/config/apiRoutes';
 import returnErrorMessage from '@/utils/showAuthError';
 
 export default function EditProfileModal({
@@ -39,7 +39,7 @@ export default function EditProfileModal({
       formData.append('file', avatar);
     }
 
-    const res: Response = await fetch(CONFIG.API.EDIT_PROFILE, {
+    const res: Response = await fetch(SERVER.API.EDIT_PROFILE, {
       method: 'PUT',
       credentials: 'include',
       body: formData,

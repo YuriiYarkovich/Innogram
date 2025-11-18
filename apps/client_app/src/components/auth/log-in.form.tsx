@@ -1,6 +1,6 @@
 'use client';
 
-import { CONFIG } from '@/config/apiRoutes';
+import { SERVER } from '@/config/apiRoutes';
 import { useState } from 'react';
 import { getDeviceId } from '@/utils/device';
 import { useRouter } from 'next/navigation';
@@ -16,7 +16,7 @@ export default function LogInForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const deviceId: string = getDeviceId();
-    const response: Response = await fetch(CONFIG.API.LOG_IN, {
+    const response: Response = await fetch(SERVER.API.LOG_IN, {
       method: 'POST',
       headers: {
         'Content-type': 'application/json',

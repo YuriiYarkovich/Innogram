@@ -8,6 +8,7 @@ export interface ReturningCommentData {
   liked: boolean;
   isAuthor: boolean;
   parentCommentId?: string;
+  responsesAmount: number;
 }
 
 export interface FindingCommentData {

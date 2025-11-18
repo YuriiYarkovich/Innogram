@@ -4,7 +4,7 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { getDeviceId } from '@/utils/device';
-import { CONFIG } from '@/config/apiRoutes';
+import { SERVER } from '@/config/apiRoutes';
 import returnErrorMessage from '@/utils/showAuthError';
 
 export default function RegistrationForm() {
@@ -19,7 +19,7 @@ export default function RegistrationForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const deviceId: string = getDeviceId();
-    const response: Response = await fetch(CONFIG.API.REGISTRATION, {
+    const response: Response = await fetch(SERVER.API.REGISTRATION, {
       method: 'POST',
       headers: {
         'Content-type': 'application/json',

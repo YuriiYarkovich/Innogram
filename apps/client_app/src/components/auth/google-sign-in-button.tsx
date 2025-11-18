@@ -1,5 +1,5 @@
 'use client';
-import { CONFIG } from '@/config/apiRoutes';
+import { SERVER } from '@/config/apiRoutes';
 import Image from 'next/image';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useRouter } from 'next/navigation';
@@ -8,7 +8,7 @@ export default function GoogleSignInButton() {
   const router: AppRouterInstance = useRouter();
 
   const handleGoogleSignIn = async () => {
-    window.location.href = `${CONFIG.API.GOOGLE_AUTH}`;
+    window.location.href = `${SERVER.API.GOOGLE_AUTH}`;
   };
 
   return (

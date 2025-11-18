@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
-import { CONFIG } from '@/config/apiRoutes';
+import { SERVER } from '@/config/apiRoutes';
 import PostComment from '@/components/post/post-comment';
 import Line from '@/components/line';
 import returnErrorMessage from '@/utils/showAuthError';
@@ -22,13 +22,18 @@ export default function PostPreviewModal({
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [comments, setComments] = useState<PostComment[]>([]);
   const [commentContent, setCommentContent] = useState<string>('');
+  const [isRespondingOnComment, setIsRespondingOnComment] =
+    useState<boolean>(false);
+  const [respondingComment, setRespondingComment] = useState<
+    PostComment | undefined
+  >(undefined);
 
   const likeOrUnlikePost = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!liked) {
       const response: Response = await fetch(
-        `${CONFIG.API.LIKE_POST}${post.postId}`,
+        `${SERVER.API.LIKE_POST}${post.postId}`,
         {
           method: 'POST',
           credentials: 'include',
@@ -45,7 +50,7 @@ export default function PostPreviewModal({
       }
     } else {
       const response: Response = await fetch(
-        `${CONFIG.API.UNLIKE_POST}${post.postId}`,
+        `${SERVER.API.UNLIKE_POST}${post.postId}`,
         {
           method: 'DELETE',
           credentials: 'include',
@@ -68,7 +73,15 @@ export default function PostPreviewModal({
   }, []);
 
   const addComment = async () => {
-    const response: Response = await fetch(CONFIG.API.ADD_COMMENT, {
+    console.log(
+      `Sending data: ${JSON.stringify({
+        content: commentContent,
+        postId: post.postId,
+        isAnswer: false,
+        parentCommentId: respondingComment?.commentId || '',
+      })}`,
+    );
+    const response: Response = await fetch(SERVER.API.ADD_COMMENT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -77,7 +90,7 @@ export default function PostPreviewModal({
         content: commentContent,
         postId: post.postId,
         isAnswer: false,
-        answerCommentId: '',
+        parentCommentId: respondingComment?.commentId || '',
       }),
       credentials: 'include',
     });
@@ -89,14 +102,20 @@ export default function PostPreviewModal({
       return;
     }
 
+    if (isRespondingOnComment) setIsRespondingOnComment(false);
     await fetchComments();
+  };
+
+  const setCommentToRespond = (comment: PostComment) => {
+    setRespondingComment(comment);
+    setIsRespondingOnComment(true);
   };
 
   const fetchComments = async () => {
     try {
       setCommentsLoading(true);
       const response: Response = await fetch(
-        `${CONFIG.API.GET_COMMENTS_OF_POST}${post.postId}`,
+        `${SERVER.API.GET_COMMENTS_OF_POST}${post.postId}`,
         {
           method: 'GET',
           credentials: 'include',
@@ -117,7 +136,7 @@ export default function PostPreviewModal({
 
   const deletePost = async () => {
     const response: Response = await fetch(
-      `${CONFIG.API.DELETE_POST}${post.postId}`,
+      `${SERVER.API.DELETE_POST}${post.postId}`,
       {
         method: 'DELETE',
         credentials: 'include',
@@ -245,7 +264,7 @@ export default function PostPreviewModal({
             <Line thickness={2} />
             <div className={`flex flex-col h-2/3 pr-6 pb-2 gap-5`}>
               <div
-                className={`flex flex-col h-2/3 overflow-y-scroll p-4 gap-2`}
+                className={`flex flex-col h-2/3 overflow-y-scroll p-4 gap-2 bg-blue-600`}
               >
                 {commentsLoading ? (
                   <p>Loading...</p>
@@ -255,25 +274,76 @@ export default function PostPreviewModal({
                       key={comment.commentId}
                       postComment={comment}
                       onDeleteComment={() => fetchComments()}
+                      onResponseClick={setCommentToRespond}
                     />
                   ))
                 ) : (
                   <p>There are no comments yet</p>
                 )}
               </div>
-              <div className={`flex flex-row w-full h-1/5 pl-3 gap-2`}>
-                <textarea
-                  placeholder={`PostComment`}
-                  className={`w-3/4 border-2 border-[#bcb8b8] rounded-[6px] bg-white`}
-                  onChange={(e) => setCommentContent(e.target.value)}
-                />
-                <div className={`flex w-1/4 items-center`}>
-                  <button
-                    className={`rounded-3xl bg-[#4f378a] w-full h-1/3 text-white hover:bg-[#d0bcff] hover:text-black cursor-pointer`}
-                    onClick={() => addComment()}
+
+              {isRespondingOnComment ? (
+                <>
+                  <Line thickness={1} marginTop={1} />
+                  <div
+                    className={`flex flex-col min-h-[50px]  w-full gap-1.5 mt-[-15px] mb-[-15px]`}
                   >
-                    Submit
-                  </button>
+                    <div className={`flex items-start ml-3 gap-3 `}>
+                      <Image
+                        src={`/images/icons/reply.svg`}
+                        alt={`arrow`}
+                        height={23}
+                        width={23}
+                        draggable={false}
+                      />
+                      <div className={`flex flex-col flex-grow`}>
+                        <span className={`font-bold text-[14px]`}>
+                          Answer to{' '}
+                          {respondingComment?.authorUsername || 'Username'}
+                        </span>
+                        <span className={`break-words w-100 text-[14px]`}>
+                          {respondingComment ? (
+                            respondingComment?.commentContent?.length > 100 ? (
+                              respondingComment?.commentContent.slice(0, 100) +
+                              '...'
+                            ) : (
+                              respondingComment?.commentContent
+                            )
+                          ) : (
+                            <></>
+                          )}
+                        </span>
+                      </div>
+                      <Image
+                        src={`/images/icons/cross.svg`}
+                        alt={`arrow`}
+                        height={23}
+                        width={23}
+                        draggable={false}
+                        className={`h-full hover:md:w-[30px] hover:md:h-[30px]`}
+                        onClick={() => setIsRespondingOnComment(false)}
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <></>
+              )}
+              <div className={`flex flex-col h-1/4`}>
+                <div className={`flex flex-row w-full h-full pl-3 gap-2`}>
+                  <textarea
+                    placeholder={`PostComment`}
+                    className={`w-3/4 border-2 border-[#bcb8b8] rounded-[6px] bg-white`}
+                    onChange={(e) => setCommentContent(e.target.value)}
+                  />
+                  <div className={`flex w-1/4 items-center`}>
+                    <button
+                      className={`rounded-3xl bg-[#4f378a] w-full h-1/3 text-white hover:bg-[#d0bcff] hover:text-black cursor-pointer`}
+                      onClick={() => addComment()}
+                    >
+                      Submit
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

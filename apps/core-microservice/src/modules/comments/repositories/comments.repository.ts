@@ -16,6 +16,7 @@ export class CommentsRepository {
     dto: CreateCommentDto,
     profileId: string,
   ): Promise<Comment> {
+    if (dto.parentCommentId === '') dto.parentCommentId = undefined;
     const createdComment: Comment = this.commentsRepository.create({
       ...dto,
       profileId: profileId,
@@ -45,9 +46,43 @@ export class CommentsRepository {
                LEFT JOIN main.profiles AS p ON c.profile_id = p.id
         WHERE c.post_id = $1
           AND c.status = $2
+          AND c.parent_comment_id IS NULL
         ORDER BY c.created_at DESC
       `,
       [postId, CommentStatus.ACTIVE],
+    );
+  }
+
+  async countResponses(commentId: string): Promise<number> {
+    return await this.commentsRepository.count({
+      where: { parentCommentId: commentId, status: CommentStatus.ACTIVE },
+    });
+  }
+
+  async findAllResponsesOfComment(
+    commentId: string,
+  ): Promise<FindingCommentData[]> {
+    return await this.commentsRepository.query(
+      `
+        SELECT c.id                                                                    AS "commentId",
+               p.id                                                                    AS "authorProfileId",
+               p.username                                                              AS "authorUsername",
+               p.avatar_filename                                                       AS "authorAvatarFilename",
+               c.content                                                               AS "commentContent",
+               (SELECT COUNT(*) FROM main.comment_likes cl WHERE cl.comment_id = c.id) AS "likesAmount",
+               CASE
+                 WHEN EXTRACT(EPOCH FROM (NOW() - c.created_at)) / 3600 < 10
+                   THEN ROUND(EXTRACT(EPOCH FROM (NOW() - c.created_at)) / 3600::numeric, 1)
+                 ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - c.created_at)) / 3600::numeric)
+                 END                                                                   AS "timePast",
+               c.parent_comment_id                                                     AS "parentCommentId"
+        FROM main.comments AS c
+               LEFT JOIN main.profiles AS p ON c.profile_id = p.id
+        WHERE c.status = $1
+          AND c.parent_comment_id = $2
+        ORDER BY c.created_at DESC
+      `,
+      [CommentStatus.ACTIVE, commentId],
     );
   }
 

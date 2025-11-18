@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import React, { useState } from 'react';
-import { CONFIG } from '@/config/apiRoutes';
+import { SERVER } from '@/config/apiRoutes';
 import PostPreviewModal from '@/components/post/post-preview.modal';
 
 export default function PostTile({ post }: { post: Post }) {
@@ -16,7 +16,7 @@ export default function PostTile({ post }: { post: Post }) {
 
     if (!liked) {
       const response: Response = await fetch(
-        `${CONFIG.API.LIKE_POST}${post.postId}`,
+        `${SERVER.API.LIKE_POST}${post.postId}`,
         {
           method: 'POST',
           credentials: 'include',
@@ -33,7 +33,7 @@ export default function PostTile({ post }: { post: Post }) {
       }
     } else {
       const response: Response = await fetch(
-        `${CONFIG.API.UNLIKE_POST}${post.postId}`,
+        `${SERVER.API.UNLIKE_POST}${post.postId}`,
         {
           method: 'DELETE',
           credentials: 'include',

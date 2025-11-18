@@ -6,12 +6,12 @@ export class CreateCommentDto {
     content: string,
     postId: string,
     isAnswer: boolean = false,
-    answeredCommentId: string = '',
+    parentCommentId: string = '',
   ) {
     this.content = content;
     this.postId = postId;
     this.isAnswer = isAnswer;
-    this.answeredCommentId = answeredCommentId;
+    this.parentCommentId = parentCommentId;
   }
 
   @ApiProperty({
@@ -28,5 +28,5 @@ export class CreateCommentDto {
   readonly isAnswer?: boolean;
 
   @IsString()
-  readonly answeredCommentId?: string;
+  parentCommentId?: string;
 }

@@ -11,6 +11,7 @@ import {
   ReturningCommentData,
 } from '../../common/types/comment';
 import { MinioService } from '../minio/minio.service';
+import { factory } from 'ts-jest/dist/transformers/hoist-jest';
 
 @Injectable()
 export class CommentsService {
@@ -55,17 +56,48 @@ export class CommentsService {
       const authorAvatarUrl: string | undefined =
         await this.minioService.getPublicUrl(comment.authorAvatarFilename);
 
+      const responsesAmount: number =
+        await this.commentsRepository.countResponses(comment.commentId);
       const returningCommentData: ReturningCommentData = {
         ...comment,
         authorAvatarUrl,
         liked,
         isAuthor,
+        responsesAmount,
       };
 
       returningComments.push(returningCommentData);
     }
 
     return returningComments;
+  }
+
+  async getAllResponsesOfComment(commentId: string, currentProfileId: string) {
+    const foundResponses: FindingCommentData[] =
+      await this.commentsRepository.findAllResponsesOfComment(commentId);
+
+    const returningCommentsData: ReturningCommentData[] = [];
+    for (const comment of foundResponses) {
+      const liked: boolean = await this.checkIfLikeExist(
+        comment.commentId,
+        currentProfileId,
+      );
+
+      const isAuthor: boolean = currentProfileId === comment.authorProfileId;
+      const authorAvatarUrl: string | undefined =
+        await this.minioService.getPublicUrl(comment.authorAvatarFilename);
+
+      const returningCommentData: ReturningCommentData = {
+        ...comment,
+        authorAvatarUrl,
+        liked,
+        isAuthor,
+        responsesAmount: 0,
+      };
+
+      returningCommentsData.push(returningCommentData);
+    }
+    return returningCommentsData;
   }
 
   async updateComment(

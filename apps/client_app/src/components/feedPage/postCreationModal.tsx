@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import React, { useState } from 'react';
-import { CONFIG } from '@/config/apiRoutes';
+import { SERVER } from '@/config/apiRoutes';
 
 export default function PostCreationModal({
   userAvatarUrl = `/images/avaTest.png`,
@@ -32,7 +32,7 @@ export default function PostCreationModal({
       formData.append('files', file);
     }
 
-    const response: Response = await fetch(CONFIG.API.CREATE_POST, {
+    const response: Response = await fetch(SERVER.API.CREATE_POST, {
       method: 'POST',
       credentials: 'include',
       body: formData,

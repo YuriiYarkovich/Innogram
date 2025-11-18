@@ -1,7 +1,6 @@
 import '../../next.config';
 
-export const CONFIG = {
-  BACKEND_URL: process.env.NEXT_PUBLIC_SERVER_URL,
+export const SERVER = {
   API: {
     GOOGLE_AUTH: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/google`,
     LOG_IN: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/login`,
@@ -22,5 +21,6 @@ export const CONFIG = {
     LIKE_COMMENT: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/comments/like/`,
     UNLIKE_COMMENT: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/comments/unlike/`,
     DELETE_COMMENT: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/comments/delete/`,
+    GET_ALL_COMMENT_RESPONSES: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/comments/allResponses/`,
   },
 };

@@ -51,6 +51,20 @@ export class CommentsController {
     );
   }
 
+  @ApiOperation({ summary: 'Returns all responses of given comment' })
+  @ApiResponse({ status: 200, type: Comment })
+  @Get('/allResponses/:commentId')
+  @UseGuards(AuthGuard)
+  async getAllResponsesOfComment(
+    @Param('commentId') commentId: string,
+  ): Promise<ReturningCommentData[]> {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.commentsService.getAllResponsesOfComment(
+      commentId,
+      currentProfileId,
+    );
+  }
+
   @ApiOperation({ summary: 'Edit comments' })
   @ApiResponse({ status: 200, type: Comment })
   @Put(`/update/:commentId`)

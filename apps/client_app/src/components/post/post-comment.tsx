@@ -1,60 +1,44 @@
-import React, { useState } from 'react';
-import Image from 'next/image';
+import React, { useEffect, useState } from 'react';
 import Line from '@/components/line';
-import { CONFIG } from '@/config/apiRoutes';
+import { SERVER } from '@/config/apiRoutes';
+import CommentContent from '@/components/post/comment-content';
 
 const PostComment = ({
   postComment,
   onDeleteComment,
+  onResponseClick,
 }: {
-  postComment?: PostComment | null;
+  postComment: PostComment;
   onDeleteComment: () => void;
+  onResponseClick: (responseComment: PostComment) => void;
 }) => {
-  const [liked, setLiked] = useState<boolean>(postComment?.liked || false);
+  const [responses, setResponses] = useState<PostComment[]>([]);
+  const [isResponsesOpen, setIsResponsesOpen] = useState<boolean>(false);
+  const [isResponsesLoading, setIsResponsesLoading] = useState<boolean>(false);
 
-  const [likesAmount, setLikesAmount] = useState<number>(
-    Number(postComment?.likesAmount) || 0,
-  );
+  const fetchResponses = async () => {
+    setIsResponsesLoading(true);
+    const response: Response = await fetch(
+      `${SERVER.API.GET_ALL_COMMENT_RESPONSES}${postComment.commentId}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+      },
+    );
 
-  const likeOrUnlikeComment = async () => {
-    if (!liked) {
-      const response: Response = await fetch(
-        `${CONFIG.API.LIKE_COMMENT}${postComment?.commentId}`,
-        {
-          method: `POST`,
-          credentials: 'include',
-        },
-      );
-
-      if (!response.ok) {
-        const message: string = await response.json();
-        console.error(message);
-      }
-
-      setLiked((prev) => !prev);
-      setLikesAmount((prev) => prev + 1);
-    } else {
-      const response: Response = await fetch(
-        `${CONFIG.API.UNLIKE_COMMENT}${postComment?.commentId}`,
-        {
-          method: `DELETE`,
-          credentials: 'include',
-        },
-      );
-
-      if (!response.ok) {
-        const message: string = await response.json();
-        console.error(message);
-      }
-
-      setLiked((prev) => !prev);
-      setLikesAmount((prev) => prev - 1);
+    if (!response.ok) {
+      const message: string = await response.json();
+      console.error(message);
     }
+
+    const responsesData: PostComment[] = await response.json();
+    console.log(`Responses: ${JSON.stringify(responsesData)}`);
+    setResponses(responsesData);
   };
 
-  const deleteComment = async () => {
+  const deleteComment = async (commentId: string) => {
     const response: Response = await fetch(
-      `${CONFIG.API.DELETE_COMMENT}${postComment?.commentId}`,
+      `${SERVER.API.DELETE_COMMENT}${commentId}`,
       {
         method: 'DELETE',
         credentials: 'include',
@@ -67,77 +51,65 @@ const PostComment = ({
     } else onDeleteComment();
   };
 
-  console.log(`time past: ${postComment?.timePast}`);
+  const toggleAccordion = () => {
+    if (!isResponsesOpen) {
+      setIsResponsesLoading(true);
+      fetchResponses().then(() => setIsResponsesLoading(false));
+    }
+    setIsResponsesOpen((prev) => !prev);
+  };
+
   return (
     <div className={`flex flex-col max-h-full`}>
-      <div className={`flex flex-row w-full gap-3`}>
-        <Image
-          src={postComment?.authorAvatarUrl || `/images/avaTest.png`}
-          alt={`author avatar`}
-          height={40}
-          width={40}
-          unoptimized
-          draggable={false}
-          className={`rounded-[270px] md:w-[40px] md:h-[40px]`}
-        />
-        <div className={`flex flex-col`}>
-          <span className={`font-bold text-[15px]`}>
-            {postComment?.authorUsername || `username`}
+      <CommentContent
+        postComment={postComment}
+        onResponseClick={onResponseClick}
+        deleteComment={deleteComment}
+      />
+
+      {/*RESPONSES*/}
+      {postComment.responsesAmount > 0 && (
+        <div className="flex w-full justify-center">
+          <span
+            className="text-[13px] font-semibold cursor-pointer"
+            onClick={toggleAccordion}
+          >
+            {isResponsesOpen
+              ? 'Hide responses'
+              : `Watch responses (${postComment.responsesAmount})`}
           </span>
-          <div className={`flex flex-col`}>
-            <div className={`flex flex-row gap-2`}>
-              <span className={`text-[12px]`}>{likesAmount}&nbsp;likes</span>
-              {(Number(postComment?.timePast) || 5) >= 24 ? (
-                <span className={`text-[12px]`}>
-                  {Math.floor(Number(postComment?.timePast) / 24)}&nbsp;d
-                </span>
-              ) : (
-                <span className={`text-[12px]`}>
-                  {postComment?.timePast || 5}&nbsp;h
-                </span>
-              )}
-            </div>
-            <span className={`text-[12px] cursor-pointer hover:font-`}>
-              Response
-            </span>
+        </div>
+      )}
+
+      {/* Аккордеон */}
+      <div
+        className={`transition-all ease-in-out overflow-hidden ${
+          isResponsesOpen
+            ? 'max-h-[9999px] opacity-100 py-2'
+            : 'max-h-0 opacity-0 py-0'
+        } duration-500`}
+      >
+        {isResponsesOpen && (
+          <div className="w-full max-w-sm mx-auto">
+            {isResponsesLoading ? (
+              <span className="text-[14px]">Responses loading...</span>
+            ) : (
+              responses.map((response: PostComment) => (
+                <div
+                  key={response.commentId}
+                  className="flex flex-col w-full ml-10"
+                >
+                  <CommentContent
+                    postComment={response}
+                    onResponseClick={() => onResponseClick(postComment)}
+                    deleteComment={deleteComment}
+                  />
+                  <Line thickness={1} marginBottom={10} />
+                </div>
+              ))
+            )}
           </div>
-        </div>
-        <span className={`text-[14px] w-3/4 text-center`}>
-          {postComment?.commentContent ||
-            `Comment content sdfhasdfhal ksdfhalskdjfh alskdjfhalskdjfh`}
-        </span>
-        <div
-          className={`flex md:w-[27px] min-h-full flex-col gap-4 justify-end`}
-        >
-          <button className={`h-1/2`} onClick={() => likeOrUnlikeComment()}>
-            <Image
-              src={
-                liked || false
-                  ? `/images/icons/heart.png`
-                  : `/images/icons/emptyHeart.png`
-              }
-              alt={`like comment`}
-              width={20}
-              height={20}
-              draggable={false}
-              className={`md:h-[20px] md:w-[20px] hover:md:h-[27px] hover:md:w-[27px]`}
-            />
-          </button>
-          {postComment?.isAuthor ? (
-            <button className={`h-1/2`} onClick={() => deleteComment()}>
-              <Image
-                src={`/images/icons/delete.svg`}
-                alt={`delete comment`}
-                width={20}
-                height={20}
-                draggable={false}
-                className={`md:h-[20px] md:w-[20px] hover:md:h-[27px] hover:md:w-[27px]`}
-              />
-            </button>
-          ) : (
-            <div />
-          )}
-        </div>
+        )}
       </div>
       <Line thickness={1} color={`#624b98`} />
     </div>

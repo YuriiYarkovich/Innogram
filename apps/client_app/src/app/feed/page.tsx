@@ -2,7 +2,7 @@
 
 import PostTile from '@/components/feedPage/postTile';
 import { useEffect, useState } from 'react';
-import { CONFIG } from '@/config/apiRoutes';
+import { SERVER } from '@/config/apiRoutes';
 import SidePanel from '@/components/sidePanel';
 
 const Page = () => {
@@ -12,7 +12,7 @@ const Page = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const res: Response = await fetch(CONFIG.API.GET_CURRENT_PROFILE_INFO, {
+      const res: Response = await fetch(SERVER.API.GET_CURRENT_PROFILE_INFO, {
         credentials: 'include',
       });
       const data: Profile = await res.json();
@@ -25,7 +25,7 @@ const Page = () => {
     const fetchPosts = async () => {
       try {
         const res: Response = await fetch(
-          CONFIG.API.GET_POSTS_OF_SUBSCRIBED_ON,
+          SERVER.API.GET_POSTS_OF_SUBSCRIBED_ON,
           {
             credentials: 'include',
           },

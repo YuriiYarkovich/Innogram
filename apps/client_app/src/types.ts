@@ -59,4 +59,5 @@ type PostComment = {
   liked: boolean;
   isAuthor: boolean;
   parentCommentId?: string;
+  responsesAmount: number;
 };
