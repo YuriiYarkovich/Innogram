@@ -73,11 +73,11 @@ export class CommentsService {
     profileId: string,
     dto: CreateCommentDto,
   ): Promise<Comment | null> {
-    await this.checkIfCommentExist(commentId, profileId);
+    await this.checkIfCommentExistAndBelongsToProfile(commentId, profileId);
     return await this.commentsRepository.updateComment(commentId, dto);
   }
 
-  private async checkIfCommentExist(
+  private async checkIfCommentExistAndBelongsToProfile(
     commentId: string,
     profileId: string,
   ): Promise<Comment> {
@@ -86,6 +86,14 @@ export class CommentsService {
         commentId,
         profileId,
       );
+    if (!comment) throw new BadRequestException('There are no such comment!');
+    return comment;
+  }
+
+  private async checkIfCommentExists(commentId: string) {
+    const comment: Comment | null =
+      await this.commentsRepository.getCommentById(commentId);
+
     if (!comment) throw new BadRequestException('There are no such comment!');
     return comment;
   }
@@ -102,7 +110,7 @@ export class CommentsService {
   }
 
   async deleteComment(commentId: string, profileId: string): Promise<Comment> {
-    const comment: Comment = await this.checkIfCommentExist(
+    const comment: Comment = await this.checkIfCommentExistAndBelongsToProfile(
       commentId,
       profileId,
     );
@@ -114,7 +122,7 @@ export class CommentsService {
     commentId: string,
     profileId: string,
   ): Promise<CommentLike> {
-    await this.checkIfCommentExist(commentId, profileId);
+    await this.checkIfCommentExists(commentId);
     if (await this.checkIfLikeExist(commentId, profileId))
       throw new BadRequestException('This like already exists!');
 

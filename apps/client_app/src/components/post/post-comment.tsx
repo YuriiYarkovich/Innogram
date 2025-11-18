@@ -26,7 +26,10 @@ const PostComment = ({
         },
       );
 
-      if (!response.ok) console.error(response.status);
+      if (!response.ok) {
+        const message: string = await response.json();
+        console.error(message);
+      }
 
       setLiked((prev) => !prev);
       setLikesAmount((prev) => prev + 1);
@@ -39,7 +42,11 @@ const PostComment = ({
         },
       );
 
-      if (!response.ok) console.error(response.status);
+      if (!response.ok) {
+        const message: string = await response.json();
+        console.error(message);
+      }
+
       setLiked((prev) => !prev);
       setLikesAmount((prev) => prev - 1);
     }
@@ -54,8 +61,10 @@ const PostComment = ({
       },
     );
 
-    if (!response.ok) console.error(response.status);
-    else onDeleteComment();
+    if (!response.ok) {
+      const message: string = await response.json();
+      console.error(message);
+    } else onDeleteComment();
   };
 
   console.log(`time past: ${postComment?.timePast}`);
