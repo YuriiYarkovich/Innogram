@@ -2,42 +2,22 @@
 
 import PostTile from '@/components/feedPage/postTile';
 import { useEffect, useState } from 'react';
-import { SERVER } from '@/config/apiRoutes';
 import SidePanel from '@/components/sidePanel';
+import FetchService from '@/services/fetch.service';
 
 const Page = () => {
   const [curProfile, setCurProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchService: FetchService = new FetchService();
+
   useEffect(() => {
-    const fetchProfile = async () => {
-      const res: Response = await fetch(SERVER.API.GET_CURRENT_PROFILE_INFO, {
-        credentials: 'include',
-      });
-      const data: Profile = await res.json();
-      setCurProfile(data);
-    };
-    fetchProfile();
+    fetchService.fetchProfile(setCurProfile);
   }, []);
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const res: Response = await fetch(
-          SERVER.API.GET_POSTS_OF_SUBSCRIBED_ON,
-          {
-            credentials: 'include',
-          },
-        );
-        const data: Post[] = await res.json();
-        setPosts(data);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPosts();
+    fetchService.fetchPostsOfsubscribedOnProfiles(setPosts, setLoading);
   }, []);
 
   return (

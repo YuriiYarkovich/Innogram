@@ -1,41 +1,20 @@
 'use client';
 
-import { SERVER } from '@/config/apiRoutes';
 import { useState } from 'react';
-import { getDeviceId } from '@/utils/device';
 import { useRouter } from 'next/navigation';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import returnErrorMessage from '@/utils/showAuthError';
+import ActionsService from '@/services/actions.service';
 
 export default function LogInForm() {
   const router: AppRouterInstance = useRouter();
+  const actionsService: ActionsService = new ActionsService();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const deviceId: string = getDeviceId();
-    const response: Response = await fetch(SERVER.API.LOG_IN, {
-      method: 'POST',
-      headers: {
-        'Content-type': 'application/json',
-        'x-device-id': deviceId,
-      },
-      body: JSON.stringify({ email, password }),
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      const finalMessage: string | undefined =
-        await returnErrorMessage(response);
-      if (finalMessage) setError(finalMessage);
-      return;
-    }
-
-    if (response.status === 201) {
-      router.push(`/feed`);
-    }
+    await actionsService.submitLogin(email, password, setError, router);
   };
 
   return (

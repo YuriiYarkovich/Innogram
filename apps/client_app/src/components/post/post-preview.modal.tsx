@@ -2,10 +2,10 @@
 
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
-import { SERVER } from '@/config/apiRoutes';
 import PostComment from '@/components/post/post-comment';
 import Line from '@/components/line';
-import returnErrorMessage from '@/utils/showAuthError';
+import ActionsService from '@/services/actions.service';
+import FetchService from '@/services/fetch.service';
 
 export default function PostPreviewModal({
   post,
@@ -28,129 +28,30 @@ export default function PostPreviewModal({
     PostComment | undefined
   >(undefined);
 
+  const actionsService: ActionsService = new ActionsService();
+  const fetchService: FetchService = new FetchService();
+
   const likeOrUnlikePost = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!liked) {
-      const response: Response = await fetch(
-        `${SERVER.API.LIKE_POST}${post.postId}`,
-        {
-          method: 'POST',
-          credentials: 'include',
-        },
-      );
+    const response: Response = await actionsService.likeOrUnlikePost(
+      liked,
+      post,
+    );
 
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      if (response.ok) {
-        setLiked((prev) => !prev);
-        setLikesCount((prev) => prev + 1);
-      }
-    } else {
-      const response: Response = await fetch(
-        `${SERVER.API.UNLIKE_POST}${post.postId}`,
-        {
-          method: 'DELETE',
-          credentials: 'include',
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      if (response.ok) {
-        setLiked((prev) => !prev);
-        setLikesCount((prev) => prev - 1);
-      }
+    if (response.ok) {
+      setLiked((prev) => !prev);
+      setLikesCount((prev) => prev - 1);
     }
   };
 
   useEffect(() => {
-    fetchComments();
+    fetchService.fetchComments(post, setCommentsLoading, setComments);
   }, []);
-
-  const addComment = async () => {
-    console.log(
-      `Sending data: ${JSON.stringify({
-        content: commentContent,
-        postId: post.postId,
-        isAnswer: false,
-        parentCommentId: respondingComment?.commentId || '',
-      })}`,
-    );
-    const response: Response = await fetch(SERVER.API.ADD_COMMENT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        content: commentContent,
-        postId: post.postId,
-        isAnswer: false,
-        parentCommentId: respondingComment?.commentId || '',
-      }),
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      const finalMessage: string | undefined =
-        await returnErrorMessage(response);
-      if (finalMessage) console.error(finalMessage);
-      return;
-    }
-
-    if (isRespondingOnComment) setIsRespondingOnComment(false);
-    await fetchComments();
-  };
 
   const setCommentToRespond = (comment: PostComment) => {
     setRespondingComment(comment);
     setIsRespondingOnComment(true);
-  };
-
-  const fetchComments = async () => {
-    try {
-      setCommentsLoading(true);
-      const response: Response = await fetch(
-        `${SERVER.API.GET_COMMENTS_OF_POST}${post.postId}`,
-        {
-          method: 'GET',
-          credentials: 'include',
-        },
-      );
-
-      if (!response.ok) {
-        console.error(response.status);
-      }
-
-      const commentsData: PostComment[] = await response.json();
-      console.log(`Comments data: ${JSON.stringify(commentsData)}`);
-      setComments(commentsData);
-    } finally {
-      setCommentsLoading(false);
-    }
-  };
-
-  const deletePost = async () => {
-    const response: Response = await fetch(
-      `${SERVER.API.DELETE_POST}${post.postId}`,
-      {
-        method: 'DELETE',
-        credentials: 'include',
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
-    }
-
-    if (response.ok) {
-      onClose();
-      location.reload();
-    }
   };
 
   return (
@@ -204,7 +105,7 @@ export default function PostPreviewModal({
               {post.isCreator ? (
                 <button
                   className={`ml-auto mr-9 cursor-pointer`}
-                  onClick={async () => deletePost()}
+                  onClick={async () => actionsService.deletePost(post, onClose)}
                 >
                   <Image
                     src={`/images/icons/delete.svg`}
@@ -273,7 +174,13 @@ export default function PostPreviewModal({
                     <PostComment
                       key={comment.commentId}
                       postComment={comment}
-                      onDeleteComment={() => fetchComments()}
+                      onDeleteComment={() =>
+                        fetchService.fetchComments(
+                          post,
+                          setCommentsLoading,
+                          setComments,
+                        )
+                      }
                       onResponseClick={setCommentToRespond}
                     />
                   ))
@@ -339,7 +246,17 @@ export default function PostPreviewModal({
                   <div className={`flex w-1/4 items-center`}>
                     <button
                       className={`rounded-3xl bg-[#4f378a] w-full h-1/3 text-white hover:bg-[#d0bcff] hover:text-black cursor-pointer`}
-                      onClick={() => addComment()}
+                      onClick={() =>
+                        actionsService.addComment(
+                          commentContent,
+                          post,
+                          respondingComment,
+                          isRespondingOnComment,
+                          setIsRespondingOnComment,
+                          setCommentsLoading,
+                          setComments,
+                        )
+                      }
                     >
                       Submit
                     </button>

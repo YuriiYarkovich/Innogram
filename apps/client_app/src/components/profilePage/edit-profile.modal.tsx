@@ -2,8 +2,7 @@
 
 import Image from 'next/image';
 import React, { useState } from 'react';
-import { SERVER } from '@/config/apiRoutes';
-import returnErrorMessage from '@/utils/showAuthError';
+import ActionsService from '@/services/actions.service';
 
 export default function EditProfileModal({
   profile,
@@ -18,6 +17,8 @@ export default function EditProfileModal({
   const [birthday, setBirthday] = useState(profile.birthday);
   const [error, setError] = useState<string | null>(null);
 
+  const actionsService: ActionsService = new ActionsService();
+
   const handleChangeAvatarInPlaceholder = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -29,35 +30,14 @@ export default function EditProfileModal({
   const editProfile = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const formData = new FormData();
-    formData.append('username', username);
-    formData.append('bio', bio);
-    formData.append('birthday', birthday);
-
-    if (avatar) {
-      console.log(`Sending file`);
-      formData.append('file', avatar);
-    }
-
-    const res: Response = await fetch(SERVER.API.EDIT_PROFILE, {
-      method: 'PUT',
-      credentials: 'include',
-      body: formData,
-    });
-
-    if (!res.ok) {
-      const finalMessage: string | undefined = await returnErrorMessage(res);
-      if (finalMessage) {
-        setError(finalMessage);
-        console.log(`Error message: ${finalMessage}`);
-      }
-      return;
-    }
-
-    if (res.ok) {
-      onClose();
-      location.replace(`/profile/${username}`);
-    }
+    await actionsService.editProfile(
+      username,
+      bio,
+      birthday,
+      avatar,
+      setError,
+      onClose,
+    );
   };
 
   return (

@@ -2,8 +2,8 @@
 
 import Image from 'next/image';
 import React, { useState } from 'react';
-import { SERVER } from '@/config/apiRoutes';
 import PostPreviewModal from '@/components/post/post-preview.modal';
+import ActionsService from '@/services/actions.service';
 
 export default function PostTile({ post }: { post: Post }) {
   const [liked, setLiked] = useState(post.liked);
@@ -11,43 +11,19 @@ export default function PostTile({ post }: { post: Post }) {
   const [isPostPreviewModalOpen, setIsPostPreviewModalOpen] =
     useState<boolean>(false);
 
+  const actionsService: ActionsService = new ActionsService();
+
   const likeOrUnlikePost = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!liked) {
-      const response: Response = await fetch(
-        `${SERVER.API.LIKE_POST}${post.postId}`,
-        {
-          method: 'POST',
-          credentials: 'include',
-        },
-      );
+    const response: Response = await actionsService.likeOrUnlikePost(
+      liked,
+      post,
+    );
 
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      if (response.ok) {
-        setLiked((prev) => !prev);
-        setLikesCount((prev) => prev + 1);
-      }
-    } else {
-      const response: Response = await fetch(
-        `${SERVER.API.UNLIKE_POST}${post.postId}`,
-        {
-          method: 'DELETE',
-          credentials: 'include',
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      if (response.ok) {
-        setLiked((prev) => !prev);
-        setLikesCount((prev) => prev - 1);
-      }
+    if (response.ok) {
+      setLiked((prev) => !prev);
+      setLikesCount((prev) => prev - 1);
     }
   };
 

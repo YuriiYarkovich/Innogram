@@ -3,9 +3,7 @@
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
-import { getDeviceId } from '@/utils/device';
-import { SERVER } from '@/config/apiRoutes';
-import returnErrorMessage from '@/utils/showAuthError';
+import ActionsService from '@/services/actions.service';
 
 export default function RegistrationForm() {
   const router: AppRouterInstance = useRouter();
@@ -16,35 +14,19 @@ export default function RegistrationForm() {
   const [bio, setBio] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  const actionsService: ActionsService = new ActionsService();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const deviceId: string = getDeviceId();
-    const response: Response = await fetch(SERVER.API.REGISTRATION, {
-      method: 'POST',
-      headers: {
-        'Content-type': 'application/json',
-        'x-device-id': deviceId,
-      },
-      body: JSON.stringify({
-        email,
-        password,
-        username,
-        birthday,
-        bio,
-      }),
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      const finalMessage: string | undefined =
-        await returnErrorMessage(response);
-      if (finalMessage) setError(finalMessage);
-      return;
-    }
-
-    if (response.status === 201) {
-      router.push('/feed');
-    }
+    await actionsService.submitRegistration(
+      email,
+      password,
+      username,
+      birthday,
+      bio,
+      setError,
+      router,
+    );
   };
 
   return (

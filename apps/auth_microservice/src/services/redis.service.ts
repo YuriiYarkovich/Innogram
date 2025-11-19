@@ -22,15 +22,11 @@ export class RedisService {
 
   async findRedisNote(refreshToken: string): Promise<undefined | RedisNote> {
     const payload: RefreshTokenObj = this.jwtService.verifyToken(refreshToken);
-    console.log(
-      `payload in find redis note method: ${JSON.stringify(payload)}`,
-    );
     const accountId: string = payload.accountId;
 
     const keys: string[] = await redisClient.keys(`session:${accountId}:*`);
 
     if (!keys.length) {
-      console.log(`No active sessions found for account ${accountId}`);
       return undefined;
     }
 

@@ -10,19 +10,24 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import PostPreviewModal from '@/components/post/post-preview.modal';
+import FetchService from '@/services/fetch.service';
+import ActionsService from '@/services/actions.service';
 
 const Page = () => {
   const router: AppRouterInstance = useRouter();
+  const fetchService: FetchService = new FetchService();
+  const actionsService: ActionsService = new ActionsService();
+
   const [profile, setProfile] = useState<Profile>({
-    avatarUrl: '',
+    profileId: '',
+    username: '',
     bio: '',
     birthday: '',
+    avatarUrl: '',
     isPublic: false,
     postsAmount: 0,
-    profileId: '',
     subscribersAmount: 0,
     subscriptionsAmount: 0,
-    username: '',
     isCurrent: false,
     isSubscribed: false,
   });
@@ -41,28 +46,8 @@ const Page = () => {
   const { username } = useParams<{ username?: string }>();
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      const res: Response = await fetch(SERVER.API.GET_CURRENT_PROFILE_INFO, {
-        credentials: 'include',
-      });
-      const data: Profile = await res.json();
-      setCurProfile(data);
-    };
-    fetchProfile();
+    fetchService.fetchProfile(setCurProfile);
   }, []);
-
-  const handleLogout = async () => {
-    const response: Response = await fetch(SERVER.API.LOG_OUT, {
-      method: 'POST',
-      credentials: 'include',
-    });
-
-    if (response.ok) {
-      router.push(`/`);
-    } else {
-      console.error(`Message: ${JSON.stringify(response.json())}`);
-    }
-  };
 
   const openPostPreviewModal = (postId: string) => {
     const index: number | undefined = findPostIndex(postId);
@@ -92,75 +77,30 @@ const Page = () => {
     }
   }, [isEditProfileModalOpen]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      let profileData: Profile;
-      try {
-        if (!username) {
-          const resProfile: Response = await fetch(
-            SERVER.API.GET_CURRENT_PROFILE_INFO,
-            {
-              credentials: 'include',
-            },
-          );
-          profileData = await resProfile.json();
-        } else {
-          const resProfile: Response = await fetch(
-            `${SERVER.API.GET_CURRENT_PROFILE_INFO}/${username}`,
-            {
-              credentials: 'include',
-            },
-          );
-          profileData = await resProfile.json();
-        }
-        setFollowersAmount(profileData.subscribersAmount);
-        setIsFollowed(profileData.isSubscribed);
-        setProfile(profileData);
-        await updatePostsArray(profileData?.profileId);
-      } finally {
-        setProfileLoading(false);
-        setPostsLoading(false);
-      }
-    };
-    fetchData();
-  }, [username]);
-
   const updatePostsArray = async (profileId: string) => {
-    const resPosts: Response = await fetch(
-      `${SERVER.API.GEL_ALL_POSTS_OF_PROFILE}${profileId}`,
-      {
-        credentials: 'include',
-      },
-    );
-    const postsData: Post[] = await resPosts.json();
-    setPosts(postsData);
+    await fetchService.fetchPostsOfProfile(profileId, setPosts);
   };
 
-  const handleFollowing = async () => {
-    const response: Response = await fetch(
-      `${SERVER.API.FOLLOW}${profile.profileId}`,
-      {
-        method: 'POST',
-        credentials: 'include',
-      },
+  useEffect(() => {
+    fetchService.fetchFullProfileData(
+      username,
+      setFollowersAmount,
+      setIsFollowed,
+      setProfile,
+      updatePostsArray,
+      setProfileLoading,
+      setPostsLoading,
     );
+  }, [username]);
 
-    if (!response.ok) console.error(response.json());
-
+  const handleFollowing = async () => {
+    await actionsService.handleFollowing(profile);
     setFollowersAmount((prev: number): number => prev + 1);
     setIsFollowed(true);
   };
 
   const handleUnfollow = async () => {
-    const response: Response = await fetch(
-      `${SERVER.API.UNFOLLOW}${profile.profileId}`,
-      {
-        method: 'DELETE',
-        credentials: 'include',
-      },
-    );
-
-    if (!response.ok) console.error(response.json());
+    await actionsService.handleUnfollow(profile);
 
     setFollowersAmount((prev: number): number => prev - 1);
     setIsFollowed(false);
@@ -235,7 +175,10 @@ const Page = () => {
                   <span className={`text-[#79747e]`}>{profile.bio}</span>
                 </div>
                 {profile.isCurrent ? (
-                  <button className={`ml-50`} onClick={handleLogout}>
+                  <button
+                    className={`ml-50`}
+                    onClick={actionsService.handleLogout}
+                  >
                     <Image
                       src={`/images/icons/logout.svg`}
                       alt={`logout button`}

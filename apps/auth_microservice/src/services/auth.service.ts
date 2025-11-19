@@ -68,7 +68,6 @@ export class AuthService {
   ): Promise<{ accessToken: string; refreshToken: string }> {
     try {
       await pool.query(`BEGIN`);
-      console.log('transaction begun');
 
       const candidate: { isExist: boolean; account: any } =
         await this.checkIfAccountExist(email);

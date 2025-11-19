@@ -1,22 +1,9 @@
 import { ApiError } from '../error/api.error.ts';
-import { Request, NextFunction, Response } from 'express';
-import {
-  FieldValidationError,
-  Result,
-  ValidationError,
-  validationResult,
-} from 'express-validator';
 
-export function errorHandlingMiddleware(
-  err: unknown,
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+import { Response } from 'express';
+
+export function errorHandlingMiddleware(err: unknown, res: Response) {
   if (err instanceof ApiError) {
-    console.log(
-      `returning instance of Api error, code: ${err.statusCode}, message: ${err.message}`,
-    );
     return res.status(err.statusCode).json({ message: err.message });
   }
   if (err instanceof Error) console.log(`returning unknown ${err.stack}`);

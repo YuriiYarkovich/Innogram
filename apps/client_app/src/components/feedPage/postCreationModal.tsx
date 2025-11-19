@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { SERVER } from '@/config/apiRoutes';
+import ActionsService from '@/services/actions.service';
 
 export default function PostCreationModal({
   userAvatarUrl = `/images/avaTest.png`,
@@ -11,6 +12,8 @@ export default function PostCreationModal({
   onClose,
 }: CreatePostModalProps) {
   if (!isOpen) return null;
+
+  const actionsService: ActionsService = new ActionsService();
 
   const [file, setFile] = useState<File | null>(null);
   const [content, setContent] = useState('');
@@ -26,26 +29,7 @@ export default function PostCreationModal({
   const createPost = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const formData = new FormData();
-    formData.append('content', content);
-    if (file) {
-      formData.append('files', file);
-    }
-
-    const response: Response = await fetch(SERVER.API.CREATE_POST, {
-      method: 'POST',
-      credentials: 'include',
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
-    }
-
-    if (response.status === 201) {
-      onClose();
-      location.reload();
-    }
+    await actionsService.createPost(content, file, onClose);
   };
 
   return (
