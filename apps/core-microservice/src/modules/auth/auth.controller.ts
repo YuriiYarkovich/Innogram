@@ -13,6 +13,7 @@ import type { Response, Request } from 'express';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { GoogleResponseDto } from './dto/google-response.dto';
 import { HttpService } from './httpService';
+import { AuthService } from './auth.service';
 
 @ApiTags('Authentication operations')
 @ApiBearerAuth('access-token')
@@ -21,6 +22,7 @@ export class AuthController {
   constructor(
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
+    private readonly authService: AuthService,
   ) {}
 
   @ApiOperation({ summary: 'Authenticates users in system' })
@@ -44,27 +46,24 @@ export class AuthController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const url: string = `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/login`;
-    const options = {
-      method: 'POST',
-      data: dto,
-      withCredentials: true,
-      headers: { 'x-device-id': req.headers['x-device-id'] },
-    };
+    const url = `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/login`;
 
     const response = await this.httpService.forwardRequest<{
       accessToken: string;
       refreshToken: string;
-    }>(url, options);
+    }>(url, {
+      method: 'POST',
+      data: dto,
+      withCredentials: true,
+      headers: { 'x-device-id': req.headers['x-device-id'] },
+    });
 
-    const setCookie: string[] | undefined = response.headers['set-cookie'];
+    const setCookie = response.headers['set-cookie'];
     if (setCookie) {
       res.setHeader('Set-Cookie', setCookie);
     }
 
-    return res.json({
-      message: 'success!',
-    });
+    return res.json({ message: ['success!'] });
   }
 
   @ApiOperation({ summary: 'Registers users in system' })

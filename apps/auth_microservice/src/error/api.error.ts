@@ -6,7 +6,6 @@ export class ApiError extends Error {
   constructor(statusCode: number, message: string) {
     super(message);
     this.statusCode = statusCode;
-    console.log(`In ApiError constructor. Message: ${message}`);
   }
 
   static fromError(errorType): ApiError {
