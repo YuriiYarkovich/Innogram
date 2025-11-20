@@ -68,7 +68,7 @@ export default function PostPreviewModal({
           draggable={false}
         />
       </button>
-      <div className={`flex w-full md:h-[554px] justify-center`}>
+      <div className={`flex w-full h-3/4 justify-center`}>
         <div
           className={`flex flex-row items-center md:w-[1054px] max-h-full bg-[#eaddff] rounded-4xl`}
         >
@@ -85,7 +85,7 @@ export default function PostPreviewModal({
               draggable={false}
             />
           </div>
-          <div className={`flex flex-col w-1/2 md:h-[554px]`}>
+          <div className={`flex flex-col w-1/2 h-full`}>
             <div className={`flex flex-row h-1/6 gap-4 p-3.5 items-center`}>
               <Image
                 src={profileAvatarUrl}
@@ -163,9 +163,9 @@ export default function PostPreviewModal({
               {likesCount} likes
             </span>
             <Line thickness={2} />
-            <div className={`flex flex-col h-2/3 pr-6 pb-2 gap-5`}>
+            <div className={`flex flex-col h-2/3 pr-6 pb-2 gap-2`}>
               <div
-                className={`flex flex-col h-2/3 overflow-y-scroll p-4 gap-2 bg-blue-600`}
+                className={`flex flex-col h-2/3 overflow-y-scroll p-4 gap-2`}
               >
                 {commentsLoading ? (
                   <p>Loading...</p>
@@ -191,9 +191,9 @@ export default function PostPreviewModal({
 
               {isRespondingOnComment ? (
                 <>
-                  <Line thickness={1} marginTop={1} />
+                  <Line thickness={1} marginBottom={3} marginTop={0} />
                   <div
-                    className={`flex flex-col min-h-[50px]  w-full gap-1.5 mt-[-15px] mb-[-15px]`}
+                    className={`flex flex-col min-h-[50px] w-full gap-1.5 mb-[-5px]`}
                   >
                     <div className={`flex items-start ml-3 gap-3 `}>
                       <Image

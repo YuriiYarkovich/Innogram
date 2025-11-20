@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Line from '@/components/line';
 import { SERVER } from '@/config/apiRoutes';
 import CommentContent from '@/components/post/comment-content';
@@ -15,6 +15,19 @@ const PostComment = ({
   const [responses, setResponses] = useState<PostComment[]>([]);
   const [isResponsesOpen, setIsResponsesOpen] = useState<boolean>(false);
   const [isResponsesLoading, setIsResponsesLoading] = useState<boolean>(false);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const [height, setHeight] = useState('0px');
+
+  useEffect(() => {
+    if (isResponsesOpen) {
+      requestAnimationFrame(() => {
+        const newHeight = contentRef.current?.scrollHeight ?? 0;
+        setHeight(newHeight + 'px');
+      });
+    } else {
+      setHeight('0px');
+    }
+  }, [isResponsesOpen, responses]);
 
   const fetchResponses = async () => {
     setIsResponsesLoading(true);
@@ -60,14 +73,14 @@ const PostComment = ({
   };
 
   return (
-    <div className={`flex flex-col max-h-full`}>
+    <div className={`flex flex-col`}>
       <CommentContent
         postComment={postComment}
         onResponseClick={onResponseClick}
         deleteComment={deleteComment}
       />
 
-      {/*RESPONSES*/}
+      {/*responses clickable text*/}
       {postComment.responsesAmount > 0 && (
         <div className="flex w-full justify-center">
           <span
@@ -83,34 +96,30 @@ const PostComment = ({
 
       {/* Аккордеон */}
       <div
-        className={`transition-all ease-in-out overflow-hidden ${
-          isResponsesOpen
-            ? 'max-h-[9999px] opacity-100 py-2'
-            : 'max-h-0 opacity-0 py-0'
-        } duration-500`}
+        className="transition-all duration-500 ease-in-out overflow-hidden"
+        style={{ maxHeight: height }}
       >
-        {isResponsesOpen && (
-          <div className="w-full max-w-sm mx-auto">
-            {isResponsesLoading ? (
-              <span className="text-[14px]">Responses loading...</span>
-            ) : (
-              responses.map((response: PostComment) => (
-                <div
-                  key={response.commentId}
-                  className="flex flex-col w-full ml-10"
-                >
-                  <CommentContent
-                    postComment={response}
-                    onResponseClick={() => onResponseClick(postComment)}
-                    deleteComment={deleteComment}
-                  />
-                  <Line thickness={1} marginBottom={10} />
-                </div>
-              ))
-            )}
-          </div>
-        )}
+        <div ref={contentRef}>
+          {isResponsesLoading ? (
+            <span className="text-[14px]">Responses loading...</span>
+          ) : (
+            responses.map((response: PostComment) => (
+              <div
+                key={response.commentId}
+                className="flex flex-col w-full ml-10"
+              >
+                <CommentContent
+                  postComment={response}
+                  onResponseClick={() => onResponseClick(postComment)}
+                  deleteComment={deleteComment}
+                />
+                <Line thickness={1} marginBottom={10} />
+              </div>
+            ))
+          )}
+        </div>
       </div>
+
       <Line thickness={1} color={`#624b98`} />
     </div>
   );
