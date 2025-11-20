@@ -177,7 +177,7 @@ const Page = () => {
                 {profile.isCurrent ? (
                   <button
                     className={`ml-50`}
-                    onClick={actionsService.handleLogout}
+                    onClick={() => actionsService.handleLogout(router)}
                   >
                     <Image
                       src={`/images/icons/logout.svg`}

@@ -9,6 +9,7 @@ import { ChatParticipantRepository } from './repositories/chat-participant.repos
 import { AuthModule } from '../auth/auth.module';
 import { ChatGateway } from './chat.gateway';
 import { MessagesModule } from '../messages/messages.module';
+import { Logger } from 'nestjs-pino';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { MessagesModule } from '../messages/messages.module';
     ChatRepository,
     ChatParticipantRepository,
     ChatGateway,
+    Logger,
   ],
   exports: [ChatService, ChatRepository, ChatParticipantRepository],
 })

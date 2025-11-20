@@ -3,6 +3,15 @@
 import Image from 'next/image';
 import React, { useState } from 'react';
 import ActionsService from '@/services/actions.service';
+import { useForm } from 'react-hook-form';
+import AddFilePlaceholder from '@/components/add-file-placeholder';
+
+type ProfileEditFormValues = {
+  username: string;
+  bio: string;
+  birthday: string;
+  file: File | null;
+};
 
 export default function EditProfileModal({
   profile,
@@ -10,31 +19,34 @@ export default function EditProfileModal({
   onClose,
 }: EditProfileModalProps) {
   if (!isOpen) return null;
-
-  const [avatar, setAvatar] = useState<File | null>(null);
-  const [username, setUsername] = useState<string>(profile.username);
-  const [bio, setBio] = useState<string>(profile.bio);
-  const [birthday, setBirthday] = useState(profile.birthday);
-  const [error, setError] = useState<string | null>(null);
-
   const actionsService: ActionsService = new ActionsService();
 
-  const handleChangeAvatarInPlaceholder = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    if (e.target.files && e.target.files[0]) {
-      setAvatar(e.target.files[0]);
-    }
-  };
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    formState: { isSubmitting },
+  } = useForm<ProfileEditFormValues>({
+    defaultValues: {
+      username: '',
+      bio: '',
+      birthday: '',
+      file: null,
+    },
+  });
 
-  const editProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const file = watch('file');
+  const selectedFile = file as File | null;
 
+  const [error, setError] = useState<string | null>(null);
+
+  const onSubmit = async (data: ProfileEditFormValues) => {
     await actionsService.editProfile(
-      username,
-      bio,
-      birthday,
-      avatar,
+      data.username,
+      data.bio,
+      data.birthday,
+      file,
       setError,
       onClose,
     );
@@ -48,8 +60,8 @@ export default function EditProfileModal({
         className={`flex flex-col items-center justify-center md:w-[500px] min-h-screen`}
       >
         <form
-          className={`flex flex-col w-full md:h-[800px] bg-[#eaddff] pr-[30px] pl-[30px] rounded-[50px] gap-2 pt-8`}
-          onSubmit={editProfile}
+          className={`flex flex-col w-full pb-5 bg-[#eaddff] pr-[30px] pl-[30px] rounded-[50px] gap-2 pt-5`}
+          onSubmit={handleSubmit(onSubmit)}
         >
           <div className={`flex justify-center md:w-[47px] md:h-[47px] ml-1`}>
             <button onClick={onClose}>
@@ -62,43 +74,22 @@ export default function EditProfileModal({
               />
             </button>
           </div>
-          <div className={`flex justify-center`}>
-            {!avatar ? (
-              <div className="flex items-center md:w-[200px] md:h-[200px] rounded-[270px] border-[#918d94] border-2 p-6 mb-14">
-                <label
-                  htmlFor="file-upload"
-                  className="cursor-pointer bg-[#4f378a] text-white hover:text-black text-center px-4 py-2 hover:bg-[#d0bcff] w-full rounded-3xl"
-                >
-                  Upload file
-                </label>
-                <input
-                  id="file-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleChangeAvatarInPlaceholder}
-                  className="hidden"
-                />{' '}
-              </div>
-            ) : (
-              // Превью файла
-              <div className="md:w-[200px] md:h-[200px] mb-14 flex justify-center items-center bg-transparent">
-                <Image
-                  src={URL.createObjectURL(avatar)}
-                  draggable={false}
-                  alt="preview"
-                  width={200}
-                  height={200}
-                  className="md:w-[200px] md:h-[200px] rounded-[270px]"
-                  unoptimized
-                />
-              </div>
-            )}
+          <div className={`flex w-full justify-center`}>
+            <div
+              className={`flex items-center justify-center m-5 md:h-[200px] md:w-[200px] rounded-[270px] bg-[#79747e] overflow-hidden`}
+            >
+              <AddFilePlaceholder
+                control={control}
+                name={`file`}
+                label={'Upload file'}
+              />
+            </div>
           </div>
           <input
             type="username"
             placeholder="Username"
             defaultValue={profile.username}
-            onChange={(e) => setUsername(e.target.value)}
+            {...register('username')}
             className="border-2 border-[#bcb8b8] rounded-[6px] px-3 py-2 w-full bg-white"
           />
           <span className={`mb-[-10px] text-[#625b71]`}>Birthday</span>
@@ -106,13 +97,13 @@ export default function EditProfileModal({
             type="date"
             title="Birthday"
             defaultValue={profile.birthday}
-            onChange={(e) => setBirthday(e.target.value)}
+            {...register('birthday')}
             className="border-2 border-[#bcb8b8] rounded-[6px] px-3 py-2 w-full bg-white"
           />
           <textarea
             placeholder="Bio"
             defaultValue={profile.bio}
-            onChange={(e) => setBio(e.target.value)}
+            {...register('birthday')}
             className="border-2 border-[#bcb8b8] rounded-[6px] md:h-[100px] px-3 py-2 w-full bg-white"
           />
           <button

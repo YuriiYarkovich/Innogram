@@ -1,5 +1,4 @@
 import { SERVER } from '@/config/apiRoutes';
-import { router } from 'next/client';
 import { getDeviceId } from '@/utils/device';
 import returnErrorMessage from '@/utils/showAuthError';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
@@ -8,7 +7,7 @@ import FetchService from '@/services/fetch.service';
 export default class ActionsService {
   private fetchService: FetchService = new FetchService();
 
-  async handleLogout() {
+  async handleLogout(router: AppRouterInstance) {
     const response: Response = await fetch(SERVER.API.LOG_OUT, {
       method: 'POST',
       credentials: 'include',

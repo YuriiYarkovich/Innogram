@@ -154,11 +154,9 @@ export class AuthController {
   })
   @Post('/logout')
   async logout(@Req() req: Request, @Res() res: Response) {
-    console.log(`In logout method!`);
     try {
       const refreshToken: string = req.cookies?.refreshToken;
       if (!refreshToken) {
-        console.log(`There are no refresh token!`);
         return res.status(400).json({ message: 'Refresh token not provided' });
       }
 

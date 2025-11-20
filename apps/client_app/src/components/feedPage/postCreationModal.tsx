@@ -1,9 +1,15 @@
 'use client';
 
 import Image from 'next/image';
-import React, { useState } from 'react';
-import { SERVER } from '@/config/apiRoutes';
+import React from 'react';
 import ActionsService from '@/services/actions.service';
+import { Controller, useForm } from 'react-hook-form';
+import AddFilePlaceholder from '@/components/add-file-placeholder';
+
+type PostCreationFormValues = {
+  content: string;
+  file: File | null;
+};
 
 export default function PostCreationModal({
   userAvatarUrl = `/images/avaTest.png`,
@@ -12,24 +18,26 @@ export default function PostCreationModal({
   onClose,
 }: CreatePostModalProps) {
   if (!isOpen) return null;
-
   const actionsService: ActionsService = new ActionsService();
 
-  const [file, setFile] = useState<File | null>(null);
-  const [content, setContent] = useState('');
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    formState: { isSubmitting },
+  } = useForm<PostCreationFormValues>({
+    defaultValues: {
+      content: '',
+      file: null,
+    },
+  });
 
-  const handleChangeFileInPlaceholder = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
-  };
+  const file = watch('file');
+  const selectedFile = file as File | null;
 
-  const createPost = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    await actionsService.createPost(content, file, onClose);
+  const onSubmit = async (data: PostCreationFormValues) => {
+    await actionsService.createPost(data.content, data.file, onClose);
   };
 
   return (
@@ -37,7 +45,7 @@ export default function PostCreationModal({
       className={`fixed inset-0 z-50 flex justify-center items-center backdrop-blur-xs bg-black/50 min-h-screen`}
     >
       <form
-        onSubmit={createPost}
+        onSubmit={handleSubmit(onSubmit)}
         className={`flex flex-col md:w-[470px] rounded-[30px] bg-[#eaddff] items-center justify-center`}
       >
         <div className={`flex flex-row items-center w-full md:h-[50px]`}>
@@ -57,45 +65,15 @@ export default function PostCreationModal({
         <div className="flex items-center w-full">
           <div className={`flex-grow h-[1px] bg-[#624b98]`}></div>
         </div>
+        {/*file field*/}
         <div
           className={`flex justify-center items-center md:h-[400px] md:w-[400px] border-black bg-[#d9d9d9] mt-5`}
         >
-          {!file ? (
-            <div className="flex md:w-[120px]">
-              <label
-                htmlFor="file-upload"
-                className="cursor-pointer bg-[#4f378a] text-white text-center rounded-[20px] px-4 py-2 hover:bg-[#d0bcff] w-full"
-              >
-                Upload file
-              </label>
-              <input
-                id="file-upload"
-                type="file"
-                accept="image/*,video/*"
-                onChange={handleChangeFileInPlaceholder}
-                className="hidden"
-              />
-            </div>
-          ) : (
-            <div className="w-full h-full flex justify-center items-center bg-transparent">
-              {file.type.startsWith('image/') ? (
-                <Image
-                  src={URL.createObjectURL(file)}
-                  draggable={false}
-                  alt="preview"
-                  width={400}
-                  height={400}
-                  className="object-contain w-full h-full"
-                />
-              ) : (
-                <video
-                  src={URL.createObjectURL(file)}
-                  controls
-                  className="object-contain w-full h-full"
-                />
-              )}
-            </div>
-          )}
+          <AddFilePlaceholder
+            control={control}
+            name={`file`}
+            label={'Upload file'}
+          />
         </div>
 
         <div className={`flex flex-row w-full ml-17 mt-4 items-center gap-3`}>
@@ -111,16 +89,16 @@ export default function PostCreationModal({
         </div>
 
         <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder={`What do you think?`}
-          className={`flex md:w-[400px] md:h-[122px] bg-white mt-5`}
+          {...register('content')}
+          placeholder="What do you think?"
+          className="flex md:w-[400px] md:h-[122px] bg-white mt-5"
         ></textarea>
         <button
-          className={`cursor-pointer bg-[#4f378a] text-white text-center rounded-[20px] px-4 py-2 hover:bg-[#d0bcff] md:w-[400px] mt-6 mb-5`}
-          type={`submit`}
+          className="cursor-pointer bg-[#4f378a] text-white text-center rounded-[20px] px-4 py-2 hover:bg-[#d0bcff] md:w-[400px] mt-6 mb-5"
+          type="submit"
+          disabled={isSubmitting}
         >
-          Create post
+          {isSubmitting ? 'Creating...' : 'Create post'}
         </button>
       </form>
     </div>

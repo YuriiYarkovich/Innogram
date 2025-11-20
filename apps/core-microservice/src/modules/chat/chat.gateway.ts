@@ -28,6 +28,7 @@ import { CreateMessageDto } from '../messages/dto/create-message.dto';
 import { Message } from '../../common/entities/chat/message.entity';
 import { ChatParticipant } from '../../common/entities/chat/chat-participant.entity';
 import { EditMessageDto } from '../messages/dto/edit-message.dto';
+import { Logger } from 'nestjs-pino';
 
 @WebSocketGateway(3004, { cors: { origin: '*', credentials: true } })
 @Injectable()
@@ -36,6 +37,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly messagesService: MessagesService,
     private readonly chatService: ChatService,
     private readonly authService: AuthService,
+    private readonly logger: Logger,
   ) {}
 
   @WebSocketServer() private server: Server;
@@ -45,7 +47,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const cookiesHeader: string | undefined = socket.handshake.headers.cookie;
       if (!cookiesHeader) {
-        console.log(`No cookies found in handshake! Disconnect`);
+        this.logger.log(`No cookies found in handshake! Disconnect`);
         socket.disconnect();
         return;
       }
@@ -55,7 +57,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const accessToken: string | undefined = cookies['accessToken'];
 
       if (!accessToken) {
-        console.log(`No access token provided! Disconnect`);
+        this.logger.log(`No access token provided! Disconnect`);
         socket.disconnect();
         return;
       }
@@ -67,7 +69,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       this.users.set(profileId, socket.id);
 
-      console.log(
+      this.logger.log(
         `Client connected! ProfileId(key): ${user.profileId}, socketId:${socket.id}`,
       );
 
@@ -76,21 +78,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       if (messagesToEmit.length > 0)
         await this.emitMessagesToNewUser(messagesToEmit);
-
-      this.logAllConnectedUsers();
     } catch (e) {
       socket.disconnect();
       if (e instanceof HttpException || e.message === `Access token expired!`)
         throw new UnauthorizedException(`Access token expired!`);
       throw e;
     }
-  }
-
-  private logAllConnectedUsers(): void {
-    console.log(`All connected users: `);
-    this.users.forEach((value: string, key: string): void => {
-      console.log(`profileId: ${key}, socketId: ${value}`);
-    });
   }
 
   @SubscribeMessage(`deleteMessage`)
@@ -119,7 +112,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           message: messageData.messageId,
         }),
       );
-      console.log(`Message with id: ${messageData.messageId} has been deleted`);
+      this.logger.log(
+        `Message with id: ${messageData.messageId} has been deleted`,
+      );
     });
   }
 
@@ -186,7 +181,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           message: messageData.updatedContent,
         }),
       );
-      console.log(`Message with id: ${messageData.messageId} has been edited`);
+      this.logger.log(
+        `Message with id: ${messageData.messageId} has been edited`,
+      );
     });
   }
 
@@ -259,8 +256,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           'reply',
           JSON.stringify({ senderProfileId, message: messageData.content }),
         );
-      console.log(
-        `Message sent to user with socket id: ${receiverSocketId}: ${messageData.content}; to chat: ${messageData.chatId}`,
+      this.logger.log(
+        `Message sent to user with socket id: ${receiverSocketId}: ${messageData.content}; to chat: ${messageData.chatId}`, //TODO delete this log after everything will work fine
       );
     });
   }
@@ -276,12 +273,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.users.forEach((value: string, key: string): void => {
       if (socket.id === value) {
         this.users.delete(key);
-        console.log(
+        this.logger.log(
           `User with socketId: ${value} and profileId: ${key} has disconnected!`,
         );
       }
     });
-    this.logAllConnectedUsers();
   }
 
   private getProfileIdBySocketId(socketId: string): string | undefined {

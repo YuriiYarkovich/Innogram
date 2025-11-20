@@ -1,45 +1,78 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { useForm } from 'react-hook-form';
 import ActionsService from '@/services/actions.service';
 
-export default function LogInForm() {
-  const router: AppRouterInstance = useRouter();
-  const actionsService: ActionsService = new ActionsService();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+type LoginFormValues = {
+  email: string;
+  password: string;
+};
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await actionsService.submitLogin(email, password, setError, router);
+export default function LogInForm() {
+  const router = useRouter();
+  const actionsService = new ActionsService();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<LoginFormValues>();
+
+  const onSubmit = async (data: LoginFormValues) => {
+    await actionsService.submitLogin(
+      data.email,
+      data.password,
+      (msg: string | null) => {
+        if (msg) {
+          setError('root', { message: msg });
+        }
+      },
+      router,
+    );
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="w-full flex flex-col gap-4"
+    >
       <input
         type="email"
         placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
         className="border-2 border-[#bcb8b8] rounded-[6px] px-3 py-2 w-full bg-white"
+        {...register('email', {
+          required: 'Email is required',
+        })}
       />
+      {errors.email && (
+        <p className="text-red-600 text-sm">{errors.email.message}</p>
+      )}
+
       <input
         type="password"
         placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
         className="border-2 border-[#bcb8b8] rounded-[6px] px-3 py-2 w-full bg-white"
+        {...register('password', {
+          required: 'Password is required',
+        })}
       />
+      {errors.password && (
+        <p className="text-red-600 text-sm">{errors.password.message}</p>
+      )}
+
+      {errors.root && (
+        <p className="text-red-600 text-sm">{errors.root.message}</p>
+      )}
+
       <button
         type="submit"
+        disabled={isSubmitting}
         className="bg-[#4f378a] text-white py-2 rounded-[20px] hover:bg-[#d0bcff]"
       >
-        Log in
+        {isSubmitting ? 'Loading...' : 'Log in'}
       </button>
-      {error && <div className="text-red-600 text-sm mt-2">{error}</div>}
     </form>
   );
 }
