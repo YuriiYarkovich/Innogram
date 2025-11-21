@@ -14,7 +14,12 @@ export class AuthController {
   }
 
   registerUsingEmailPassword = async (
-    req: Request<object, object, CreateAccountDto>,
+    req: Request<
+      Record<string, unknown>,
+      Record<string, unknown>,
+      CreateAccountDto
+    >,
+
     res: Response,
     next: NextFunction,
   ) => {
@@ -81,7 +86,7 @@ export class AuthController {
   }
 
   loginUsingEmailPassword = async (
-    req: Request<object, object, LoginDto>,
+    req: Request<Record<string, unknown>, Record<string, unknown>, LoginDto>,
     res: Response,
     next: NextFunction,
   ) => {
