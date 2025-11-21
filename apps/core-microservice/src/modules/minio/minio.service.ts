@@ -19,20 +19,27 @@ import { ConfigService } from '@nestjs/config';
 import * as ffmpeg from 'fluent-ffmpeg';
 import * as ffprobeStatic from 'ffprobe-static';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { Worker } from 'worker_threads';
+import path from 'node:path';
 
 ffmpeg.setFfprobePath(ffprobeStatic.path);
 
+interface VideoWorkerMessage {
+  duration?: number;
+  error?: string;
+}
+
 @Injectable()
 export class MinioService {
-  private s3Client: S3Client;
+  private readonly s3Client: S3Client;
 
   private readonly bucketName: string | undefined;
   private readonly s3BaseUrl: string | undefined;
 
   constructor(private readonly config: ConfigService) {
     this.s3Client = new S3Client({
-      region: 'us-east-1',
-      endpoint: 'http://localhost:9000',
+      region: this.config.get<string>('MINIO_REGION'),
+      endpoint: this.config.get<string>('S3_ENDPOINT'),
       credentials: {
         accessKeyId:
           this.config.get<string>('MINIO_ROOT_USER') ?? 'innogram_user', //TODO переделать без вставки строк
@@ -48,14 +55,23 @@ export class MinioService {
 
   private getVideoDuration(buffer: Buffer): Promise<number> {
     return new Promise((resolve, reject) => {
-      const tempPath = `/tmp/${uuid.v4()}.mp4`;
-      import('fs').then((fs) => {
-        fs.writeFileSync(tempPath, buffer);
-        ffmpeg.ffprobe(tempPath, (err, metadata) => {
-          fs.unlinkSync(tempPath);
-          if (err) return reject(err);
-          resolve(metadata.format.duration || 0);
-        });
+      const worker = new Worker(
+        path.resolve(__dirname, 'video_duration.worker.ts'),
+        {
+          workerData: { buffer },
+          execArgv: ['-r', 'ts-node/register'],
+        },
+      );
+
+      worker.on('message', (msg: VideoWorkerMessage) => {
+        if (msg.error) return reject(new Error(msg.error));
+        resolve(msg.duration ?? 0);
+      });
+
+      worker.on('error', reject);
+      worker.on('exit', (code) => {
+        if (code !== 0)
+          reject(new Error(`Worker stopped with exit code ${code}`));
       });
     });
   }
@@ -64,24 +80,24 @@ export class MinioService {
     file: MulterFile,
   ): Promise<{ hashedFileName: string; type: string }> {
     let type: string;
-    const fileExtension = extname(file.originalname).toLowerCase();
-    const mimeType = file.mimetype;
+    const fileExtension: string = extname(file.originalname).toLowerCase();
+    const mimeType: string = file.mimetype;
 
-    const isImage = mimeType.startsWith('image/');
-    const isVideo = mimeType.startsWith('video/');
+    const isImage: boolean = mimeType.startsWith('image/');
+    const isVideo: boolean = mimeType.startsWith('video/');
 
     if (!isImage && !isVideo)
       throw new BadRequestException('Unknown file type');
 
     if (isVideo) {
-      const duration = await this.getVideoDuration(file.buffer);
+      const duration: number = await this.getVideoDuration(file.buffer);
       type = 'video';
       if (duration > 60) {
         throw new BadRequestException('Video is longer then one minute');
       }
     } else type = 'image';
 
-    const hashedFileName = uuid.v4() + fileExtension;
+    const hashedFileName: string = uuid.v4() + fileExtension;
 
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
@@ -95,13 +111,20 @@ export class MinioService {
     return { hashedFileName, type };
   }
 
-  async getPublicUrl(fileKey: string): Promise<string> {
+  async getPublicUrl(fileKey: string): Promise<string | undefined> {
+    if (!fileKey) return undefined;
     const command = new GetObjectCommand({
       Bucket: this.bucketName,
       Key: fileKey,
     });
 
-    return await getSignedUrl(this.s3Client, command, { expiresIn: 600 });
+    const url: string | null = await getSignedUrl(this.s3Client, command, {
+      expiresIn: 600,
+    });
+
+    if (!url) return undefined;
+
+    return url;
   }
 
   async getFile(key: string): Promise<Readable> {
@@ -113,18 +136,24 @@ export class MinioService {
     try {
       const response = await this.s3Client.send(command);
       return response.Body as Readable;
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (
-        error.name === 'NoSuchKey' ||
-        error.$metadata?.httpStatusCode === 404
+        typeof error === 'object' &&
+        error !== null &&
+        ('name' in error || '$metadata' in error)
       ) {
-        throw new NotFoundException(`File "${key}" couldn't be found`);
+        const e = error as {
+          name?: string;
+          $metadata?: { httpStatusCode?: number };
+        };
+
+        if (e.name === 'NoSuchKey' || e.$metadata?.httpStatusCode === 404) {
+          throw new NotFoundException(`File "${key}" couldn't be found`);
+        }
       }
 
-      console.error(`Error while getting file "${key}":`, error);
-
       throw new InternalServerErrorException(
-        'Error while getting file from MinIO',
+        `Error while getting file "${key}": ${error}`,
       );
     }
   }

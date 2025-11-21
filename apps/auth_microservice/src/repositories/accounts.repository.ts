@@ -1,19 +1,27 @@
 import pool from '../config/db.config.ts';
+import { User } from '../types/user.types.ts';
+import { Account, AccountWithProfileId } from '../types/account.types.ts';
+import { QueryResult } from 'pg';
+import { Profile } from '../types/profile.type.ts';
 
 export class AccountsRepository {
-  async createUser() {
-    const createUserQueryResult = await pool.query(`
-        INSERT INTO main.users DEFAULT VALUES 
-        RETURNING *;
+  async createUser(): Promise<User> {
+    const createUserQueryResult: QueryResult<User> = await pool.query(`
+        INSERT INTO auth.users DEFAULT VALUES 
+        RETURNING id, role;
     `);
     return createUserQueryResult.rows[0];
   }
 
-  async createAccount(createdUser, email: string, hashPassword: string) {
-    const createAccountQueryResult = await pool.query(
-      `INSERT INTO main.accounts (user_id, email, password_hash, created_by)
+  async createAccount(
+    createdUser: User,
+    email: string,
+    hashPassword: string,
+  ): Promise<Account> {
+    const createAccountQueryResult: QueryResult<Account> = await pool.query(
+      `INSERT INTO auth.accounts (user_id, email, password_hash, created_by)
          VALUES($1, $2, $3, $1)
-         RETURNING *;
+         RETURNING id, password_hash AS "passwordHash", user_id AS "userId", email, provider;
         `,
       [createdUser.id, email, hashPassword],
     );
@@ -22,12 +30,12 @@ export class AccountsRepository {
   }
 
   async createAccountWithoutPassword(
-    createdUser,
+    createdUser: User,
     email: string,
     provider: string,
-  ) {
-    const createAccountQueryResult = await pool.query(
-      `INSERT INTO main.accounts (user_id, email, provider, created_by)
+  ): Promise<Account> {
+    const createAccountQueryResult: QueryResult<Account> = await pool.query(
+      `INSERT INTO auth.accounts (user_id, email, provider, created_by)
        VALUES ($1, $2, $3, $1)
        RETURNING *;
       `,
@@ -38,62 +46,63 @@ export class AccountsRepository {
   }
 
   async createProfile(
-    createdUser,
+    createdUser: User,
     username: string,
     displayName: string,
     birthday: string,
     bio: string,
-  ) {
-    const createProfileQueryResult = await pool.query(
+  ): Promise<Profile> {
+    const createProfileQueryResult: QueryResult<Profile> = await pool.query(
       `
-         INSERT INTO main.profiles (user_id, username, display_name, birthday, bio)
-         VALUES ($1, $2, $3, $4, $5)
-         RETURNING *;
-        `,
+        INSERT INTO main.profiles (user_id, username, display_name, birthday, bio)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, user_id AS "userId", username, display_name AS "displayName", 
+          birthday, bio, avatar_filename AS "avatarFilename", is_public AS "isPublic", deleted;
+      `,
       [createdUser.id, username, displayName, birthday, bio],
     );
     return createProfileQueryResult.rows[0];
   }
 
-  async createProfileFromOAuth(createdUser, displayName: string) {
-    const createProfileQueryResult = await pool.query(
+  async createProfileFromOAuth(
+    createdUser: User,
+    displayName: string,
+  ): Promise<Profile> {
+    const createProfileQueryResult: QueryResult<Profile> = await pool.query(
       `
         INSERT INTO main.profiles (user_id, username, display_name)
         VALUES ($1, $2, $2)
-        RETURNING *;
+        RETURNING id, user_id AS "userId", username, display_name AS "displayName",
+          birthday, bio, avatar_filename AS "avatarFilename", is_public AS "isPublic", deleted;
       `,
       [createdUser.id, displayName],
     );
     return createProfileQueryResult.rows[0];
   }
 
-  async findAccountByEmail(email: string): Promise<{
-    id: string;
-    email: string;
-    password_hash: string;
-    user_id: string;
-    role: string;
-    profile_id: string;
-  }> {
-    const result = await pool.query<{ id: string; email: string }>(
-      `
-        SELECT a.id, a.email, a.password_hash, a.user_id, u.role, p.id AS profile_id
-        FROM main.accounts AS a
-               LEFT JOIN main.users AS u ON a.user_id = u.id
-               LEFT JOIN main.profiles AS p ON a.user_id = p.user_id 
+  async findAccountByEmail(email: string): Promise<AccountWithProfileId> {
+    const result: QueryResult<AccountWithProfileId> =
+      await pool.query<AccountWithProfileId>(
+        `
+        SELECT a.id, a.email, a.password_hash AS "passwordHash", a.user_id AS "userId", u.role, p.id AS "profileId"
+        FROM auth.accounts AS a
+               LEFT JOIN auth.users AS u ON a.user_id = u.id
+               LEFT JOIN main.profiles AS p ON a.user_id = p.user_id
         WHERE email = $1
       `,
-      [email],
-    );
+        [email],
+      );
     return result.rows[0];
   }
 
-  async findProfileIdByAccountId(account_id: string) {
-    const result = await pool.query(
+  async findProfileIdByAccountId(
+    account_id: string,
+  ): Promise<{ profileId: string }> {
+    const result: QueryResult<{ profileId: string }> = await pool.query(
       `
-       SELECT id AS profile_id
+       SELECT id AS "profileId"
        FROM main.profiles
-       WHERE user_id=(SELECT user_id FROM main.accounts WHERE id=$1)
+       WHERE user_id=(SELECT user_id FROM auth.accounts WHERE id=$1)
       `,
       [account_id],
     );
@@ -104,7 +113,7 @@ export class AccountsRepository {
   async updateLastLogin(accountId: string) {
     await pool.query(
       `
-       UPDATE main.accounts
+       UPDATE auth.accounts
        SET last_login_at=NOW()
        WHERE id=$1
       `,

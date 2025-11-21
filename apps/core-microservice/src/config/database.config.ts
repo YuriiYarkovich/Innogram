@@ -1,20 +1,22 @@
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
-import { User } from '../common/entities/accountDedicated/user.entity';
-import { Profile } from '../common/entities/accountDedicated/profile.entity';
-import { Account } from '../common/entities/accountDedicated/account.entity';
-import { PostAsset } from '../common/entities/postsDedicated/post-asset.entity';
-import { ProfileFollow } from '../common/entities/accountDedicated/profile-follow.entity';
-import { Post } from '../common/entities/postsDedicated/post.entity';
-import { CommentMention } from '../common/entities/commentsDedicated/comment-mention.entity';
-import { Comment } from '../common/entities/commentsDedicated/comment.entity';
-import { ChatParticipant } from '../common/entities/chatDedicated/chat-participant.entity';
-import { Chat } from '../common/entities/chatDedicated/chat.entity';
-import { MessageAsset } from '../common/entities/chatDedicated/message_asset.entity';
-import { Message } from '../common/entities/chatDedicated/message.entity';
-import { PostLike } from '../common/entities/postsDedicated/post-like.entity';
-import { CommentLike } from '../common/entities/commentsDedicated/comment-like.entity';
+import { User } from '../common/entities/account/user.entity';
+import { Profile } from '../common/entities/account/profile.entity';
+import { Account } from '../common/entities/account/account.entity';
+import { PostAsset } from '../common/entities/posts/post-asset.entity';
+import { ProfileFollow } from '../common/entities/account/profile-follow.entity';
+import { Post } from '../common/entities/posts/post.entity';
+import { CommentMention } from '../common/entities/comments/comment-mention.entity';
+import { Comment } from '../common/entities/comments/comment.entity';
+import { ChatParticipant } from '../common/entities/chat/chat-participant.entity';
+import { Chat } from '../common/entities/chat/chat.entity';
+import { MessageAsset } from '../common/entities/chat/message_asset.entity';
+import { Message } from '../common/entities/chat/message.entity';
+import { PostLike } from '../common/entities/posts/post-like.entity';
+import { CommentLike } from '../common/entities/comments/comment-like.entity';
+import { MessageReceiver } from '../common/entities/chat/Message-Receiver.entity';
+import path from 'node:path';
 
 @Injectable()
 export class DatabaseConfig implements TypeOrmOptionsFactory {
@@ -29,20 +31,14 @@ export class DatabaseConfig implements TypeOrmOptionsFactory {
       password: this.config.get<string>('POSTGRES_PASSWORD'),
       database: this.config.get<string>('POSTGRES_DB'),
       entities: [
-        User,
-        Profile,
-        Account,
-        Post,
-        PostAsset,
-        ProfileFollow,
-        Comment,
-        CommentMention,
-        Chat,
-        ChatParticipant,
-        Message,
-        MessageAsset,
-        PostLike,
-        CommentLike,
+        path.join(
+          __dirname,
+          '..',
+          'common',
+          'entities',
+          '**',
+          '*.entity.{ts,js}',
+        ),
       ],
       autoLoadEntities: true,
       synchronize: true,

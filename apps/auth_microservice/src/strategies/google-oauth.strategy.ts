@@ -2,14 +2,13 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth2';
 import passport from 'passport';
 import { AuthService } from '../services/auth.service.ts';
 import '../config/load-env.config.ts';
-import redisClient from '../config/redis.init.ts';
 import { JwtService } from '../services/jwt.service.ts';
-import { AccountsRepository } from '../repositories/accounts.repository.ts';
 import { ApiError } from '../error/api.error.ts';
-import { stringify } from 'node:querystring';
+import { RedisService } from '../services/redis.service.ts';
+import { AccountWithProfileId } from '../types/account.types.ts';
 
 const authService: AuthService = new AuthService();
-const accountsRepository: AccountsRepository = new AccountsRepository();
+const redisService: RedisService = new RedisService();
 const jwtService: JwtService = new JwtService();
 
 passport.use(
@@ -37,7 +36,7 @@ passport.use(
         );
       }
 
-      const account = foundData.isExist
+      const account: AccountWithProfileId | undefined = foundData.isExist
         ? foundData.account
         : (await authService.checkIfAccountExist(profile.email)).account;
 
@@ -46,7 +45,7 @@ passport.use(
       }
 
       newAccessToken = jwtService.generateAccessJwt(
-        account.profile_id,
+        account.profileId,
         account.role,
       );
       newRefreshToken = jwtService.generateRefreshJwt(account.id);
@@ -58,7 +57,7 @@ passport.use(
         account?.id,
         deviceId,
       );
-      await authService.setDataToRedis(
+      await redisService.setDataToRedis(
         sessionKey,
         newRefreshToken,
         profile.email,
@@ -79,5 +78,5 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((user, done) => {
-  done(null, user);
+  if (user) done(null, user);
 });

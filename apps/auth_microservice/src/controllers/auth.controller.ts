@@ -1,9 +1,10 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { CreateAccountDto } from '../dto/create-account.dto.ts';
 import { AuthService } from '../services/auth.service.ts';
 import { LoginDto } from '../dto/login.dto.ts';
 import '../config/load-env.config.ts';
 import { ApiError } from '../error/api.error.ts';
+import { requireEnv } from '../validation/env.validation.ts';
 
 export class AuthController {
   readonly authService: AuthService;
@@ -13,41 +14,42 @@ export class AuthController {
   }
 
   registerUsingEmailPassword = async (
-    req: Request<CreateAccountDto>,
+    req: Request<object, object, CreateAccountDto>,
     res: Response,
     next: NextFunction,
   ) => {
     try {
-      const { email, bio, displayName, username, password, birthday } =
-        req.body;
+      const { email, bio, username, password, birthday } = req.body;
 
-      const deviceId = req.headers['x-device-id'] as string;
+      const displayName: string = username;
+      const deviceId: string | undefined = req.headers['x-device-id'] as string; // = req.deviceId;
 
       if (!deviceId) {
         return res.status(400).json({ message: 'Device ID required' });
       }
 
-      const tokens = await this.authService.register(
-        email,
-        password,
-        username,
-        displayName,
-        birthday,
-        bio,
-        this.getDeviceId(req),
-      );
+      const tokens: { accessToken: string; refreshToken: string } =
+        await this.authService.register(
+          email,
+          password,
+          username,
+          displayName,
+          birthday,
+          bio,
+          deviceId,
+        );
       res.cookie('accessToken', tokens.accessToken, {
         httpOnly: true,
         secure: true,
         sameSite: 'strict',
-        maxAge: 15 * 60 * 1000,
+        maxAge: parseInt(requireEnv(`JWT_ACCESS_EXPIRES_IN`), 10) * 60 * 1000,
       });
 
       res.cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: true,
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: parseInt(requireEnv(`JWT_REFRESH_EXPIRES_IN`), 10) * 60 * 1000,
       });
       return res.json(tokens);
     } catch (e) {
@@ -61,35 +63,32 @@ export class AuthController {
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
-      maxAge: 15 * 60 * 1000,
+      sameSite: 'none',
+      domain: requireEnv('DOMAIN'),
+      maxAge: parseInt(requireEnv(`JWT_ACCESS_EXPIRES_IN`), 10) * 60 * 1000,
     });
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: 'none',
+      domain: requireEnv('DOMAIN'),
+      maxAge: parseInt(requireEnv(`JWT_REFRESH_EXPIRES_IN`), 10) * 60 * 1000,
     });
 
-    console.log('In google success before redirecting');
     return res.redirect(
-      `${process.env.CORE_SERVICE_URL}/api/auth/google/success?accessToken=${accessToken}`,
+      `${requireEnv(`CORE_SERVICE_URL`)}/api/auth/google/success`,
     );
   }
 
-  getDeviceId(req: any): string {
-    return req.headers['x-device-id'] as string;
-  }
-
   loginUsingEmailPassword = async (
-    req: Request<LoginDto>,
+    req: Request<object, object, LoginDto>,
     res: Response,
     next: NextFunction,
   ) => {
     try {
       const { email, password } = req.body;
 
-      const deviceId = this.getDeviceId(req);
+      const deviceId: string | undefined = req.headers['x-device-id'] as string; // = req.deviceId;
 
       if (!deviceId) {
         return res.status(400).json({ message: 'Device ID required' });
@@ -101,14 +100,14 @@ export class AuthController {
         httpOnly: true,
         secure: true,
         sameSite: 'strict',
-        maxAge: 15 * 60 * 1000,
+        maxAge: parseInt(requireEnv(`JWT_ACCESS_EXPIRES_IN`), 10) * 60 * 1000,
       });
 
       res.cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: true,
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: parseInt(requireEnv(`JWT_REFRESH_EXPIRES_IN`), 10) * 60 * 1000,
       });
       return res.json(tokens);
     } catch (e) {
@@ -132,10 +131,8 @@ export class AuthController {
   };
 
   refreshToken = async (req: Request, res: Response) => {
-    console.log(`refresh token in body: ${req.body.refreshToken}`);
     const refreshToken: string = req.body.refreshToken;
     if (!refreshToken) {
-      console.log('No refresh token in refresh token controller method!');
       throw ApiError.unauthorized('No refresh token');
     }
 
@@ -151,13 +148,12 @@ export class AuthController {
     res.json(refreshData);
   };
 
-  validateToken = async (req, res): Promise<string> => {
+  validateToken = async (req: Request, res: Response) => {
     try {
-      const token = req.body?.accessToken;
+      const token: string = req.body?.accessToken;
       const user = await this.authService.validateToken(token);
       return res.json({ valid: true, user });
     } catch (e) {
-      console.log(e);
       return res.status(401).json({ valid: false, message: e.message });
     }
   };

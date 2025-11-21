@@ -15,11 +15,12 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { CommentLike } from '../../common/entities/commentsDedicated/comment-like.entity';
+import { CommentLike } from '../../common/entities/comments/comment-like.entity';
 import { CreateCommentDto } from './dto/crete-comment.dto';
-import { Comment } from '../../common/entities/commentsDedicated/comment.entity';
+import { Comment } from '../../common/entities/comments/comment.entity';
 import { context, CONTEXT_KEYS } from '../../common/cls/request-context';
 import { AuthGuard } from '../../common/guards/auth.guard';
+import { ReturningCommentData } from '../../common/types/comment';
 
 @ApiTags('Operations with comments')
 @ApiBearerAuth('access-token')
@@ -29,21 +30,39 @@ export class CommentsController {
 
   @ApiOperation({ summary: 'Adds comment to the post' })
   @ApiResponse({ status: 200, type: Comment })
-  @Post(`/add/:postId`)
+  @Post(`/add`)
   @UseGuards(AuthGuard)
-  async createComment(
-    @Body() dto: CreateCommentDto,
-    @Param('postId') postId: string,
-  ) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
-    return await this.commentsService.createComment(dto, postId, profileId);
+  async createComment(@Body() dto: CreateCommentDto): Promise<Comment> {
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.commentsService.createComment(dto, profileId);
   }
 
   @ApiOperation({ summary: 'Returns all comments of posts' })
   @ApiResponse({ status: 200, type: Comment })
   @Get(`/allOfPost/:postId`)
-  async getAllCommentsOfPost(@Param('postId') postId: string) {
-    return await this.commentsService.getAllCommentsOfPost(postId);
+  @UseGuards(AuthGuard)
+  async getAllCommentsOfPost(
+    @Param('postId') postId: string,
+  ): Promise<ReturningCommentData[]> {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.commentsService.getAllCommentsOfPost(
+      postId,
+      currentProfileId,
+    );
+  }
+
+  @ApiOperation({ summary: 'Returns all responses of given comment' })
+  @ApiResponse({ status: 200, type: Comment })
+  @Get('/allResponses/:commentId')
+  @UseGuards(AuthGuard)
+  async getAllResponsesOfComment(
+    @Param('commentId') commentId: string,
+  ): Promise<ReturningCommentData[]> {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.commentsService.getAllResponsesOfComment(
+      commentId,
+      currentProfileId,
+    );
   }
 
   @ApiOperation({ summary: 'Edit comments' })
@@ -53,8 +72,8 @@ export class CommentsController {
   async updateComment(
     @Body() dto: CreateCommentDto,
     @Param('commentId') commentId: string,
-  ) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+  ): Promise<Comment | null> {
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.commentsService.updateComment(commentId, profileId, dto);
   }
 
@@ -62,8 +81,8 @@ export class CommentsController {
   @ApiResponse({ status: 200, type: Comment })
   @Delete(`/delete/:commentId`)
   @UseGuards(AuthGuard)
-  async deleteComment(@Param('commentId') commentId: string) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+  async deleteComment(@Param('commentId') commentId: string): Promise<Comment> {
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.commentsService.deleteComment(commentId, profileId);
   }
 
@@ -71,8 +90,10 @@ export class CommentsController {
   @ApiResponse({ status: 200, type: CommentLike })
   @Post(`/like/:commentId`)
   @UseGuards(AuthGuard)
-  async likeComment(@Param('commentId') commentId: string) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+  async likeComment(
+    @Param('commentId') commentId: string,
+  ): Promise<CommentLike> {
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.commentsService.likeComment(commentId, profileId);
   }
 
@@ -80,15 +101,19 @@ export class CommentsController {
   @ApiResponse({ status: 200, type: CommentLike })
   @Delete(`/unlike/:commentId`)
   @UseGuards(AuthGuard)
-  async unlikeComment(@Param('commentId') commentId: string) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+  async unlikeComment(
+    @Param('commentId') commentId: string,
+  ): Promise<CommentLike> {
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.commentsService.unlikeComment(commentId, profileId);
   }
 
   @ApiOperation({ summary: 'Returns info about all likes of comment' })
   @ApiResponse({ status: 200, type: CommentLike })
   @Get(`/allLikes/:commentId`)
-  async getAllLikesOfComment(@Param('commentId') commentId: string) {
+  async getAllLikesOfComment(
+    @Param('commentId') commentId: string,
+  ): Promise<CommentLike[]> {
     return await this.commentsService.getAllLikesOfComment(commentId);
   }
 }

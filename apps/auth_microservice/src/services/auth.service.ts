@@ -1,25 +1,29 @@
 import pool from '../config/db.config.ts';
 import bcrypt from 'bcrypt';
-import { NextFunction } from 'express';
 import { AccountsRepository } from '../repositories/accounts.repository.ts';
 import { ApiError } from '../error/api.error.ts';
 import '../config/load-env.config.ts';
 import redisClient from '../config/redis.init.ts';
-import { isEmpty } from 'lodash';
 import { JwtService } from './jwt.service.ts';
-import { isNumberObject } from 'node:util/types';
+import {
+  Account,
+  AccountWithProfileId,
+  ExistingAccount,
+} from '../types/account.types.ts';
+import { User } from '../types/user.types.ts';
+import { Profile } from '../types/profile.type.ts';
+import { RefreshTokenObj } from '../types/tokens.type.ts';
+import { RedisNote } from '../types/redis.type.ts';
+import { RedisService } from './redis.service.ts';
 
 export class AuthService {
   readonly accountsRepository: AccountsRepository = new AccountsRepository();
   readonly jwtService: JwtService = new JwtService();
+  readonly redisService: RedisService = new RedisService();
 
-  isLoggedIn(req, res, next: NextFunction) {
-    req.user ? next() : res.sendStatus(401);
-  }
-
-  async checkIfAccountExist(email: string) {
-    const candidate = await this.accountsRepository.findAccountByEmail(email);
-    console.log('Founding candidate request executed');
+  async checkIfAccountExist(email: string): Promise<ExistingAccount> {
+    const candidate: AccountWithProfileId =
+      await this.accountsRepository.findAccountByEmail(email);
     if (candidate) return { isExist: true, account: candidate };
     return { isExist: false, account: undefined };
   }
@@ -28,34 +32,26 @@ export class AuthService {
     email: string,
     displayName: string,
     provider: string,
-  ) {
+  ): Promise<boolean> {
     try {
       await pool.query(`BEGIN`);
-      console.log('transaction begun');
-      const createdUser = await this.accountsRepository.createUser();
-      console.log(`user created: ${JSON.stringify(createdUser)}`);
+      const createdUser: User = await this.accountsRepository.createUser();
 
-      const createdAccount =
+      const createdAccount: Account =
         await this.accountsRepository.createAccountWithoutPassword(
           createdUser,
           email,
           provider,
         );
-      console.log(`account created: ${JSON.stringify(createdAccount)}`);
+      await this.accountsRepository.createProfileFromOAuth(
+        createdUser,
+        displayName,
+      );
 
-      const createdProfile =
-        await this.accountsRepository.createProfileFromOAuth(
-          createdUser,
-          displayName,
-        );
-      console.log(`profile created: ${JSON.stringify(createdProfile)}`);
-
-      console.log('commit transaction');
       await this.accountsRepository.updateLastLogin(createdAccount.id);
       await pool.query('COMMIT');
       return true;
     } catch (e) {
-      console.log('rollback transaction');
       await pool.query(`ROLLBACK`);
       throw e;
     }
@@ -69,10 +65,9 @@ export class AuthService {
     birthday: string,
     bio: string,
     deviceId: string,
-  ) {
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     try {
       await pool.query(`BEGIN`);
-      console.log('transaction begun');
 
       const candidate: { isExist: boolean; account: any } =
         await this.checkIfAccountExist(email);
@@ -81,38 +76,40 @@ export class AuthService {
         throw ApiError.badRequest('User with this email already exists');
       }
 
-      const hashPassword = await bcrypt.hash(password, 5);
+      const hashPassword: string = await bcrypt.hash(password, 5);
 
-      const createdUser = await this.accountsRepository.createUser();
+      const createdUser: User = await this.accountsRepository.createUser();
 
-      const createdAccount = await this.accountsRepository.createAccount(
-        createdUser,
-        email,
-        hashPassword,
-      );
+      const createdAccount: Account =
+        await this.accountsRepository.createAccount(
+          createdUser,
+          email,
+          hashPassword,
+        );
 
-      const createdProfile = await this.accountsRepository.createProfile(
-        createdUser,
-        username,
-        displayName,
-        birthday,
-        bio,
-      );
+      const createdProfile: Profile =
+        await this.accountsRepository.createProfile(
+          createdUser,
+          username,
+          displayName,
+          birthday,
+          bio,
+        );
 
       await this.accountsRepository.updateLastLogin(createdAccount.id);
       await pool.query('COMMIT');
 
-      const accessToken = this.jwtService.generateAccessJwt(
+      const accessToken: string = this.jwtService.generateAccessJwt(
         createdProfile.id,
         createdUser.role,
       );
-      const refreshToken = this.jwtService.generateRefreshJwt(
+      const refreshToken: string = this.jwtService.generateRefreshJwt(
         createdAccount.id,
       );
 
       const sessionKey = `session:${createdAccount.id}:${deviceId}`;
 
-      await this.setDataToRedis(
+      await this.redisService.setDataToRedis(
         sessionKey,
         refreshToken,
         email,
@@ -121,7 +118,6 @@ export class AuthService {
 
       return { accessToken, refreshToken };
     } catch (e) {
-      console.log('rollback transaction');
       await pool.query(`ROLLBACK`);
       throw e;
     }
@@ -131,32 +127,35 @@ export class AuthService {
     return `session:${accountId}:${deviceId}`;
   }
 
-  async login(email: string, password: string, deviceId: string) {
-    const userData = await this.checkIfAccountExist(email);
+  async login(
+    email: string,
+    password: string,
+    deviceId: string,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const userData: ExistingAccount = await this.checkIfAccountExist(email);
     if (!userData || !userData.isExist || !userData.account) {
       throw ApiError.badRequest(`User with email not found`);
     }
 
-    let comparedPassword = bcrypt.compareSync(
+    let comparedPassword: boolean = bcrypt.compareSync(
       password,
-      userData.account.password_hash,
+      userData.account.passwordHash,
     );
 
     if (!comparedPassword) {
       throw ApiError.badRequest(`Wrong password!`);
     }
 
-    const accountId = userData.account.id;
-    const userRole = userData.account.role;
+    const accountId: string = userData.account.id;
+    const userRole: string = userData.account.role;
 
-    const sessionKey = this.getSessionKey(accountId, deviceId);
-    const existingSession = await redisClient.get(sessionKey);
+    const sessionKey: string = this.getSessionKey(accountId, deviceId);
+    const existingSession: string | null = await redisClient.get(sessionKey);
 
     let accessToken: string = '';
     let refreshToken: string = '';
 
     if (existingSession) {
-      console.log(`User ${email} already logged in on this device.`);
       const sessionData: {
         sessionKey: string;
         refreshToken: string;
@@ -169,120 +168,73 @@ export class AuthService {
     }
 
     accessToken = this.jwtService.generateAccessJwt(
-      userData.account.profile_id,
+      userData.account.profileId,
       userRole,
     );
 
-    await this.setDataToRedis(sessionKey, refreshToken, email, userRole);
+    await this.redisService.setDataToRedis(
+      sessionKey,
+      refreshToken,
+      email,
+      userRole,
+    );
 
-    console.log(`User ${email} authorized on device ${deviceId}`);
     await this.accountsRepository.updateLastLogin(userData.account.id);
     return { accessToken, refreshToken };
   }
 
-  async setDataToRedis(
-    sessionKey: string,
-    refreshToken: string,
-    email: string,
-    role: string,
-  ) {
-    await redisClient.setEx(
-      sessionKey,
-      parseInt(process.env.JWT_REFRESH_EXPIRES_IN || '10080') * 60,
-      JSON.stringify({ refreshToken, email, role }),
-    );
-  }
-
-  async findRedisNote(refreshToken: string) {
-    const payload = this.jwtService.verifyToken(refreshToken);
-    console.log(
-      `payload in find redis note method: ${JSON.stringify(payload)}`,
-    );
-    const accountId = payload.account_id;
-
-    const keys = await redisClient.keys(`session:${accountId}:*`);
-
-    if (!keys.length) {
-      console.log(`No active sessions found for account ${accountId}`);
-      return false;
-    }
-
-    for (const key of keys) {
-      const session = JSON.parse((await redisClient.get(key)) || `{}`);
-      if (session.refreshToken === refreshToken) {
-        return { role: session.role, key };
-      }
-    }
-    return undefined;
-  }
-
-  async logout(refreshToken: string) {
-    const redisNote = await this.findRedisNote(refreshToken);
+  async logout(refreshToken: string): Promise<boolean> {
+    const redisNote: RedisNote | undefined =
+      await this.redisService.findRedisNote(refreshToken);
     if (redisNote) {
       await redisClient.del(redisNote.key);
       return true;
     }
 
-    console.log(`Refresh token not found in active sessions`);
     return false;
   }
 
   async refreshAccessToken(refreshToken: string) {
-    try {
-      console.log(
-        `Refreshing access token. Received refresh token: ${refreshToken}`,
-      );
+    const redisNote: RedisNote | undefined =
+      await this.redisService.findRedisNote(refreshToken);
 
-      const redisNote = await this.findRedisNote(refreshToken);
-
-      if (!redisNote) {
-        throw ApiError.forbidden('Invalid refresh token');
-      }
-
-      const decoded: { account_id: string } =
-        this.jwtService.verifyToken(refreshToken);
-
-      const foundProfileIdObject =
-        await this.accountsRepository.findProfileIdByAccountId(
-          decoded.account_id,
-        );
-
-      const profile_id = foundProfileIdObject.profile_id;
-
-      const newAccessToken = this.jwtService.generateAccessJwt(
-        profile_id,
-        redisNote.role,
-      );
-
-      const user: { profile_id: string; role: string } = {
-        profile_id,
-        role: redisNote.role,
-      };
-      return { user, newAccessToken };
-    } catch (e) {
-      throw ApiError.forbidden(e.message);
+    if (!redisNote) {
+      throw ApiError.forbidden('Invalid refresh token');
     }
+
+    const decoded: RefreshTokenObj = this.jwtService.verifyToken(refreshToken);
+
+    const foundProfileIdObject: { profileId: string } =
+      await this.accountsRepository.findProfileIdByAccountId(decoded.accountId);
+
+    const profileId: string = foundProfileIdObject.profileId;
+
+    const newAccessToken: string = this.jwtService.generateAccessJwt(
+      profileId,
+      redisNote.role,
+    );
+
+    const user: { profileId: string; role: string } = {
+      profileId: profileId,
+      role: redisNote.role,
+    };
+
+    return { user, newAccessToken };
   }
 
-  async validateToken(token: string) {
+  validateToken(token: string): string {
+    if (!token) throw ApiError.unauthorized('No access token!');
+
+    let decoded: string = '';
     try {
-      if (!token) throw ApiError.unauthorized('No access token!');
-
-      console.log(`Validating token: ${token}`);
-      let decoded: string = '';
-      try {
-        decoded = this.jwtService.verifyToken(token);
-      } catch (e) {
-        if (e.name === 'TokenExpiredError') {
-          throw ApiError.unauthorized('Access token expired!');
-        }
-        throw ApiError.unauthorized('Invalid access token!');
-      }
-
-      return JSON.stringify(decoded);
+      decoded = this.jwtService.verifyToken(token);
     } catch (e) {
-      console.log(`Validation method error: ${e}`);
-      throw e;
+      if (e.name === 'TokenExpiredError') {
+        throw ApiError.unauthorized('Access token expired!');
+      }
+      throw ApiError.unauthorized('Invalid access token!');
     }
+
+    return decoded;
   }
 }

@@ -1,8 +1,10 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Post } from '../../../common/entities/postsDedicated/post.entity';
+import { Post } from '../../../common/entities/posts/post.entity';
 import { QueryRunner, Repository } from 'typeorm';
 import { CreatePostDto } from '../dto/create-post.dto';
+import { PostStatus } from '../../../common/enums/post.enum';
+import { FoundPostData } from '../../../common/types/posts.type';
 
 @Injectable()
 export class PostsRepository {
@@ -15,15 +17,15 @@ export class PostsRepository {
     dto: CreatePostDto,
     queryRunner: QueryRunner,
   ): Promise<Post> {
-    const post = queryRunner.manager.create(Post, {
+    const post: Post = queryRunner.manager.create(Post, {
       content: dto.content,
-      profile_id: profileId,
+      profileId: profileId,
     });
     await queryRunner.manager.save(post);
     return post;
   }
 
-  async getByProfile(profileId: string) {
+  async getByProfile(profileId: string): Promise<Post[]> {
     return await this.postRepository.find({
       relations: {
         postAssets: true,
@@ -31,29 +33,32 @@ export class PostsRepository {
       },
       where: [
         {
-          profile_id: profileId,
-          status: 'active',
+          profileId: profileId,
+          status: PostStatus.ACTIVE,
         },
         {
-          profile_id: profileId,
-          status: 'archived',
+          profileId: profileId,
+          status: PostStatus.ARCHIVED,
         },
       ],
     });
   }
 
-  async getPostByIdAndProfile(profileId: string, postId: string) {
+  async getPostByIdAndProfile(
+    profileId: string,
+    postId: string,
+  ): Promise<Post | null> {
     return await this.postRepository.findOne({
       where: [
         {
-          profile_id: profileId,
+          profileId: profileId,
           id: postId,
-          status: 'active',
+          status: PostStatus.ACTIVE,
         },
         {
-          profile_id: profileId,
+          profileId: profileId,
           id: postId,
-          status: 'archived',
+          status: PostStatus.ARCHIVED,
         },
       ],
     });
@@ -70,7 +75,7 @@ export class PostsRepository {
       { content: dto.content },
     );
 
-    const updatedPost = await queryRunner.manager.findOne(Post, {
+    const updatedPost: Post | null = await queryRunner.manager.findOne(Post, {
       relations: { postAssets: true },
       where: { id: postId },
     });
@@ -80,18 +85,45 @@ export class PostsRepository {
     return updatedPost;
   }
 
-  async deletePost(postId: string) {
-    await this.postRepository.update(postId, { status: 'deleted' });
+  async deletePost(postId: string): Promise<Post | null> {
+    await this.postRepository.update(postId, { status: PostStatus.DELETED });
 
     return await this.findPostById(postId);
   }
 
-  async findPostById(postId: string) {
+  async findPostById(postId: string): Promise<Post | null> {
     return await this.postRepository.findOne({ where: { id: postId } });
   }
 
-  async archivePost(postId: string) {
-    await this.postRepository.update({ id: postId }, { status: 'archived' });
+  async archivePost(postId: string): Promise<Post | null> {
+    await this.postRepository.update(
+      { id: postId },
+      { status: PostStatus.ARCHIVED },
+    );
     return await this.findPostById(postId);
+  }
+
+  async getAllOfProfileList(profileIds: string[]): Promise<FoundPostData[]> {
+    return await this.postRepository.query(
+      `
+        SELECT p.id                                                            AS "postId",
+               p.profile_id                                                    AS "profileId",
+               pr.username,
+               pr.avatar_filename                                              AS "profileAvatarFilename",
+               p.content,
+               CASE
+                 WHEN EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 < 10
+                   THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
+                 ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
+                 END                                                           AS "timePast",
+               (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount"
+        FROM main.posts AS p
+               LEFT JOIN main.profiles AS pr ON p.profile_id = pr.id
+        WHERE p.profile_id = ANY ($1)
+          AND status = $2
+        ORDER BY p.created_at DESC
+      `,
+      [profileIds, PostStatus.ACTIVE],
+    );
   }
 }

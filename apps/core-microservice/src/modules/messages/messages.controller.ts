@@ -20,7 +20,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Message } from '../../common/entities/chatDedicated/message.entity';
+import { Message } from '../../common/entities/chat/message.entity';
 import { EditMessageDto } from './dto/edit-message.dto';
 import { context, CONTEXT_KEYS } from '../../common/cls/request-context';
 import { AuthGuard } from '../../common/guards/auth.guard';
@@ -31,23 +31,14 @@ import { AuthGuard } from '../../common/guards/auth.guard';
 export class MessagesController {
   constructor(private messagesService: MessagesService) {}
 
-  @ApiOperation({ summary: 'Creates message' })
-  @ApiResponse({ status: 200, type: Message })
-  @ApiConsumes('multipart/form-data')
-  @Post(`/create`)
-  @UseGuards(AuthGuard)
-  @UseInterceptors(FilesInterceptor('files'))
-  async createMessage(@Body() dto: CreateMessageDto, @UploadedFiles() files) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
-    return await this.messagesService.createMessage(dto, profileId, files);
-  }
-
   @ApiOperation({ summary: 'Returns all messages of chat' })
   @ApiResponse({ status: 200, type: Message })
   @Get(`/allOfChat/:chatId`)
   @UseGuards(AuthGuard)
-  async getAllMessagesOfChat(@Param('chatId') chatId: string) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+  async getAllMessagesOfChat(
+    @Param('chatId') chatId: string,
+  ): Promise<Message[]> {
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.messagesService.getAllMessagesOfChat(profileId, chatId);
   }
 
@@ -61,8 +52,8 @@ export class MessagesController {
     @Param('messageId') messageId: string,
     @Body() dto: EditMessageDto,
     @UploadedFiles() files,
-  ) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+  ): Promise<Message | null> {
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.messagesService.editMessage(
       messageId,
       dto,
@@ -75,8 +66,8 @@ export class MessagesController {
   @ApiResponse({ status: 200, type: Message })
   @Delete(`/delete/:messageId`)
   @UseGuards(AuthGuard)
-  async deleteMessage(@Param('messageId') messageId: string) {
-    const profileId = context.get(CONTEXT_KEYS.USER).profile_id;
+  async deleteMessage(@Param('messageId') messageId: string): Promise<Message> {
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
     return await this.messagesService.deleteMessage(messageId, profileId);
   }
 }

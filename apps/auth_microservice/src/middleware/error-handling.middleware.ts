@@ -1,12 +1,20 @@
-import { ApiError as apiError } from '../error/api.error.ts';
+import { NextFunction, Request, Response } from 'express';
+import { ApiError } from '../error/api.error.ts';
 
-export function errorHandlingMiddleware(err, req, res, next) {
-  if (err instanceof apiError) {
-    console.log(
-      `returning instance of Api error, code: ${err.statusCode}, message: ${err.message}`,
-    );
+export function errorHandlingMiddleware(
+  err: unknown,
+  _req: Request,
+  res: Response,
+  _next: NextFunction,
+) {
+  if (err instanceof ApiError) {
     return res.status(err.statusCode).json({ message: err.message });
   }
-  console.log(`returning unknown ${err.stack}`);
+  if (err instanceof Error) {
+    console.error('Unhandled error stack:', err.stack);
+  } else {
+    console.error('Unhandled non-Error thrown:', err);
+  }
+
   return res.status(500).json({ message: 'Unexpected error!' });
 }

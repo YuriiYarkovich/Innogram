@@ -1,14 +1,21 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Post } from '../../common/entities/postsDedicated/post.entity';
+import { Post } from '../../common/entities/posts/post.entity';
 import { PostsRepository } from './repositories/posts.reposiory';
 import { DataSource, QueryRunner } from 'typeorm';
 import { MinioService } from '../minio/minio.service';
-import { PostAsset } from '../../common/entities/postsDedicated/post-asset.entity';
+import { PostAsset } from '../../common/entities/posts/post-asset.entity';
 import { PostAssetRepository } from './repositories/post-asset.repository';
 import { PostLikeRepository } from './repositories/post-like.repository';
 import { File as MulterFile } from 'multer';
 import { CreatePostDto } from './dto/create-post.dto';
 import { WrongUserException } from '../../common/exceptions/wrong-user.exception';
+import { ProfileFollowRepository } from '../follows/profile-follow.repository';
+import {
+  FoundPostData,
+  ReturningAssetData,
+  ReturningPostData,
+} from '../../common/types/posts.type';
+import { PostLike } from '../../common/entities/posts/post-like.entity';
 
 @Injectable()
 export class PostsService {
@@ -18,25 +25,25 @@ export class PostsService {
     private minioService: MinioService,
     private postAssetRepository: PostAssetRepository,
     private postLikeRepository: PostLikeRepository,
+    private profileFollowRepository: ProfileFollowRepository,
   ) {}
 
   async createPost(
     profile_id: string,
     dto: CreatePostDto,
-    files,
+    files: MulterFile[],
   ): Promise<Post> {
-    const queryRunner = this.dataSource.createQueryRunner();
+    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const post = await this.postsRepository.createPost(
+      const post: Post = await this.postsRepository.createPost(
         profile_id,
         dto,
         queryRunner,
       );
 
-      let order = 0;
-      await this.uploadFilesArray(files, queryRunner, post, order);
+      await this.uploadFilesArray(files, queryRunner, post);
 
       await queryRunner.commitTransaction();
 
@@ -44,44 +51,106 @@ export class PostsService {
     } catch (e) {
       await queryRunner.rollbackTransaction();
       throw e;
+    } finally {
+      await queryRunner.release();
     }
   }
 
+  private async createReturningPostsArray(
+    foundData: FoundPostData[],
+    profileId: string,
+    currentProfileId: string,
+  ): Promise<ReturningPostData[]> {
+    const returningPostsData: ReturningPostData[] = [];
+    for (const postData of foundData) {
+      const assetsOfPost: PostAsset[] =
+        await this.postAssetRepository.findAssetsByPost(postData.postId);
+      const returningAssetsData: ReturningAssetData[] = [];
+      for (const asset of assetsOfPost) {
+        const assetData: ReturningAssetData = {
+          url: '',
+          order: 0,
+        };
+        const url: string | undefined = await this.minioService.getPublicUrl(
+          asset.hashedFileName,
+        );
+        assetData.url = url;
+        assetData.order = asset.order;
+        returningAssetsData.push(assetData);
+      }
+      const like: PostLike | null = await this.postLikeRepository.findLike(
+        postData.postId,
+        profileId,
+      );
+
+      const profileAvatarUrl: string | undefined =
+        await this.minioService.getPublicUrl(postData.profileAvatarFilename);
+
+      const isCreator: boolean = currentProfileId === postData.profileId;
+
+      const returningPostData: ReturningPostData = {
+        ...postData,
+        profileAvatarUrl,
+        liked: !!like,
+        assets: returningAssetsData,
+        isCreator,
+      };
+      returningPostsData.push(returningPostData);
+    }
+
+    return returningPostsData;
+  }
+
+  async getAllPostsOfSubscribedOn(
+    profileId: string,
+  ): Promise<ReturningPostData[]> {
+    const followedProfilesIds: string[] =
+      await this.profileFollowRepository.getAllSubscribedOnUsersIds(profileId);
+    followedProfilesIds.push(profileId);
+
+    const foundData: FoundPostData[] =
+      await this.postsRepository.getAllOfProfileList(followedProfilesIds);
+
+    return await this.createReturningPostsArray(
+      foundData,
+      profileId,
+      profileId,
+    );
+  }
+
   async uploadFilesArray(
-    files,
+    files: MulterFile[],
     queryRunner: QueryRunner,
     post: Post,
-    order: number,
   ) {
-    for (const file of files) {
-      const fileData = await this.minioService.uploadFile(file);
+    for (let i: number = 0; i < files.length; i++) {
+      const fileData: { hashedFileName: string; type: string } =
+        await this.minioService.uploadFile(files[i]);
       queryRunner.manager.create(PostAsset, {
-        hashed_file_name: fileData.hashedFileName,
+        hashedFileName: fileData.hashedFileName,
       });
       await this.postAssetRepository.createPostAsset(
         fileData.hashedFileName,
         post.id,
         queryRunner,
         fileData.type,
-        ++order,
+        i + 1,
       );
     }
   }
 
-  async getByProfile(profileId: string) {
-    const foundPosts = await this.postsRepository.getByProfile(profileId);
+  async getByProfile(
+    profileId: string,
+    currentProfileId: string,
+  ): Promise<ReturningPostData[]> {
+    const foundData: FoundPostData[] =
+      await this.postsRepository.getAllOfProfileList([profileId]);
 
-    for (const post of foundPosts) {
-      await Promise.all(
-        post.postAssets.map(async (postAsset) => {
-          const url = await this.minioService.getPublicUrl(
-            postAsset.hashed_file_name,
-          );
-          postAsset.url = url;
-        }),
-      );
-    }
-    return foundPosts;
+    return await this.createReturningPostsArray(
+      foundData,
+      profileId,
+      currentProfileId,
+    );
   }
 
   async updatePost(
@@ -90,7 +159,7 @@ export class PostsService {
     dto: CreatePostDto,
     files: MulterFile[],
   ) {
-    const queryRunner = this.dataSource.createQueryRunner();
+    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
@@ -107,15 +176,15 @@ export class PostsService {
         queryRunner,
       );
 
-      const existingFileNames =
-        updatedPost?.postAssets?.map((a) => a.hashed_file_name) ?? [];
-      const newFileNames = files.map((f) => f.originalname);
+      const existingFileNames: string[] =
+        updatedPost?.postAssets?.map((a) => a.hashedFileName) ?? [];
+      const newFileNames: string[] = files.map((f) => f.originalname);
 
       const namesToAdd = newFileNames.filter(
-        (name) => !existingFileNames.includes(name),
+        (name: string) => !existingFileNames.includes(name),
       );
       const namesToRemove = existingFileNames.filter(
-        (name) => !newFileNames.includes(name),
+        (name: string) => !newFileNames.includes(name),
       );
 
       if (namesToRemove.length > 0) {
@@ -156,6 +225,8 @@ export class PostsService {
     } catch (e) {
       await queryRunner.rollbackTransaction();
       throw e;
+    } finally {
+      await queryRunner.release();
     }
   }
 
