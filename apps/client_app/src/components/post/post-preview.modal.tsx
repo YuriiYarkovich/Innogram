@@ -86,17 +86,24 @@ export default function PostPreviewModal({
             />
           </div>
           <div className={`flex flex-col w-1/2 h-full`}>
-            <div className={`flex flex-row h-1/6 gap-4 p-3.5 items-center`}>
-              <Image
-                src={profileAvatarUrl}
-                alt={`Profile avatar url`}
-                width={50}
-                height={50}
-                unoptimized
-                className={`rounded-full md:w-15 md:h-15`}
-                draggable={false}
-              />
-              <span className={`font-bold text-[20px]`}>{post.username}</span>
+            <div
+              className={`flex flex-row h-1/6 gap-4 p-3.5 items-center cursor-pointer`}
+            >
+              <a
+                className={`flex flex-row cursor-pointer gap-4 items-center`}
+                href={`/profile/${post.username}`}
+              >
+                <Image
+                  src={profileAvatarUrl}
+                  alt={`Profile avatar url`}
+                  width={50}
+                  height={50}
+                  unoptimized
+                  className={`rounded-full md:w-15 md:h-15`}
+                  draggable={false}
+                />
+                <span className={`font-bold text-[20px]`}>{post.username}</span>
+              </a>
               <span className={`text-[16px] text-[#79747e] ml-2`}>
                 {Number(post.timePast) >= 24
                   ? `${Math.floor(Number(post.timePast) / 24)} d`

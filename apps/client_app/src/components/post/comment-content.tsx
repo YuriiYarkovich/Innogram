@@ -3,6 +3,8 @@
 import Image from 'next/image';
 import { SERVER } from '@/config/apiRoutes';
 import { useState } from 'react';
+import ActionsService from '@/services/actions.service';
+import FetchService from '@/services/fetch.service';
 
 type CommentContentProps = {
   postComment: PostComment;
@@ -58,15 +60,20 @@ const CommentContent = ({
 
   return (
     <div className={`flex flex-row w-full gap-3`}>
-      <Image
-        src={postComment?.authorAvatarUrl || `/images/avaTest.png`}
-        alt={`author avatar`}
-        height={40}
-        width={40}
-        unoptimized
-        draggable={false}
-        className={`rounded-[270px] md:w-[40px] md:h-[40px]`}
-      />
+      <a
+        className={`flex flex-row cursor-pointer gap-1.5`}
+        href={`/profile/${postComment?.authorUsername}`}
+      >
+        <Image
+          src={postComment?.authorAvatarUrl || `/images/avaTest.png`}
+          alt={`author avatar`}
+          height={40}
+          width={40}
+          unoptimized
+          draggable={false}
+          className={`rounded-[270px] md:w-[40px] md:h-[40px]`}
+        />
+      </a>
       <div className={`flex flex-col`}>
         <span className={`font-bold text-[15px]`}>
           {postComment?.authorUsername || `username`}
