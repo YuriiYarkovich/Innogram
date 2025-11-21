@@ -3,21 +3,24 @@
 import PostTile from '@/components/feedPage/postTile';
 import { useEffect, useState } from 'react';
 import SidePanel from '@/components/sidePanel';
-import FetchService from '@/services/fetch.service';
+import { fetchProfile } from '@/services/profile.service';
+import { fetchPostsOfSubscribedOnProfiles } from '@/services/posts.service';
 
 const Page = () => {
   const [curProfile, setCurProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchService: FetchService = new FetchService();
-
   useEffect(() => {
-    fetchService.fetchProfile(setCurProfile);
+    fetchProfile().then((data: Profile) => setCurProfile(data));
   }, []);
 
   useEffect(() => {
-    fetchService.fetchPostsOfsubscribedOnProfiles(setPosts, setLoading);
+    fetchPostsOfSubscribedOnProfiles()
+      .then((data: Post[]) => {
+        setPosts(data);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   return (

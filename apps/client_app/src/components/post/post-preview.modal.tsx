@@ -4,16 +4,14 @@ import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import PostComment from '@/components/post/post-comment';
 import Line from '@/components/line';
-import ActionsService from '@/services/actions.service';
-import FetchService from '@/services/fetch.service';
+import { deletePost, likeOrUnlikePost } from '@/services/posts.service';
+import { addComment, fetchComments } from '@/services/comment.service';
 
 export default function PostPreviewModal({
   post,
   isOpen,
   onClose,
 }: PostPreviewModalProps) {
-  if (!isOpen) return null;
-
   const [profileAvatarUrl] = useState<string>(
     post.profileAvatarUrl || `/images/avaTest.png`,
   );
@@ -28,31 +26,27 @@ export default function PostPreviewModal({
     PostComment | undefined
   >(undefined);
 
-  const actionsService: ActionsService = new ActionsService();
-  const fetchService: FetchService = new FetchService();
-
-  const likeOrUnlikePost = async (e: React.FormEvent) => {
+  const handleLikeOrUnlikePost = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const response: Response = await actionsService.likeOrUnlikePost(
-      liked,
-      post,
-    );
+    const response: Response = await likeOrUnlikePost(liked, post);
 
     if (response.ok) {
       setLiked((prev) => !prev);
       setLikesCount((prev) => prev - 1);
     }
   };
-
   useEffect(() => {
-    fetchService.fetchComments(post, setCommentsLoading, setComments);
-  }, []);
+    if (!isOpen) return;
+    fetchComments(post, setCommentsLoading, setComments);
+  }, [isOpen]);
 
   const setCommentToRespond = (comment: PostComment) => {
     setRespondingComment(comment);
     setIsRespondingOnComment(true);
   };
+
+  if (!isOpen) return null;
 
   return (
     <div
@@ -112,7 +106,7 @@ export default function PostPreviewModal({
               {post.isCreator ? (
                 <button
                   className={`ml-auto mr-9 cursor-pointer`}
-                  onClick={async () => actionsService.deletePost(post, onClose)}
+                  onClick={async () => deletePost(post, onClose)}
                 >
                   <Image
                     src={`/images/icons/delete.svg`}
@@ -134,7 +128,7 @@ export default function PostPreviewModal({
                   'flex items-center justify-center md:w-[45px] md:h-[45px]'
                 }
               >
-                <button onClick={likeOrUnlikePost}>
+                <button onClick={handleLikeOrUnlikePost}>
                   <Image
                     src={
                       liked
@@ -182,11 +176,7 @@ export default function PostPreviewModal({
                       key={comment.commentId}
                       postComment={comment}
                       onDeleteComment={() =>
-                        fetchService.fetchComments(
-                          post,
-                          setCommentsLoading,
-                          setComments,
-                        )
+                        fetchComments(post, setCommentsLoading, setComments)
                       }
                       onResponseClick={setCommentToRespond}
                     />
@@ -254,7 +244,7 @@ export default function PostPreviewModal({
                     <button
                       className={`rounded-3xl bg-[#4f378a] w-full h-1/3 text-white hover:bg-[#d0bcff] hover:text-black cursor-pointer`}
                       onClick={() =>
-                        actionsService.addComment(
+                        addComment(
                           commentContent,
                           post,
                           respondingComment,

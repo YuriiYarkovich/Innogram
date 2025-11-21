@@ -2,9 +2,9 @@
 
 import Image from 'next/image';
 import React from 'react';
-import ActionsService from '@/services/actions.service';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import AddFilePlaceholder from '@/components/add-file-placeholder';
+import { createPost } from '@/services/posts.service';
 
 type PostCreationFormValues = {
   content: string;
@@ -17,9 +17,6 @@ export default function PostCreationModal({
   isOpen,
   onClose,
 }: CreatePostModalProps) {
-  if (!isOpen) return null;
-  const actionsService: ActionsService = new ActionsService();
-
   const {
     register,
     handleSubmit,
@@ -32,13 +29,13 @@ export default function PostCreationModal({
       file: null,
     },
   });
-
   const file = watch('file');
-  const selectedFile = file as File | null;
 
   const onSubmit = async (data: PostCreationFormValues) => {
-    await actionsService.createPost(data.content, data.file, onClose);
+    await createPost(data.content, data.file, onClose);
   };
+
+  if (!isOpen) return null;
 
   return (
     <div

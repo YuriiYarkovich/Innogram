@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import React, { useState } from 'react';
 import PostPreviewModal from '@/components/post/post-preview.modal';
-import ActionsService from '@/services/actions.service';
+import { likeOrUnlikePost } from '@/services/posts.service';
 
 export default function PostTile({ post }: { post: Post }) {
   const [liked, setLiked] = useState(post.liked);
@@ -11,15 +11,10 @@ export default function PostTile({ post }: { post: Post }) {
   const [isPostPreviewModalOpen, setIsPostPreviewModalOpen] =
     useState<boolean>(false);
 
-  const actionsService: ActionsService = new ActionsService();
-
-  const likeOrUnlikePost = async (e: React.FormEvent) => {
+  const handleLikeOrUnlikePost = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const response: Response = await actionsService.likeOrUnlikePost(
-      liked,
-      post,
-    );
+    const response: Response = await likeOrUnlikePost(liked, post);
 
     if (response.ok) {
       setLiked((prev) => !prev);
@@ -74,7 +69,7 @@ export default function PostTile({ post }: { post: Post }) {
               'flex items-center justify-center md:w-[45px] md:h-[45px]'
             }
           >
-            <button onClick={likeOrUnlikePost}>
+            <button onClick={handleLikeOrUnlikePost}>
               <Image
                 src={
                   liked

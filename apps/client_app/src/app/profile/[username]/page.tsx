@@ -4,19 +4,22 @@ import SidePanel from '@/components/sidePanel';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import PostPreviewImage from '@/components/post/post-preview-image';
-import { SERVER } from '@/config/apiRoutes';
 import EditProfileModal from '@/components/profilePage/edit-profile.modal';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import PostPreviewModal from '@/components/post/post-preview.modal';
-import FetchService from '@/services/fetch.service';
-import ActionsService from '@/services/actions.service';
+import { handleLogout } from '@/services/auth.service';
+import {
+  fetchFullProfileData,
+  fetchProfile,
+  handleOnProfileFollowing,
+  handleProfileUnfollow,
+} from '@/services/profile.service';
+import { fetchPostsOfProfile } from '@/services/posts.service';
 
 const Page = () => {
   const router: AppRouterInstance = useRouter();
-  const fetchService: FetchService = new FetchService();
-  const actionsService: ActionsService = new ActionsService();
 
   const [profile, setProfile] = useState<Profile>({
     profileId: '',
@@ -46,7 +49,7 @@ const Page = () => {
   const { username } = useParams<{ username?: string }>();
 
   useEffect(() => {
-    fetchService.fetchProfile(setCurProfile);
+    fetchProfile().then((data: Profile) => setCurProfile(data));
   }, []);
 
   const openPostPreviewModal = (postId: string) => {
@@ -78,29 +81,31 @@ const Page = () => {
   }, [isEditProfileModalOpen]);
 
   const updatePostsArray = async (profileId: string) => {
-    await fetchService.fetchPostsOfProfile(profileId, setPosts);
+    fetchPostsOfProfile(profileId).then((data: Post[]) => setPosts(data));
   };
 
   useEffect(() => {
-    fetchService.fetchFullProfileData(
-      username,
-      setFollowersAmount,
-      setIsFollowed,
-      setProfile,
-      updatePostsArray,
-      setProfileLoading,
-      setPostsLoading,
-    );
+    fetchFullProfileData(username)
+      .then((profileData: Profile) => {
+        setFollowersAmount(profileData.subscribersAmount);
+        setIsFollowed(profileData.isSubscribed);
+        setProfile(profileData);
+        updatePostsArray(profileData?.profileId);
+      })
+      .finally(() => {
+        setProfileLoading(false);
+        setPostsLoading(false);
+      });
   }, [username]);
 
   const handleFollowing = async () => {
-    await actionsService.handleFollowing(profile);
+    await handleOnProfileFollowing(profile);
     setFollowersAmount((prev: number): number => prev + 1);
     setIsFollowed(true);
   };
 
   const handleUnfollow = async () => {
-    await actionsService.handleUnfollow(profile);
+    await handleProfileUnfollow(profile);
 
     setFollowersAmount((prev: number): number => prev - 1);
     setIsFollowed(false);
@@ -177,7 +182,7 @@ const Page = () => {
                 {profile.isCurrent ? (
                   <button
                     className={`ml-50`}
-                    onClick={() => actionsService.handleLogout(router)}
+                    onClick={() => handleLogout(router)}
                   >
                     <Image
                       src={`/images/icons/logout.svg`}

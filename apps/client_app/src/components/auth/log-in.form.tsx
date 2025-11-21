@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import ActionsService from '@/services/actions.service';
+import { submitLogin } from '@/services/auth.service';
 
 type LoginFormValues = {
   email: string;
@@ -11,7 +11,6 @@ type LoginFormValues = {
 
 export default function LogInForm() {
   const router = useRouter();
-  const actionsService = new ActionsService();
 
   const {
     register,
@@ -21,7 +20,7 @@ export default function LogInForm() {
   } = useForm<LoginFormValues>();
 
   const onSubmit = async (data: LoginFormValues) => {
-    await actionsService.submitLogin(
+    await submitLogin(
       data.email,
       data.password,
       (msg: string | null) => {

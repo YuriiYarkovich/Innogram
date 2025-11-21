@@ -2,9 +2,9 @@
 
 import Image from 'next/image';
 import React, { useState } from 'react';
-import ActionsService from '@/services/actions.service';
 import { useForm } from 'react-hook-form';
 import AddFilePlaceholder from '@/components/add-file-placeholder';
+import { editProfile } from '@/services/profile.service';
 
 type ProfileEditFormValues = {
   username: string;
@@ -18,9 +18,6 @@ export default function EditProfileModal({
   isOpen,
   onClose,
 }: EditProfileModalProps) {
-  if (!isOpen) return null;
-  const actionsService: ActionsService = new ActionsService();
-
   const {
     register,
     handleSubmit,
@@ -42,7 +39,7 @@ export default function EditProfileModal({
   const [error, setError] = useState<string | null>(null);
 
   const onSubmit = async (data: ProfileEditFormValues) => {
-    await actionsService.editProfile(
+    await editProfile(
       data.username,
       data.bio,
       data.birthday,
@@ -52,6 +49,7 @@ export default function EditProfileModal({
     );
   };
 
+  if (!isOpen) return null;
   return (
     <div
       className={`fixed inset-0 z-50 flex justify-center items-center backdrop-blur-xs bg-black/50 min-h-screen`}

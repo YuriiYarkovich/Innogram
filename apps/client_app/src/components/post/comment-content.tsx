@@ -3,8 +3,6 @@
 import Image from 'next/image';
 import { SERVER } from '@/config/apiRoutes';
 import { useState } from 'react';
-import ActionsService from '@/services/actions.service';
-import FetchService from '@/services/fetch.service';
 
 type CommentContentProps = {
   postComment: PostComment;

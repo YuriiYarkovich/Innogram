@@ -2,9 +2,8 @@
 
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
-import ActionsService from '@/services/actions.service';
 import { useForm } from 'react-hook-form';
+import { submitRegistration } from '@/services/auth.service';
 
 type RegistrationFormValues = {
   email: string;
@@ -16,7 +15,6 @@ type RegistrationFormValues = {
 
 export default function RegistrationForm() {
   const router: AppRouterInstance = useRouter();
-  const actionsService: ActionsService = new ActionsService();
 
   const {
     register,
@@ -26,7 +24,7 @@ export default function RegistrationForm() {
   } = useForm<RegistrationFormValues>();
 
   const onSubmit = async (data: RegistrationFormValues) => {
-    await actionsService.submitRegistration(
+    await submitRegistration(
       data.email,
       data.password,
       data.username,

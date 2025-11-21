@@ -45,7 +45,6 @@ const PostComment = ({
     }
 
     const responsesData: PostComment[] = await response.json();
-    console.log(`Responses: ${JSON.stringify(responsesData)}`);
     setResponses(responsesData);
   };
 
