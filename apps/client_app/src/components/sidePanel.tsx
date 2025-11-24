@@ -33,6 +33,14 @@ const SidePanel = ({ curProfile }: { curProfile: Profile | null }) => {
             </a>
           </li>
           <li>
+            <a
+              href="/chat"
+              className="block hover:bg-[#d0bcff] p-2 rounded text-[#21005d]"
+            >
+              Chat
+            </a>
+          </li>
+          <li>
             <button
               className={`flex hover:bg-[#d0bcff] p-2 rounded w-full text-[#21005d]`}
               onClick={() => setIsCreatePostModalOpen(true)}

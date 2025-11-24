@@ -13,10 +13,12 @@ export default function PostPreviewModal({
   onClose,
 }: PostPreviewModalProps) {
   const [profileAvatarUrl] = useState<string>(
-    post.profileAvatarUrl || `/images/avaTest.png`,
+    post?.profileAvatarUrl || `/images/avaTest.png`,
   );
-  const [liked, setLiked] = useState(post.liked);
-  const [likesCount, setLikesCount] = useState<number>(Number(post.likesCount));
+  const [liked, setLiked] = useState(post?.liked || false);
+  const [likesCount, setLikesCount] = useState<number>(
+    Number(post?.likesCount) || 0,
+  );
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [comments, setComments] = useState<PostComment[]>([]);
   const [commentContent, setCommentContent] = useState<string>('');

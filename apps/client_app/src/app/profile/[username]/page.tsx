@@ -122,8 +122,8 @@ const Page = () => {
         post={postOfPostModal}
         isOpen={isPostPreviewModalOpen}
         onClose={async () => {
-          await updatePostsArray(profile.profileId);
           setIsPostPreviewModalOpen(false);
+          await updatePostsArray(profile.profileId);
         }}
       />
       <div

@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import AddFilePlaceholder from '@/components/add-file-placeholder';
 import { editProfile } from '@/services/profile.service';
@@ -18,25 +18,32 @@ export default function EditProfileModal({
   isOpen,
   onClose,
 }: EditProfileModalProps) {
-  const {
-    register,
-    handleSubmit,
-    control,
-    watch,
-    formState: { isSubmitting },
-  } = useForm<ProfileEditFormValues>({
-    defaultValues: {
-      username: '',
-      bio: '',
-      birthday: '',
-      file: null,
-    },
-  });
+  const { register, handleSubmit, control, watch, reset } =
+    useForm<ProfileEditFormValues>({
+      defaultValues: {
+        username: profile.username,
+        bio: profile.bio,
+        birthday: profile.birthday,
+        file: null,
+      },
+    });
+
+  useEffect(() => {
+    if (profile) {
+      reset({
+        username: profile.username ?? '',
+        bio: profile.bio ?? '',
+        birthday: profile.birthday ?? '',
+        file: null,
+      });
+    }
+  }, [profile, reset]);
 
   const file = watch('file');
-  const selectedFile = file as File | null;
 
   const [error, setError] = useState<string | null>(null);
+
+  console.log(`received profile in edit modal: ${JSON.stringify(profile)}`);
 
   const onSubmit = async (data: ProfileEditFormValues) => {
     await editProfile(
@@ -86,7 +93,6 @@ export default function EditProfileModal({
           <input
             type="username"
             placeholder="Username"
-            defaultValue={profile.username}
             {...register('username')}
             className="border-2 border-[#bcb8b8] rounded-[6px] px-3 py-2 w-full bg-white"
           />
@@ -94,14 +100,12 @@ export default function EditProfileModal({
           <input
             type="date"
             title="Birthday"
-            defaultValue={profile.birthday}
             {...register('birthday')}
             className="border-2 border-[#bcb8b8] rounded-[6px] px-3 py-2 w-full bg-white"
           />
           <textarea
             placeholder="Bio"
-            defaultValue={profile.bio}
-            {...register('birthday')}
+            {...register('bio')}
             className="border-2 border-[#bcb8b8] rounded-[6px] md:h-[100px] px-3 py-2 w-full bg-white"
           />
           <button
