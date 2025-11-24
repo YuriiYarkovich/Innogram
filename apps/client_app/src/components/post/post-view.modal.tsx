@@ -7,7 +7,7 @@ import Line from '@/components/line';
 import { deletePost, likeOrUnlikePost } from '@/services/posts.service';
 import { addComment, fetchComments } from '@/services/comment.service';
 
-export default function PostPreviewModal({
+export default function PostViewModal({
   post,
   isOpen,
   onClose,

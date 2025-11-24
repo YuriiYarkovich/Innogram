@@ -21,7 +21,7 @@ const SidePanel = ({ curProfile }: { curProfile: Profile | null }) => {
         onClose={() => setIsCreatePostModalOpen(false)}
       />
       <aside
-        className={`fixed left-0 w-64 top-1/2 -translate-y-1/2 bg-[#eaddff] rounded-3xl p-4`}
+        className={`fixed left-0 w-1/8 top-1/2 -translate-y-1/2 bg-[#eaddff] rounded-3xl p-4`}
       >
         <ul className="space-y-2">
           <li>

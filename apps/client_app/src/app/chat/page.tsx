@@ -3,8 +3,35 @@
 import { useEffect, useState } from 'react';
 import { fetchProfile } from '@/services/profile.service';
 import SidePanel from '@/components/sidePanel';
+import ChatPreviewTile from '@/components/chat/chat-preview-tile';
+import Image from 'next/image';
+import { useForm } from 'react-hook-form';
+import MessageTile from '@/components/chat/messageTile';
 
-const ChatPage = () => {
+type MessageSendFormValues = {
+  content: string;
+  file: File | null;
+};
+
+export default function ChatPage() {
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    formState: { isSubmitting },
+  } = useForm<MessageSendFormValues>({
+    defaultValues: {
+      content: '',
+      file: null,
+    },
+  });
+  const file = watch('file');
+
+  const onSubmit = async (data: MessageSendFormValues) => {
+    setTimeout(() => console.log(`Message: ${data.content} sent!`), 1000);
+  };
+
   const [curProfile, setCurProfile] = useState<Profile>({
     profileId: '',
     username: '',
@@ -28,8 +55,69 @@ const ChatPage = () => {
       className={`flex flex-row min-h-screen w-full justify-center items-center`}
     >
       <SidePanel curProfile={curProfile} />
+      <div className={`flex w-5/8 h-full justify-center items-center gap-5`}>
+        <div
+          className={
+            'flex flex-col w-1/4 h-full justify-center overflow-y-scroll'
+          }
+        >
+          <div>
+            <ChatPreviewTile
+              chatAvatarUrl={'images/avaTest.png'}
+              chatName={'Username'}
+              lastMessage={'Hello world '}
+              lastMessageTimePast={2}
+              lastMessageRead={true}
+            />
+          </div>
+        </div>
+        <div className={`flex flex-col w-5/8 h-full gap-2 overflow-y-scroll`}>
+          <div
+            className={`flex flex-col-reverse w-full min-h-[800px] border-black border-1 pb-1.5`}
+          >
+            <MessageTile
+              authorUsername={'Username'}
+              authorAvatarUrl={'images/avaTest.png'}
+              content={'Hello world'}
+              fileUrl={''}
+            />
+          </div>
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className={
+              'flex flex-row w-min-1/20 border-[#79747e] border-2 rounded-4xl p-2 gap-2 items-center'
+            }
+          >
+            <div
+              className={
+                'flex items-center justify-center md:h-[34px] md:w-[34px]'
+              }
+            >
+              <Image
+                src={'images/icons/emoji.svg'}
+                alt={'emoji icon'}
+                height={30}
+                width={30}
+                draggable={false}
+                className={`cursor-pointer hover:md:h-[34px] hover:md:w-[34px]`}
+              />
+            </div>
+            <textarea
+              {...register('content')}
+              placeholder={'Write message'}
+              className={`flex w-10/12 h-full`}
+            />
+            <button
+              type={'submit'}
+              className={
+                'cursor-pointer bg-[#4f378a] text-white hover:text-black text-center rounded-[20px] px-4 py-2 hover:bg-[#d0bcff]'
+              }
+            >
+              {isSubmitting ? 'Sending...' : 'Send'}
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
-};
-
-export default ChatPage;
+}

@@ -8,7 +8,7 @@ import EditProfileModal from '@/components/profilePage/edit-profile.modal';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { useRouter } from 'next/navigation';
 import { useParams } from 'next/navigation';
-import PostPreviewModal from '@/components/post/post-preview.modal';
+import PostViewModal from '@/components/post/post-view.modal';
 import { handleLogout } from '@/services/auth.service';
 import {
   fetchFullProfileData,
@@ -118,7 +118,7 @@ const Page = () => {
         isOpen={isEditProfileModalOpen}
         onClose={() => setIsEditProfileModalOpen(false)}
       />
-      <PostPreviewModal
+      <PostViewModal
         post={postOfPostModal}
         isOpen={isPostPreviewModalOpen}
         onClose={async () => {

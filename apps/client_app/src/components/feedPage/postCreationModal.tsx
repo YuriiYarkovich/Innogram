@@ -89,9 +89,9 @@ export default function PostCreationModal({
           {...register('content')}
           placeholder="What do you think?"
           className="flex md:w-[400px] md:h-[122px] bg-white mt-5"
-        ></textarea>
+        />
         <button
-          className="cursor-pointer bg-[#4f378a] text-white text-center rounded-[20px] px-4 py-2 hover:bg-[#d0bcff] md:w-[400px] mt-6 mb-5"
+          className="cursor-pointer bg-[#4f378a] text-white text-center rounded-[20px] px-4 py-2 hover:bg-[#d0bcff] hover:text-black md:w-[400px] mt-6 mb-5"
           type="submit"
           disabled={isSubmitting}
         >

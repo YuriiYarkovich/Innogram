@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import React, { useState } from 'react';
-import PostPreviewModal from '@/components/post/post-preview.modal';
+import PostViewModal from '@/components/post/post-view.modal';
 import { likeOrUnlikePost } from '@/services/posts.service';
 
 export default function PostTile({ post }: { post: Post }) {
@@ -24,7 +24,7 @@ export default function PostTile({ post }: { post: Post }) {
 
   return (
     <div>
-      <PostPreviewModal
+      <PostViewModal
         post={post}
         isOpen={isPostPreviewModalOpen}
         onClose={() => setIsPostPreviewModalOpen(false)}
