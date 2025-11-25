@@ -37,10 +37,14 @@ export class ProfilesService {
 
     return {
       ...profile,
-      profileId,
+      id: profileId,
       avatarUrl,
       isCurrent: true,
     };
+  }
+
+  async checkIfProfilesExists(profilesIds: string[]) {
+    return await this.profilesRepository.foundProfiles(profilesIds);
   }
 
   async getProfileInfoByUsername(username: string, currentProfileId: string) {
@@ -60,7 +64,7 @@ export class ProfilesService {
       avatarUrl = await this.minioService.getPublicUrl(profile.avatarFilename);
     }
 
-    const isCurrent: boolean = currentProfileId === profile.profileId;
+    const isCurrent: boolean = currentProfileId === profile.id;
     const returningProfileInfo: ReturningProfileInfo = {
       ...profile,
       username,

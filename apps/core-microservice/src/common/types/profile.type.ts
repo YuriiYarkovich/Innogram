@@ -1,5 +1,5 @@
 export interface ReturningProfileInfo {
-  profileId: string;
+  id: string;
   username: string;
   birthday: string;
   bio: string;
@@ -25,7 +25,7 @@ export interface FindingProfileInfoById {
 }
 
 export interface FindingProfileInfoByUsername {
-  profileId: string;
+  id: string;
   birthday: string;
   bio: string;
   avatarFilename?: string;

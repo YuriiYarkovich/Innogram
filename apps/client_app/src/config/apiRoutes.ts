@@ -22,5 +22,9 @@ export const SERVER = {
     UNLIKE_COMMENT: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/comments/unlike/`,
     DELETE_COMMENT: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/comments/delete/`,
     GET_ALL_COMMENT_RESPONSES: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/comments/allResponses/`,
+    FETCH_ALL_CHATS_OF_PROFILE: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/chat/allChatsOfProfile`,
+    FETCH_PRIVATE_CHAT: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/chat/findInfoOfPrivate/`,
+    CREATE_CHAT: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/chat/create`,
+    FETCH_CHAT_INFO: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/chat/info/`,
   },
 };

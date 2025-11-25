@@ -17,12 +17,14 @@ import {
   handleProfileUnfollow,
 } from '@/services/profile.service';
 import { fetchPostsOfProfile } from '@/services/posts.service';
+import { enterOrCreateChat, fetchChatInfo } from '@/services/chat.service';
+import { Chat, Post, Profile } from '@/types';
 
 const Page = () => {
   const router: AppRouterInstance = useRouter();
 
   const [profile, setProfile] = useState<Profile>({
-    profileId: '',
+    id: '',
     username: '',
     bio: '',
     birthday: '',
@@ -90,7 +92,7 @@ const Page = () => {
         setFollowersAmount(profileData.subscribersAmount);
         setIsFollowed(profileData.isSubscribed);
         setProfile(profileData);
-        updatePostsArray(profileData?.profileId);
+        updatePostsArray(profileData?.id);
       })
       .finally(() => {
         setProfileLoading(false);
@@ -111,6 +113,11 @@ const Page = () => {
     setIsFollowed(false);
   };
 
+  const openChatWithUser = async () => {
+    const chat: Chat | undefined = await enterOrCreateChat(profile.id);
+    router.push(`/chat/${chat?.id}`);
+  };
+
   return (
     <div>
       <EditProfileModal
@@ -123,16 +130,14 @@ const Page = () => {
         isOpen={isPostPreviewModalOpen}
         onClose={async () => {
           setIsPostPreviewModalOpen(false);
-          await updatePostsArray(profile.profileId);
+          await updatePostsArray(profile.id);
         }}
       />
       <div
         className={`flex flex-row min-h-screen w-full justify-center items-center`}
       >
         <SidePanel curProfile={curProfile} />
-        <main
-          className={`flex flex-col min-h-screen md:w-[900px] {/*bg-red-600*/}`}
-        >
+        <main className={`flex flex-col min-h-screen md:w-[900px]`}>
           {profileLoading ? (
             <p>loading...</p>
           ) : profile === null ? (
@@ -228,6 +233,7 @@ const Page = () => {
                     </button>
                     <button
                       className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                      onClick={() => openChatWithUser()}
                     >
                       Send message
                     </button>
@@ -238,11 +244,9 @@ const Page = () => {
           )}
 
           <div className="flex items-center mt-3 w-full">
-            <div className={`flex-grow h-[2px] bg-[#624b98]`}></div>
+            <div className={'flex-grow h-[2px] bg-[#624b98]'}></div>
           </div>
-          <div
-            className={`{/*bg-blue-600*/} grid grid-cols-5 md:w-[900px] mt-7 gap-1`}
-          >
+          <div className={'grid grid-cols-5 md:w-[900px] mt-7 gap-1'}>
             {postsLoading ? (
               <p>loading</p>
             ) : posts.length === 0 ? (

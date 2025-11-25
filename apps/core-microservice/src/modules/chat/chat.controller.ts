@@ -20,6 +20,7 @@ import { ChatParticipant } from '../../common/entities/chat/chat-participant.ent
 import { AddParticipantDto } from './dto/add-participant.dto';
 import { context, CONTEXT_KEYS } from '../../common/cls/request-context';
 import { AuthGuard } from '../../common/guards/auth.guard';
+import { ReturningChatData } from '../../common/types/chat.types';
 
 @ApiTags('Operations with chats')
 @ApiBearerAuth('access-token')
@@ -30,16 +31,18 @@ export class ChatController {
   @ApiOperation({ summary: 'Creates chat' })
   @ApiResponse({ status: 200, type: Chat })
   @Post(`/create`)
-  async createChat(@Body() dto: CreateChatDto): Promise<Chat> {
-    return await this.chatService.createChat(dto);
+  @UseGuards(AuthGuard)
+  async createChat(@Body() dto: CreateChatDto) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.chatService.createChat(dto, currentProfileId);
   }
 
   @ApiOperation({ summary: 'Returns all chats of user' })
-  @ApiResponse({ status: 200, type: ChatParticipant })
+  @ApiResponse({ status: 200, type: Chat })
   @Get(`/allChatsOfProfile/`)
   @UseGuards(AuthGuard)
-  async getAllChatsOfUser(): Promise<ChatParticipant[]> {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
+  async getAllChatsOfUser(): Promise<ReturningChatData[]> {
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.chatService.getAllChatsOfProfile(profileId);
   }
 
@@ -49,21 +52,28 @@ export class ChatController {
   @ApiResponse({ status: 200, type: Chat })
   @Get(`/info/:chatId`)
   @UseGuards(AuthGuard)
-  async getChatInfo(@Param('chatId') chatId: string): Promise<Chat> {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
-    return await this.chatService.getChatInfo(chatId, profileId);
+  async getChatInfo(@Param('chatId') chatId: string) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.chatService.getChatInfo(chatId, currentProfileId);
+  }
+
+  @Get('/findInfoOfPrivate/:receiverId')
+  @UseGuards(AuthGuard)
+  async getPrivateChatInfo(@Param('receiverId') receiverId: string) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.chatService.getPrivateChatInfo(
+      currentProfileId,
+      receiverId,
+    );
   }
 
   @ApiOperation({ summary: 'Updates chat title' })
   @ApiResponse({ status: 200, type: Chat })
   @Put(`/updateTitle/:chatId`)
   @UseGuards(AuthGuard)
-  async editChat(
-    @Param('chatId') chatId: string,
-    @Body() dto: CreateChatDto,
-  ): Promise<Chat | null> {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
-    return this.chatService.updateChatTitle(chatId, dto, profileId);
+  async editChat(@Param('chatId') chatId: string, @Body() dto: CreateChatDto) {
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return this.chatService.updateChatTitle(chatId, dto.title, profileId);
   }
 
   @ApiOperation({ summary: 'Deletes participant from chat' })
@@ -71,7 +81,7 @@ export class ChatController {
   @Put(`/leave/:chatId`)
   @UseGuards(AuthGuard)
   async leaveChat(@Param('chatId') chatId: string) {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.chatService.leaveChat(chatId, profileId);
   }
 
@@ -82,8 +92,8 @@ export class ChatController {
   async addParticipant(
     @Param(`chatId`) chatId: string,
     @Body() dto: AddParticipantDto,
-  ): Promise<Chat | null> {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
+  ) {
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.chatService.addChatParticipants(chatId, dto, profileId);
   }
 
@@ -91,8 +101,8 @@ export class ChatController {
   @ApiResponse({ status: 200, type: Chat })
   @Put(`/archive/:chatId`)
   @UseGuards(AuthGuard)
-  async archiveChat(@Param(`chatId`) chatId: string): Promise<Chat | null> {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
+  async archiveChat(@Param(`chatId`) chatId: string) {
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.chatService.archiveChat(chatId, profileId);
   }
 }

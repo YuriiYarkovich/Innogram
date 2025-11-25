@@ -10,12 +10,16 @@ import { AuthModule } from '../auth/auth.module';
 import { ChatGateway } from './chat.gateway';
 import { MessagesModule } from '../messages/messages.module';
 import { Logger } from 'nestjs-pino';
+import { ProfilesModule } from '../profiles/profiles.module';
+import { MinioModule } from '../minio/minio.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Chat, ChatParticipant]),
     AuthModule,
     MessagesModule,
+    ProfilesModule,
+    MinioModule,
   ],
   controllers: [ChatController],
   providers: [

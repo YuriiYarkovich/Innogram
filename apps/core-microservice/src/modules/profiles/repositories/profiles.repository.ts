@@ -1,6 +1,6 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { Profile } from '../../../common/entities/account/profile.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import { In, QueryRunner, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import {
   FindingProfileInfoById,
@@ -14,6 +14,14 @@ export class ProfilesRepository {
   constructor(
     @InjectRepository(Profile) private profileRepository: Repository<Profile>,
   ) {}
+
+  async foundProfiles(profilesIds: string[]) {
+    return await this.profileRepository.find({
+      where: {
+        id: In(profilesIds),
+      },
+    });
+  }
 
   async getProfileInfo(
     currentProfileId: string,
@@ -53,7 +61,7 @@ export class ProfilesRepository {
     const result: FindingProfileInfoByUsername[] =
       await this.profileRepository.query(
         `
-          SELECT p.id                                                                          AS "profileId",
+          SELECT p.id,
                  p.birthday,
                  p.bio,
                  p.avatar_filename                                                             AS "avatarFilename",

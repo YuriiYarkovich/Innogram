@@ -18,5 +18,6 @@ import { FollowsModule } from '../follows/follows.module';
   ],
   controllers: [ProfilesController],
   providers: [ProfilesService, ProfilesRepository],
+  exports: [ProfilesService],
 })
 export class ProfilesModule {}

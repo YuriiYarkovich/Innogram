@@ -2,18 +2,18 @@ import React from 'react';
 import Image from 'next/image';
 
 type ChatPreviewProps = {
-  chatAvatarUrl: string;
-  chatName: string;
-  lastMessage: string;
-  lastMessageTimePast: number;
-  lastMessageRead: boolean;
+  chatAvatarUrl?: string;
+  chatTitle: string;
+  lastMessageContent?: string;
+  lastMessageCreatedAt?: string;
+  lastMessageRead?: boolean;
 };
 
 const ChatPreviewTile = ({
   chatAvatarUrl,
-  chatName,
-  lastMessage,
-  lastMessageTimePast,
+  chatTitle,
+  lastMessageContent,
+  lastMessageCreatedAt,
   lastMessageRead,
 }: ChatPreviewProps) => {
   return (
@@ -28,7 +28,7 @@ const ChatPreviewTile = ({
         }
       >
         <Image
-          src={chatAvatarUrl}
+          src={chatAvatarUrl || '/images/avaTest.png'}
           alt={'chatAvatarUrl'}
           width={70}
           height={70}
@@ -38,13 +38,11 @@ const ChatPreviewTile = ({
         />
       </div>
       <div className={'flex flex-col gap-2'}>
-        <span className={'text-[18px] font-bold'}>{chatName}</span>
+        <span className={'text-[18px] font-bold'}>{chatTitle}</span>
         <div className={'flex flex-row gap-2'}>
-          <span className={'text-[15px]'}>{lastMessage}</span>
+          <span className={'text-[15px]'}>{lastMessageContent}</span>
           <span className={'text-[15px] text-[#79747e]'}>
-            {lastMessageTimePast >= 24
-              ? `${Math.floor(lastMessageTimePast / 24)} d`
-              : `${lastMessageTimePast} h`}
+            {lastMessageCreatedAt ? lastMessageCreatedAt : ''}
           </span>
         </div>
       </div>

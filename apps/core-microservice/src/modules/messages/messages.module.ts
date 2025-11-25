@@ -34,6 +34,6 @@ import { MessageReceiver } from '../../common/entities/chat/Message-Receiver.ent
     MessageAssetsRepository,
     MessageReceiverRepository,
   ],
-  exports: [MessagesService],
+  exports: [MessagesService, MessagesRepository],
 })
 export class MessagesModule {}

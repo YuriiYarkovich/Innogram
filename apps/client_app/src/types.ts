@@ -1,4 +1,4 @@
-type Post = {
+export type Post = {
   postId: string;
   profileId: string;
   profileAvatarUrl?: string;
@@ -11,32 +11,32 @@ type Post = {
   isCreator: boolean;
 };
 
-type AssetData = {
+export type AssetData = {
   order: number;
   url: string;
 };
 
-type CreatePostModalProps = {
+export type CreatePostModalProps = {
   userAvatarUrl?: string;
   username?: string;
   isOpen: boolean;
   onClose: () => void;
 };
 
-type EditProfileModalProps = {
+export type EditProfileModalProps = {
   profile: Profile;
   isOpen: boolean;
   onClose: () => void;
 };
 
-type PostPreviewModalProps = {
+export type PostPreviewModalProps = {
   post: Post;
   isOpen: boolean;
   onClose: () => void;
 };
 
-type Profile = {
-  profileId: string;
+export type Profile = {
+  id: string;
   username: string;
   birthday: string;
   bio: string;
@@ -49,7 +49,7 @@ type Profile = {
   isSubscribed: boolean;
 };
 
-type PostComment = {
+export type PostComment = {
   commentId: string;
   authorUsername: string;
   authorAvatarUrl: string;
@@ -60,4 +60,28 @@ type PostComment = {
   isAuthor: boolean;
   parentCommentId?: string;
   responsesAmount: number;
+};
+
+export type Chat = {
+  id: string;
+  avatarUrl?: string;
+  title: string;
+  lastMessageContent?: string;
+  lastMessageCreatedAt?: string;
+  lastMessageRead?: boolean;
+};
+
+export enum ChatTypes {
+  PRIVATE = 'private',
+  GROUP = 'group',
+}
+
+export type Message = {
+  id: string;
+  chatId: string;
+  authorUsername: string;
+  authorProfileUrl: string;
+  content: string;
+  createdAt: string;
+  messageAssetsUrls: string[];
 };

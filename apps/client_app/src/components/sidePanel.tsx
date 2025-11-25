@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import PostCreationModal from '@/components/feedPage/postCreationModal';
+import { Profile } from '@/types';
 
 const SidePanel = ({ curProfile }: { curProfile: Profile | null }) => {
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
@@ -34,7 +35,7 @@ const SidePanel = ({ curProfile }: { curProfile: Profile | null }) => {
           </li>
           <li>
             <a
-              href="/chat"
+              href="/chat/0"
               className="block hover:bg-[#d0bcff] p-2 rounded text-[#21005d]"
             >
               Chat

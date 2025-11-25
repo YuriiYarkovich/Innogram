@@ -1,21 +1,19 @@
 import { SERVER } from '@/config/apiRoutes';
 import returnErrorMessage from '@/utils/showAuthError';
+import { Profile } from '@/types';
 
 export const handleOnProfileFollowing = async (profile: Profile) => {
-  const response: Response = await fetch(
-    `${SERVER.API.FOLLOW}${profile.profileId}`,
-    {
-      method: 'POST',
-      credentials: 'include',
-    },
-  );
+  const response: Response = await fetch(`${SERVER.API.FOLLOW}${profile.id}`, {
+    method: 'POST',
+    credentials: 'include',
+  });
 
   if (!response.ok) console.error(response.json());
 };
 
 export const handleProfileUnfollow = async (profile: Profile) => {
   const response: Response = await fetch(
-    `${SERVER.API.UNFOLLOW}${profile.profileId}`,
+    `${SERVER.API.UNFOLLOW}${profile.id}`,
     {
       method: 'DELETE',
       credentials: 'include',
@@ -90,5 +88,6 @@ export const fetchFullProfileData = async (username: string | undefined) => {
     );
     profileData = await resProfile.json();
   }
+  console.log(`Received profile data loh: ${JSON.stringify(profileData)}`);
   return profileData;
 };

@@ -7,6 +7,9 @@ import ChatPreviewTile from '@/components/chat/chat-preview-tile';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import MessageTile from '@/components/chat/messageTile';
+import { useParams } from 'next/navigation';
+import { Chat, Message, Profile } from '@/types';
+import { fetchChatsOfProfile } from '@/services/chat.service';
 
 type MessageSendFormValues = {
   content: string;
@@ -28,12 +31,10 @@ export default function ChatPage() {
   });
   const file = watch('file');
 
-  const onSubmit = async (data: MessageSendFormValues) => {
-    setTimeout(() => console.log(`Message: ${data.content} sent!`), 1000);
-  };
+  const chatIdParam = useParams<{ chatId: string }>();
 
   const [curProfile, setCurProfile] = useState<Profile>({
-    profileId: '',
+    id: '',
     username: '',
     bio: '',
     birthday: '',
@@ -46,9 +47,31 @@ export default function ChatPage() {
     isSubscribed: false,
   });
 
+  const [chats, setChats] = useState<Chat[] | null>(null);
+  const [chatsLoading, setChatsLoading] = useState<boolean>(false);
+  const [messages, setMessages] = useState<Message[] | null>(null);
+  const [messagesLoading, setMessagesLoading] = useState<boolean>(false);
+  const [currentChatId, setCurrentChatId] = useState<string | null>(
+    chatIdParam.chatId,
+  );
+
   useEffect(() => {
     fetchProfile().then((data: Profile) => setCurProfile(data));
   }, []);
+
+  useEffect(() => {
+    setChatsLoading(true);
+    fetchChatsOfProfile()
+      .then((chatsData: Chat[] | undefined) => {
+        if (!chatsData) return;
+        setChats(chatsData);
+      })
+      .finally(() => setChatsLoading(false));
+  }, []);
+
+  const onSubmit = async (data: MessageSendFormValues) => {
+    setTimeout(() => console.log(`Message: ${data.content} sent!`), 1000);
+  };
 
   return (
     <div
@@ -62,25 +85,48 @@ export default function ChatPage() {
           }
         >
           <div>
-            <ChatPreviewTile
-              chatAvatarUrl={'images/avaTest.png'}
-              chatName={'Username'}
-              lastMessage={'Hello world '}
-              lastMessageTimePast={2}
-              lastMessageRead={true}
-            />
+            {chatsLoading ? (
+              <p>Chats list is loading...</p>
+            ) : chats?.length === 0 ? (
+              <p>There are no chats yet.</p>
+            ) : (
+              chats?.map((chat) => (
+                <ChatPreviewTile
+                  key={chat.id}
+                  chatAvatarUrl={chat?.avatarUrl}
+                  chatTitle={chat.title}
+                  lastMessageContent={chat?.lastMessageContent}
+                  lastMessageCreatedAt={chat?.lastMessageCreatedAt}
+                  lastMessageRead={chat?.lastMessageRead}
+                />
+              ))
+            )}
           </div>
         </div>
         <div className={`flex flex-col w-5/8 h-full gap-2 overflow-y-scroll`}>
           <div
             className={`flex flex-col-reverse w-full min-h-[800px] border-black border-1 pb-1.5`}
           >
-            <MessageTile
+            {/*<MessageTile
               authorUsername={'Username'}
-              authorAvatarUrl={'images/avaTest.png'}
+              authorAvatarUrl={'/images/avaTest.png'}
               content={'Hello world'}
               fileUrl={''}
-            />
+            />*/}
+            {messagesLoading ? (
+              <p>Messages loading...</p>
+            ) : messages?.length === 0 ? (
+              <p>There are no messages yet</p>
+            ) : (
+              messages?.map((message) => (
+                <MessageTile
+                  key={message.id}
+                  authorUsername={message.authorUsername}
+                  authorAvatarUrl={message.authorProfileUrl}
+                  content={message.content}
+                />
+              ))
+            )}
           </div>
           <form
             onSubmit={handleSubmit(onSubmit)}
@@ -94,7 +140,7 @@ export default function ChatPage() {
               }
             >
               <Image
-                src={'images/icons/emoji.svg'}
+                src={'/images/icons/emoji.svg'}
                 alt={'emoji icon'}
                 height={30}
                 width={30}

@@ -52,11 +52,16 @@ export class Chat {
   title: string;
 
   @ApiProperty({
-    example: 'The best chat of the best chats of the best chats',
-    description: 'Description of the chat',
+    example: 'some hashed name',
+    description: 'Filename of the avatar of the chat',
   })
-  @Column({ type: 'varchar', length: 512, nullable: true })
-  description: string;
+  @Column({
+    type: 'varchar',
+    length: 512,
+    nullable: true,
+    name: 'chat_avatar_filename',
+  })
+  chatAvatarFilename: string;
 
   @CreateDateColumn()
   createdAt: Date;
