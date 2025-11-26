@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  Post,
   Put,
   UploadedFiles,
   UseGuards,
@@ -12,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { CreateMessageDto } from './dto/create-message.dto';
 import {
   ApiBearerAuth,
   ApiConsumes,
@@ -33,13 +31,18 @@ export class MessagesController {
 
   @ApiOperation({ summary: 'Returns all messages of chat' })
   @ApiResponse({ status: 200, type: Message })
-  @Get(`/allOfChat/:chatId`)
+  @Get(`/fromChat/:chatId`)
   @UseGuards(AuthGuard)
-  async getAllMessagesOfChat(
+  async getMessagesFromChat(
     @Param('chatId') chatId: string,
-  ): Promise<Message[]> {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
-    return await this.messagesService.getAllMessagesOfChat(profileId, chatId);
+    @Body('lastLoadedMessageCreatedAt') lastLoadedMessageCreatedAt: string,
+  ) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.messagesService.getMessagesFromChat(
+      currentProfileId,
+      chatId,
+      lastLoadedMessageCreatedAt,
+    );
   }
 
   @ApiOperation({ summary: 'Edits messages' })
@@ -53,7 +56,7 @@ export class MessagesController {
     @Body() dto: EditMessageDto,
     @UploadedFiles() files,
   ): Promise<Message | null> {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.messagesService.editMessage(
       messageId,
       dto,
@@ -67,7 +70,7 @@ export class MessagesController {
   @Delete(`/delete/:messageId`)
   @UseGuards(AuthGuard)
   async deleteMessage(@Param('messageId') messageId: string): Promise<Message> {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profile_id;
+    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.messagesService.deleteMessage(messageId, profileId);
   }
 }

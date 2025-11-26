@@ -7,6 +7,7 @@ type ChatPreviewProps = {
   lastMessageContent?: string;
   lastMessageCreatedAt?: string;
   lastMessageRead?: boolean;
+  onClick: () => void;
 };
 
 const ChatPreviewTile = ({
@@ -15,12 +16,14 @@ const ChatPreviewTile = ({
   lastMessageContent,
   lastMessageCreatedAt,
   lastMessageRead,
+  onClick,
 }: ChatPreviewProps) => {
   return (
     <div
       className={
         'flex flex-row w-full gap-4 p-3 items-center border-[#79747e] border-1 cursor-pointer'
       }
+      onClick={onClick}
     >
       <div
         className={

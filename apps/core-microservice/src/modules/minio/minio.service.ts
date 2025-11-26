@@ -111,7 +111,7 @@ export class MinioService {
     return { hashedFileName, type };
   }
 
-  async getPublicUrl(fileKey: string): Promise<string | undefined> {
+  async getPublicUrl(fileKey?: string): Promise<string | undefined> {
     if (!fileKey) return undefined;
     const command = new GetObjectCommand({
       Bucket: this.bucketName,

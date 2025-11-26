@@ -26,5 +26,6 @@ export const SERVER = {
     FETCH_PRIVATE_CHAT: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/chat/findInfoOfPrivate/`,
     CREATE_CHAT: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/chat/create`,
     FETCH_CHAT_INFO: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/chat/info/`,
+    GET_MESSAGES_OF_CHAT: `${process.env.NEXT_PUBLIC_SERVER_URL}/api/messages/fromChat/`,
   },
 };

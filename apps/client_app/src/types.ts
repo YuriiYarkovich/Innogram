@@ -80,7 +80,7 @@ export type Message = {
   id: string;
   chatId: string;
   authorUsername: string;
-  authorProfileUrl: string;
+  authorAvatarUrl: string;
   content: string;
   createdAt: string;
   messageAssetsUrls: string[];

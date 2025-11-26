@@ -12,7 +12,7 @@ export interface FindingMessageData {
   id: string;
   chatId: string;
   authorUsername: string;
-  authorProfileUrl: string;
+  authorAvatarFilename?: string;
   content: string;
   createdAt: string;
 }
@@ -21,7 +21,7 @@ export interface ReturningMessageData {
   id: string;
   chatId: string;
   authorUsername: string;
-  authorProfileUrl: string;
+  authorAvatarUrl?: string;
   content: string;
   createdAt: string;
   messageAssetsUrls: string[];

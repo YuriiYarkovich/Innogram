@@ -115,6 +115,8 @@ const Page = () => {
 
   const openChatWithUser = async () => {
     const chat: Chat | undefined = await enterOrCreateChat(profile.id);
+    if (!chat) router.push(`/chat/0`);
+
     router.push(`/chat/${chat?.id}`);
   };
 

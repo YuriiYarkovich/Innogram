@@ -40,7 +40,7 @@ export const enterOrCreateChat = async (
   const chatId: string | null = await response.json();
 
   if (!chatId) {
-    return await createChat([receiverProfileId]);
+    return undefined;
   }
 
   return await fetchChatInfo(chatId);
@@ -91,4 +91,14 @@ export const fetchChatInfo = async (
   }
 
   return await response.json();
+};
+
+export const findChatById = (
+  wantedChatId: string,
+  chatsArray: Chat[] | null,
+) => {
+  if (!chatsArray) return;
+  for (const chat of chatsArray) {
+    if (chat.id === wantedChatId) return chat;
+  }
 };

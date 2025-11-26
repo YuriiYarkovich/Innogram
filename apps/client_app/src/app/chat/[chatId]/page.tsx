@@ -9,7 +9,8 @@ import { useForm } from 'react-hook-form';
 import MessageTile from '@/components/chat/messageTile';
 import { useParams } from 'next/navigation';
 import { Chat, Message, Profile } from '@/types';
-import { fetchChatsOfProfile } from '@/services/chat.service';
+import { fetchChatsOfProfile, findChatById } from '@/services/chat.service';
+import { fetchMessagesOfChat } from '@/services/messages.service';
 
 type MessageSendFormValues = {
   content: string;
@@ -51,13 +52,7 @@ export default function ChatPage() {
   const [chatsLoading, setChatsLoading] = useState<boolean>(false);
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [messagesLoading, setMessagesLoading] = useState<boolean>(false);
-  const [currentChatId, setCurrentChatId] = useState<string | null>(
-    chatIdParam.chatId,
-  );
-
-  useEffect(() => {
-    fetchProfile().then((data: Profile) => setCurProfile(data));
-  }, []);
+  const [currentChat, setCurrentChat] = useState<Chat | null>(null);
 
   useEffect(() => {
     setChatsLoading(true);
@@ -68,6 +63,36 @@ export default function ChatPage() {
       })
       .finally(() => setChatsLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (chatIdParam.chatId === '0') {
+      setCurrentChat(null);
+      return;
+    }
+    const currentChat = findChatById(chatIdParam.chatId, chats);
+    if (!currentChat) return;
+    setCurrentChat(currentChat);
+  }, [chats, chatIdParam]);
+
+  useEffect(() => {
+    fetchProfile().then((data: Profile) => setCurProfile(data));
+  }, []);
+
+  useEffect(() => {
+    setMessagesLoading(true);
+    fetchMessagesOfChat(currentChat?.lastMessageCreatedAt, currentChat?.id)
+      .then((messagesData: Message[] | undefined) => {
+        if (!messagesData) return;
+        setMessages(messagesData);
+      })
+      .finally(() => setMessagesLoading(false));
+  }, [currentChat]);
+
+  const onChatTileClick = (chatId: string) => {
+    const chat = findChatById(chatId, chats);
+    if (!chat) return;
+    setCurrentChat(chat);
+  };
 
   const onSubmit = async (data: MessageSendFormValues) => {
     setTimeout(() => console.log(`Message: ${data.content} sent!`), 1000);
@@ -98,6 +123,7 @@ export default function ChatPage() {
                   lastMessageContent={chat?.lastMessageContent}
                   lastMessageCreatedAt={chat?.lastMessageCreatedAt}
                   lastMessageRead={chat?.lastMessageRead}
+                  onClick={() => onChatTileClick(chat.id)}
                 />
               ))
             )}
@@ -107,13 +133,9 @@ export default function ChatPage() {
           <div
             className={`flex flex-col-reverse w-full min-h-[800px] border-black border-1 pb-1.5`}
           >
-            {/*<MessageTile
-              authorUsername={'Username'}
-              authorAvatarUrl={'/images/avaTest.png'}
-              content={'Hello world'}
-              fileUrl={''}
-            />*/}
-            {messagesLoading ? (
+            {!currentChat ? (
+              <p>Pick chat</p>
+            ) : messagesLoading ? (
               <p>Messages loading...</p>
             ) : messages?.length === 0 ? (
               <p>There are no messages yet</p>
@@ -122,46 +144,50 @@ export default function ChatPage() {
                 <MessageTile
                   key={message.id}
                   authorUsername={message.authorUsername}
-                  authorAvatarUrl={message.authorProfileUrl}
+                  authorAvatarUrl={message.authorAvatarUrl}
                   content={message.content}
                 />
               ))
             )}
           </div>
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className={
-              'flex flex-row w-min-1/20 border-[#79747e] border-2 rounded-4xl p-2 gap-2 items-center'
-            }
-          >
-            <div
+          {!currentChat ? (
+            <></>
+          ) : (
+            <form
+              onSubmit={handleSubmit(onSubmit)}
               className={
-                'flex items-center justify-center md:h-[34px] md:w-[34px]'
+                'flex flex-row w-min-1/20 border-[#79747e] border-2 rounded-4xl p-2 gap-2 items-center'
               }
             >
-              <Image
-                src={'/images/icons/emoji.svg'}
-                alt={'emoji icon'}
-                height={30}
-                width={30}
-                draggable={false}
-                className={`cursor-pointer hover:md:h-[34px] hover:md:w-[34px]`}
+              <div
+                className={
+                  'flex items-center justify-center md:h-[34px] md:w-[34px]'
+                }
+              >
+                <Image
+                  src={'/images/icons/emoji.svg'}
+                  alt={'emoji icon'}
+                  height={30}
+                  width={30}
+                  draggable={false}
+                  className={`cursor-pointer hover:md:h-[34px] hover:md:w-[34px]`}
+                />
+              </div>
+              <textarea
+                {...register('content')}
+                placeholder={'Write message'}
+                className={`flex w-10/12 h-full`}
               />
-            </div>
-            <textarea
-              {...register('content')}
-              placeholder={'Write message'}
-              className={`flex w-10/12 h-full`}
-            />
-            <button
-              type={'submit'}
-              className={
-                'cursor-pointer bg-[#4f378a] text-white hover:text-black text-center rounded-[20px] px-4 py-2 hover:bg-[#d0bcff]'
-              }
-            >
-              {isSubmitting ? 'Sending...' : 'Send'}
-            </button>
-          </form>
+              <button
+                type={'submit'}
+                className={
+                  'cursor-pointer bg-[#4f378a] text-white hover:text-black text-center rounded-[20px] px-4 py-2 hover:bg-[#d0bcff]'
+                }
+              >
+                {isSubmitting ? 'Sending...' : 'Send'}
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>

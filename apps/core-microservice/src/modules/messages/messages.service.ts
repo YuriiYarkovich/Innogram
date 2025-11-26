@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { MessagesRepository } from './repositories/messages.repository';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { DataSource, QueryRunner } from 'typeorm';
@@ -11,8 +15,10 @@ import { File as MulterFile } from 'multer';
 import { EditMessageDto } from './dto/edit-message.dto';
 import { MessageReceiverRepository } from './repositories/message-receiver.repository';
 import {
+  FindingMessageData,
   MessageReceiverStatus,
   MessageToEmitToEnteredUser,
+  ReturningMessageData,
 } from '../../common/types/message.type';
 import { MessageAsset } from '../../common/entities/chat/message_asset.entity';
 import { ChatParticipant } from '../../common/entities/chat/chat-participant.entity';
@@ -123,26 +129,50 @@ export class MessagesService {
       );
   }
 
-  async getAllMessagesOfChat(
+  async getMessagesFromChat(
     profileId: string,
     chatId: string,
-  ): Promise<Message[]> {
+    lastLoadedMessageCreatedAt: string,
+  ) {
     await this.checkIfUserIsChatParticipant(profileId, chatId);
 
-    const foundMessages: Message[] =
-      await this.messagesRepository.getAllMessagesOfChat(chatId);
-
-    for (const message of foundMessages) {
-      await Promise.all(
-        message.assets.map(async (messageAsset: MessageAsset) => {
-          messageAsset.url = await this.minioService.getPublicUrl(
-            messageAsset.hashedFileName,
-          );
-        }),
+    const foundMessages: FindingMessageData[] | null =
+      await this.messagesRepository.getMessagesFromChat(
+        chatId,
+        lastLoadedMessageCreatedAt,
       );
+
+    if (!foundMessages) return null;
+
+    const returningMessagesData: ReturningMessageData[] = [];
+    for (const message of foundMessages) {
+      const messageAssets =
+        await this.messagesAssetRepository.findAssetsByMessage(message.id);
+
+      const messageAssetsUrls: string[] = [];
+      for (const messageAsset of messageAssets) {
+        const messageAssetUrl = await this.minioService.getPublicUrl(
+          messageAsset.hashedFileName,
+        );
+        if (!messageAssetUrl)
+          throw new InternalServerErrorException(
+            'Something went wrong while getting url to a message asset',
+          );
+        messageAssetsUrls.push(messageAssetUrl);
+      }
+
+      const authorAvatarUrl = await this.minioService.getPublicUrl(
+        message?.authorAvatarFilename,
+      );
+      const returningMessage: ReturningMessageData = {
+        ...message,
+        authorAvatarUrl,
+        messageAssetsUrls,
+      };
+      returningMessagesData.push(returningMessage);
     }
 
-    return foundMessages;
+    return returningMessagesData;
   }
 
   async checkIfMessageExistsAndProfileIsAuthor(
