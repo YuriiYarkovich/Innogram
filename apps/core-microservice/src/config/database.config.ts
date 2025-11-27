@@ -1,21 +1,6 @@
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
-import { User } from '../common/entities/account/user.entity';
-import { Profile } from '../common/entities/account/profile.entity';
-import { Account } from '../common/entities/account/account.entity';
-import { PostAsset } from '../common/entities/posts/post-asset.entity';
-import { ProfileFollow } from '../common/entities/account/profile-follow.entity';
-import { Post } from '../common/entities/posts/post.entity';
-import { CommentMention } from '../common/entities/comments/comment-mention.entity';
-import { Comment } from '../common/entities/comments/comment.entity';
-import { ChatParticipant } from '../common/entities/chat/chat-participant.entity';
-import { Chat } from '../common/entities/chat/chat.entity';
-import { MessageAsset } from '../common/entities/chat/message_asset.entity';
-import { Message } from '../common/entities/chat/message.entity';
-import { PostLike } from '../common/entities/posts/post-like.entity';
-import { CommentLike } from '../common/entities/comments/comment-like.entity';
-import { MessageReceiver } from '../common/entities/chat/Message-Receiver.entity';
 import path from 'node:path';
 
 @Injectable()
@@ -42,7 +27,8 @@ export class DatabaseConfig implements TypeOrmOptionsFactory {
       ],
       autoLoadEntities: true,
       synchronize: true,
-      logging: ['query', 'error', 'schema'],
+      //logging: ['query', 'error', 'schema'],
+      logging: ['error'],
     };
   }
 }

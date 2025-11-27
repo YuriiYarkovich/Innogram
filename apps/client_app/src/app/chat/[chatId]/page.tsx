@@ -11,6 +11,7 @@ import { useParams } from 'next/navigation';
 import { Chat, Message, Profile } from '@/types';
 import { fetchChatsOfProfile, findChatById } from '@/services/chat.service';
 import { fetchMessagesOfChat } from '@/services/messages.service';
+import { useSocket } from '@/hooks/useSocket';
 
 type MessageSendFormValues = {
   content: string;
@@ -53,6 +54,13 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [messagesLoading, setMessagesLoading] = useState<boolean>(false);
   const [currentChat, setCurrentChat] = useState<Chat | null>(null);
+  const [replyingMessageId, setReplyingMessageId] = useState<string | null>(
+    null,
+  );
+
+  const { send } = useSocket((data) => {
+    console.log(`Message: ${data}`);
+  });
 
   useEffect(() => {
     setChatsLoading(true);
@@ -79,13 +87,15 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
-    setMessagesLoading(true);
-    fetchMessagesOfChat(currentChat?.lastMessageCreatedAt, currentChat?.id)
-      .then((messagesData: Message[] | undefined) => {
-        if (!messagesData) return;
-        setMessages(messagesData);
-      })
-      .finally(() => setMessagesLoading(false));
+    if (currentChat) {
+      setMessagesLoading(true);
+      fetchMessagesOfChat(currentChat?.lastMessageCreatedAt, currentChat?.id)
+        .then((messagesData: Message[] | undefined) => {
+          if (!messagesData) return;
+          setMessages(messagesData);
+        })
+        .finally(() => setMessagesLoading(false));
+    }
   }, [currentChat]);
 
   const onChatTileClick = (chatId: string) => {
@@ -95,7 +105,14 @@ export default function ChatPage() {
   };
 
   const onSubmit = async (data: MessageSendFormValues) => {
-    setTimeout(() => console.log(`Message: ${data.content} sent!`), 1000);
+    send({
+      senderId: curProfile.id,
+      chatId: currentChat?.id,
+      replyToMessageId: replyingMessageId,
+      content: data.content,
+    });
+
+    data.content = '';
   };
 
   return (
@@ -129,9 +146,9 @@ export default function ChatPage() {
             )}
           </div>
         </div>
-        <div className={`flex flex-col w-5/8 h-full gap-2 overflow-y-scroll`}>
+        <div className={`flex flex-col w-5/8 h-full gap-2 overflow-y-scroll `}>
           <div
-            className={`flex flex-col-reverse w-full min-h-[800px] border-black border-1 pb-1.5`}
+            className={`flex w-full min-h-[800px] border-black border-1 pb-1.5 items-center justify-center`}
           >
             {!currentChat ? (
               <p>Pick chat</p>
@@ -140,14 +157,16 @@ export default function ChatPage() {
             ) : messages?.length === 0 ? (
               <p>There are no messages yet</p>
             ) : (
-              messages?.map((message) => (
-                <MessageTile
-                  key={message.id}
-                  authorUsername={message.authorUsername}
-                  authorAvatarUrl={message.authorAvatarUrl}
-                  content={message.content}
-                />
-              ))
+              <div className={'flex flex-col-reverse w-full h-full'}>
+                {messages?.map((message) => (
+                  <MessageTile
+                    key={message.id}
+                    authorUsername={message.authorUsername}
+                    authorAvatarUrl={message.authorAvatarUrl}
+                    content={message.content}
+                  />
+                ))}
+              </div>
             )}
           </div>
           {!currentChat ? (

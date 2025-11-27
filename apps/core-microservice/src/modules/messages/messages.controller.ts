@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Put,
+  Query,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -35,7 +36,7 @@ export class MessagesController {
   @UseGuards(AuthGuard)
   async getMessagesFromChat(
     @Param('chatId') chatId: string,
-    @Body('lastLoadedMessageCreatedAt') lastLoadedMessageCreatedAt: string,
+    @Query('lastLoadedMessageCreatedAt') lastLoadedMessageCreatedAt: string,
   ) {
     const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.messagesService.getMessagesFromChat(

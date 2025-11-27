@@ -21,7 +21,7 @@ import type {
   MessageReceiverStatus,
   MessageToDelete,
   MessageToEdit,
-  MessageToEmit,
+  ReceivingMessage,
   MessageToEmitToEnteredUser,
 } from '../../common/types/message.type';
 import { CreateMessageDto } from '../messages/dto/create-message.dto';
@@ -61,21 +61,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         socket.disconnect();
         return;
       }
-
       const user: UserInAccessToken =
         await this.authService.validateAccessToken(accessToken);
-
       const profileId: string = user.profileId;
 
       this.users.set(profileId, socket.id);
-
       this.logger.log(
         `Client connected! ProfileId(key): ${user.profileId}, socketId:${socket.id}`,
       );
 
       const messagesToEmit: MessageToEmitToEnteredUser[] =
         await this.messagesService.getAllUnreadMessagesOfProfile(profileId);
-
       if (messagesToEmit.length > 0)
         await this.emitMessagesToNewUser(messagesToEmit);
     } catch (e) {
@@ -188,18 +184,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage(`message`)
-  async handleMessage(client: Socket, data: MessageToEmit) {
+  async handleMessage(client: Socket, receivedMessage: ReceivingMessage) {
     const receiverSocketIds: string[] = [];
     const onlineReceiversIds: string[] = [];
     const notOnlineReceiversIds: string[] = [];
-
-    const senderProfileId: string = this.findSenderProfileId(client);
-
+    console.log(1);
     const receiverProfileIds: string[] = await this.getReceiverProfileIds(
-      data,
-      senderProfileId,
+      receivedMessage,
+      receivedMessage.senderId,
     );
-
+    console.log(2);
     receiverProfileIds.forEach((profileId: string) => {
       const socketId: string | undefined = this.users.get(profileId);
       if (socketId) {
@@ -209,45 +203,49 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         notOnlineReceiversIds.push(profileId);
       }
     });
-
+    console.log(3);
+    console.log(`Received message: ${JSON.stringify(receivedMessage)}`);
     const dto: CreateMessageDto = {
-      chatId: data.chatId,
-      content: data.content,
-      senderId: senderProfileId,
+      chatId: receivedMessage.chatId,
+      content: receivedMessage.content,
+      senderId: receivedMessage.senderId,
     };
 
     const receiverProfiles: MessageReceiverStatus[] = [];
-
+    console.log(4);
     for (const onlineReceiverId of onlineReceiversIds) {
       receiverProfiles.push({
         receiverId: onlineReceiverId,
         readStatus: true,
       });
     }
-
+    console.log(5);
     for (const notOnlineReceiverId of notOnlineReceiversIds) {
       receiverProfiles.push({
         receiverId: notOnlineReceiverId,
         readStatus: false,
       });
     }
-
+    console.log(6);
     const createdMessage: Message = await this.messagesService.createMessage(
       dto,
       receiverProfiles,
-      data.files,
+      receivedMessage.files,
     );
-
+    console.log(7);
     if (receiverSocketIds.length > 0) {
-      data.messageId = createdMessage.id;
-      this.emitMessage(receiverSocketIds, senderProfileId, data);
+      this.emitMessage(
+        receiverSocketIds,
+        receivedMessage.senderId,
+        receivedMessage,
+      );
     }
   }
 
   private emitMessage(
     receiverSocketIds: string[],
     senderProfileId: string,
-    messageData: MessageToEmit,
+    messageData: ReceivingMessage,
   ) {
     receiverSocketIds.forEach((receiverSocketId: string) => {
       this.server
@@ -290,7 +288,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private async getReceiverProfileIds(
-    data: MessageToEmit | MessageToEdit | MessageToDelete,
+    data: ReceivingMessage | MessageToEdit | MessageToDelete,
     senderProfileId: string,
   ): Promise<string[]> {
     const chatParticipants: ChatParticipant[] =

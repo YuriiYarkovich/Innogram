@@ -1,11 +1,11 @@
 import { File as MulterFile } from 'multer';
 
-export interface MessageToEmit {
-  messageId: string;
+export interface ReceivingMessage {
+  senderId: string;
   content: string;
   chatId: string;
-  replyMessageId: string;
-  files: MulterFile | undefined;
+  replyMessageId?: string;
+  files: MulterFile[] | undefined;
 }
 
 export interface FindingMessageData {

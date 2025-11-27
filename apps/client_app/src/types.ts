@@ -85,3 +85,17 @@ export type Message = {
   createdAt: string;
   messageAssetsUrls: string[];
 };
+
+export type SendingMessage = {
+  senderId: string;
+  chatId: string;
+  replyToMessageId?: string;
+  content: string;
+  files: File[];
+};
+
+export type WebSocketData = {
+  type: string;
+  message: string;
+  userMessage?: SendingMessage;
+};
