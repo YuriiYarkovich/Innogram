@@ -2,8 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import Line from '@/components/line';
 import { SERVER } from '@/config/apiRoutes';
 import CommentContent from '@/components/post/comment-content';
+import { PostComment } from '@/types';
 
-const PostComment = ({
+const PostCommentComponent = ({
   postComment,
   onDeleteComment,
   onResponseClick,
@@ -124,4 +125,4 @@ const PostComment = ({
   );
 };
 
-export default PostComment;
+export default PostCommentComponent;

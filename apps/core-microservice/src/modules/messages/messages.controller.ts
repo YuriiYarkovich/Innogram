@@ -46,7 +46,7 @@ export class MessagesController {
     );
   }
 
-  @ApiOperation({ summary: 'Edits messages' })
+  /*@ApiOperation({ summary: 'Edits messages' })
   @ApiResponse({ status: 200, type: Message })
   @ApiConsumes('multipart/form-data')
   @Put(`/edit/:messageId`)
@@ -56,7 +56,7 @@ export class MessagesController {
     @Param('messageId') messageId: string,
     @Body() dto: EditMessageDto,
     @UploadedFiles() files,
-  ): Promise<Message | null> {
+  ) {
     const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.messagesService.editMessage(
       messageId,
@@ -64,13 +64,13 @@ export class MessagesController {
       profileId,
       files,
     );
-  }
+  }*/
 
   @ApiOperation({ summary: 'Deletes messages' })
   @ApiResponse({ status: 200, type: Message })
   @Delete(`/delete/:messageId`)
   @UseGuards(AuthGuard)
-  async deleteMessage(@Param('messageId') messageId: string): Promise<Message> {
+  async deleteMessage(@Param('messageId') messageId: string) {
     const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.messagesService.deleteMessage(messageId, profileId);
   }

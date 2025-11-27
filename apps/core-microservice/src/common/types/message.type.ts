@@ -1,4 +1,5 @@
 import { File as MulterFile } from 'multer';
+import { MessageReadStatus } from '../enums/message.enum';
 
 export interface ReceivingMessage {
   senderId: string;
@@ -11,6 +12,7 @@ export interface ReceivingMessage {
 export interface FindingMessageData {
   id: string;
   chatId: string;
+  respondingMessageId?: string;
   authorUsername: string;
   authorAvatarFilename?: string;
   content: string;
@@ -19,17 +21,18 @@ export interface FindingMessageData {
 
 export interface ReturningMessageData {
   id: string;
+  respondingMessageId?: string;
   chatId: string;
   authorUsername: string;
   authorAvatarUrl?: string;
   content: string;
   createdAt: string;
-  messageAssetsUrls: string[];
+  messageAssetsUrls?: string[];
 }
 
-export interface MessageReceiverStatus {
-  receiverId: string;
-  readStatus: boolean;
+export interface MessageReceiver {
+  profileId: string;
+  readStatus: MessageReadStatus;
 }
 
 export interface MessageToEmitToEnteredUser {

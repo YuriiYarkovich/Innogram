@@ -14,25 +14,12 @@ export class MessageReceiverRepository {
   async createMessageReceiver(
     messageId: string,
     receiverId: string,
+    readStatus: MessageReadStatus,
     queryRunner: QueryRunner,
   ): Promise<MessageReceiver> {
     const messageReceiver: MessageReceiver = queryRunner.manager.create(
       MessageReceiver,
-      { messageId, receiverId },
-    );
-
-    await queryRunner.manager.save(messageReceiver);
-    return messageReceiver;
-  }
-
-  async createReadMessageReceiver(
-    messageId: string,
-    receiverId: string,
-    queryRunner: QueryRunner,
-  ): Promise<MessageReceiver> {
-    const messageReceiver: MessageReceiver = queryRunner.manager.create(
-      MessageReceiver,
-      { messageId, receiverId, readStatus: MessageReadStatus.READ },
+      { messageId, receiverId, readStatus },
     );
 
     await queryRunner.manager.save(messageReceiver);

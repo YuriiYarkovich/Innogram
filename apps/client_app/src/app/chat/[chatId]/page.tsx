@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { fetchProfile } from '@/services/profile.service';
 import SidePanel from '@/components/sidePanel';
 import ChatPreviewTile from '@/components/chat/chat-preview-tile';
@@ -58,9 +58,19 @@ export default function ChatPage() {
     null,
   );
 
-  const { send } = useSocket((data) => {
-    console.log(`Message: ${data}`);
-  });
+  const onMessageToChatReceived = (receivedMessage: Message) => {
+    console.log(`Received message: ${JSON.stringify(receivedMessage)}`);
+    setMessages((prev) =>
+      prev ? [...prev, receivedMessage] : [receivedMessage],
+    );
+  };
+
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const { send } = useSocket(onMessageToChatReceived);
 
   useEffect(() => {
     setChatsLoading(true);
@@ -99,20 +109,40 @@ export default function ChatPage() {
   }, [currentChat]);
 
   const onChatTileClick = (chatId: string) => {
+    if (currentChat) {
+      send({
+        event: 'exitChat',
+        data: {
+          chatId: chatId,
+        },
+      });
+      setCurrentChat(null);
+    }
+
     const chat = findChatById(chatId, chats);
     if (!chat) return;
     setCurrentChat(chat);
+
+    send({
+      event: 'enteredChat',
+      data: {
+        chatId: chatId,
+      },
+    });
   };
 
-  const onSubmit = async (data: MessageSendFormValues) => {
+  const onSubmit = async (messageData: MessageSendFormValues) => {
     send({
-      senderId: curProfile.id,
-      chatId: currentChat?.id,
-      replyToMessageId: replyingMessageId,
-      content: data.content,
+      event: 'message',
+      data: {
+        senderId: curProfile.id,
+        chatId: currentChat?.id,
+        replyToMessageId: replyingMessageId,
+        content: messageData.content,
+      },
     });
 
-    data.content = '';
+    messageData.content = '';
   };
 
   return (
@@ -175,15 +205,20 @@ export default function ChatPage() {
                 There are no messages yet
               </p>
             ) : (
-              <div className={'flex flex-col-reverse w-full min-h-[800px]'}>
+              <div
+                className={
+                  'flex flex-col justify-end w-full min-h-[800px] overflow-y-auto'
+                }
+              >
                 {messages?.map((message) => (
                   <MessageTile
                     key={message.id}
                     authorUsername={message.authorUsername}
-                    authorAvatarUrl={message.authorAvatarUrl}
+                    authorAvatarUrl={message?.authorAvatarUrl}
                     content={message.content}
                   />
                 ))}
+                <div ref={messagesEndRef} />
               </div>
             )}
           </div>

@@ -2,10 +2,11 @@
 
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
-import PostComment from '@/components/post/post-comment';
+import PostCommentComponent from '@/components/post/post-comment-component';
 import Line from '@/components/line';
 import { deletePost, likeOrUnlikePost } from '@/services/posts.service';
 import { addComment, fetchComments } from '@/services/comment.service';
+import { PostPreviewModalProps, PostComment } from '@/types';
 
 export default function PostViewModal({
   post,
@@ -174,7 +175,7 @@ export default function PostViewModal({
                   <p>Loading...</p>
                 ) : comments.length > 0 ? (
                   comments.map((comment) => (
-                    <PostComment
+                    <PostCommentComponent
                       key={comment.commentId}
                       postComment={comment}
                       onDeleteComment={() =>

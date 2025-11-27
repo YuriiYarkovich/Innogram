@@ -18,17 +18,20 @@ import { UserInAccessToken } from '../../common/types/user.type';
 import { AuthService } from '../auth/auth.service';
 import * as cookie from 'cookie';
 import type {
-  MessageReceiverStatus,
+  MessageReceiver,
   MessageToDelete,
   MessageToEdit,
-  ReceivingMessage,
   MessageToEmitToEnteredUser,
+  ReceivingMessage,
+  ReturningMessageData,
 } from '../../common/types/message.type';
-import { CreateMessageDto } from '../messages/dto/create-message.dto';
 import { Message } from '../../common/entities/chat/message.entity';
 import { ChatParticipant } from '../../common/entities/chat/chat-participant.entity';
 import { EditMessageDto } from '../messages/dto/edit-message.dto';
 import { Logger } from 'nestjs-pino';
+import { MessageReadStatus } from '../../common/enums/message.enum';
+import { CreateMessageDto } from '../messages/dto/create-message.dto';
+import { MinioService } from '../minio/minio.service';
 
 @WebSocketGateway(3004, { cors: { origin: '*', credentials: true } })
 @Injectable()
@@ -37,11 +40,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly messagesService: MessagesService,
     private readonly chatService: ChatService,
     private readonly authService: AuthService,
+    private readonly minioService: MinioService,
     private readonly logger: Logger,
   ) {}
 
   @WebSocketServer() private server: Server;
-  private users: Map<string, string> = new Map<string, string>(); // {profileId; socketId}
+  private allConnectedUsers = new Map<string, string>(); // {profileId; socketId}
+  private chatUsers = new Map<string, Set<string>>(); //{chatId; Set<profileId>}
 
   async handleConnection(socket: Socket): Promise<void> {
     try {
@@ -65,21 +70,45 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         await this.authService.validateAccessToken(accessToken);
       const profileId: string = user.profileId;
 
-      this.users.set(profileId, socket.id);
+      this.allConnectedUsers.set(profileId, socket.id);
       this.logger.log(
         `Client connected! ProfileId(key): ${user.profileId}, socketId:${socket.id}`,
       );
-
-      const messagesToEmit: MessageToEmitToEnteredUser[] =
-        await this.messagesService.getAllUnreadMessagesOfProfile(profileId);
-      if (messagesToEmit.length > 0)
-        await this.emitMessagesToNewUser(messagesToEmit);
     } catch (e) {
       socket.disconnect();
       if (e instanceof HttpException || e.message === `Access token expired!`)
         throw new UnauthorizedException(`Access token expired!`);
       throw e;
     }
+  }
+
+  @SubscribeMessage('enteredChat')
+  handleEnteringChat(socket: Socket, data: { chatId: string }) {
+    const profileId = this.getProfileIdBySocketId(socket.id);
+
+    if (!profileId)
+      throw new InternalServerErrorException(
+        'Something went wrong while handling entering to chat',
+      );
+
+    if (!this.chatUsers.has(data.chatId)) {
+      this.chatUsers.set(data.chatId, new Set());
+    }
+
+    this.chatUsers.get(data.chatId)?.add(profileId);
+  }
+
+  @SubscribeMessage('exitChat')
+  handleExitChat(socket: Socket, data: { chatId: string }) {
+    const profileId = this.getProfileIdBySocketId(socket.id);
+
+    if (!profileId)
+      throw new InternalServerErrorException(
+        'Something went wrong while handling exiting to chat',
+      );
+
+    this.chatUsers.get(data.chatId)?.delete(profileId);
+    //TODO add deleting of the chats from map if there are no connected allConnectedUsers
   }
 
   @SubscribeMessage(`deleteMessage`)
@@ -126,7 +155,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
 
     receiverProfileIds.forEach((profileId: string) => {
-      const socketId: string | undefined = this.users.get(profileId);
+      const socketId: string | undefined =
+        this.allConnectedUsers.get(profileId);
       if (socketId) {
         receiverSocketIds.push(socketId);
       }
@@ -135,7 +165,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return receiverSocketIds;
   }
 
-  @SubscribeMessage(`editMessage`)
+  /* @SubscribeMessage(`editMessage`)
   async handleEditMessage(client: Socket, data: MessageToEdit) {
     const senderProfileId: string = this.findSenderProfileId(client);
 
@@ -162,7 +192,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
 
     this.emitEditMessageEvent(receiverSocketIds, senderProfileId, data);
-  }
+  }*/
 
   private emitEditMessageEvent(
     receiverSocketIds: string[],
@@ -185,92 +215,77 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage(`message`)
   async handleMessage(client: Socket, receivedMessage: ReceivingMessage) {
-    const receiverSocketIds: string[] = [];
-    const onlineReceiversIds: string[] = [];
-    const notOnlineReceiversIds: string[] = [];
-    console.log(1);
-    const receiverProfileIds: string[] = await this.getReceiverProfileIds(
-      receivedMessage,
-      receivedMessage.senderId,
+    const connectedToChatSockets: string[] = [];
+    const notConnectedToChatSockets: string[] = [];
+    const messageReceivers: MessageReceiver[] = [];
+
+    const allReceivers = await this.chatService.getAllChatParticipants(
+      receivedMessage.chatId,
     );
-    console.log(2);
-    receiverProfileIds.forEach((profileId: string) => {
-      const socketId: string | undefined = this.users.get(profileId);
-      if (socketId) {
-        receiverSocketIds.push(socketId);
-        onlineReceiversIds.push(profileId);
-      } else {
-        notOnlineReceiversIds.push(profileId);
-      }
+    const allReceiversProfileIds: string[] = [];
+    allReceivers.forEach((receiver) => {
+      allReceiversProfileIds.push(receiver.profileId);
     });
-    console.log(3);
-    console.log(`Received message: ${JSON.stringify(receivedMessage)}`);
+
+    for (const receiverProfileId of allReceiversProfileIds) {
+      const socketId = this.getSocketIdByProfileId(receiverProfileId);
+      if (socketId) {
+        if (
+          this.chatUsers.get(receivedMessage.chatId)?.has(receiverProfileId) //connected to chat users
+        ) {
+          connectedToChatSockets.push(socketId);
+          messageReceivers.push({
+            profileId: receiverProfileId,
+            readStatus: MessageReadStatus.READ,
+          });
+        } else {
+          //connected to server but not to chat
+          notConnectedToChatSockets.push(socketId);
+          messageReceivers.push({
+            profileId: receiverProfileId,
+            readStatus: MessageReadStatus.UNREAD,
+          });
+        }
+      } //if user is not connected to server at all
+      else
+        messageReceivers.push({
+          profileId: receiverProfileId,
+          readStatus: MessageReadStatus.UNREAD,
+        });
+    }
+
     const dto: CreateMessageDto = {
+      senderId: receivedMessage.senderId,
       chatId: receivedMessage.chatId,
       content: receivedMessage.content,
-      senderId: receivedMessage.senderId,
     };
-
-    const receiverProfiles: MessageReceiverStatus[] = [];
-    console.log(4);
-    for (const onlineReceiverId of onlineReceiversIds) {
-      receiverProfiles.push({
-        receiverId: onlineReceiverId,
-        readStatus: true,
-      });
-    }
-    console.log(5);
-    for (const notOnlineReceiverId of notOnlineReceiversIds) {
-      receiverProfiles.push({
-        receiverId: notOnlineReceiverId,
-        readStatus: false,
-      });
-    }
-    console.log(6);
-    const createdMessage: Message = await this.messagesService.createMessage(
+    const createdMessage = await this.messagesService.createMessage(
       dto,
-      receiverProfiles,
+      messageReceivers,
       receivedMessage.files,
     );
-    console.log(7);
-    if (receiverSocketIds.length > 0) {
-      this.emitMessage(
-        receiverSocketIds,
-        receivedMessage.senderId,
-        receivedMessage,
-      );
-    }
-  }
 
-  private emitMessage(
-    receiverSocketIds: string[],
-    senderProfileId: string,
-    messageData: ReceivingMessage,
-  ) {
-    receiverSocketIds.forEach((receiverSocketId: string) => {
-      this.server
-        .to(receiverSocketId)
-        .emit(
-          'reply',
-          JSON.stringify({ senderProfileId, message: messageData.content }),
-        );
-      this.logger.log(
-        `Message sent to user with socket id: ${receiverSocketId}: ${messageData.content}; to chat: ${messageData.chatId}`, //TODO delete this log after everything will work fine
-      );
+    const authorAvatarUrl = await this.minioService.getPublicUrl(
+      createdMessage.authorAvatarFilename,
+    );
+    const returningMessage: ReturningMessageData = {
+      ...createdMessage,
+      authorAvatarUrl,
+    };
+
+    connectedToChatSockets.forEach((socketId) => {
+      this.server.to(socketId).emit('messageToUserInChat', returningMessage);
     });
-  }
 
-  private async emitMessagesToNewUser(messages: MessageToEmitToEnteredUser[]) {
-    for (const message of messages) {
-      this.server.emit('reply', JSON.stringify(message));
-    }
-    await this.messagesService.updateReadStatusOfMessages(messages);
+    notConnectedToChatSockets.forEach((socketId) => {
+      this.server.to(socketId).emit('messageToUserInServer', returningMessage);
+    });
   }
 
   handleDisconnect(socket: Socket) {
-    this.users.forEach((value: string, key: string): void => {
+    this.allConnectedUsers.forEach((value: string, key: string): void => {
       if (socket.id === value) {
-        this.users.delete(key);
+        this.allConnectedUsers.delete(key);
         this.logger.log(
           `User with socketId: ${value} and profileId: ${key} has disconnected!`,
         );
@@ -279,7 +294,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private getProfileIdBySocketId(socketId: string): string | undefined {
-    for (const [key, value] of this.users) {
+    for (const [key, value] of this.allConnectedUsers) {
       if (socketId === value) {
         return key;
       }
@@ -315,5 +330,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
 
     return senderProfileId;
+  }
+
+  private getSocketIdByProfileId(profileId: string) {
+    for (const [value, key] of this.allConnectedUsers) {
+      if (value === profileId) return key;
+    }
   }
 }

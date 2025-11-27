@@ -80,12 +80,13 @@ export enum ChatTypes {
 
 export type Message = {
   id: string;
+  respondingMessageId?: string;
   chatId: string;
   authorUsername: string;
-  authorAvatarUrl: string;
+  authorAvatarUrl?: string;
   content: string;
   createdAt: string;
-  messageAssetsUrls: string[];
+  messageAssetsUrls?: string[];
 };
 
 export type SendingMessage = {
@@ -94,10 +95,4 @@ export type SendingMessage = {
   replyToMessageId?: string;
   content: string;
   files: File[];
-};
-
-export type WebSocketData = {
-  type: string;
-  message: string;
-  userMessage?: SendingMessage;
 };

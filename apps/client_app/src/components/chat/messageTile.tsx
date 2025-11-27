@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 type MessageTileProps = {
   authorUsername: string;
-  authorAvatarUrl: string;
+  authorAvatarUrl?: string;
   content: string;
   fileUrl?: string;
 };
@@ -24,7 +24,7 @@ const MessageTile = ({
           }
         >
           <Image
-            src={authorAvatarUrl}
+            src={authorAvatarUrl || '/images/avaTest.png'}
             alt={'Author avatar'}
             height={40}
             width={40}

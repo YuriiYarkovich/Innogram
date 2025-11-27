@@ -1,8 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { env } from '@/env';
 import { io, Socket } from 'socket.io-client';
+import { Message } from '@/types';
 
-export const useSocket = (onMessage: (data: unknown) => void) => {
+export const useSocket = (
+  onMessageToUserInChat: (message: Message) => void,
+) => {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -20,8 +23,8 @@ export const useSocket = (onMessage: (data: unknown) => void) => {
       console.log('Disconnected from io server');
     });
 
-    socket.on('message', (data: unknown) => {
-      onMessage(data);
+    socket.on('messageToUserInChat', (message: Message) => {
+      onMessageToUserInChat(message);
     });
 
     return () => {
@@ -29,9 +32,13 @@ export const useSocket = (onMessage: (data: unknown) => void) => {
     };
   }, []);
 
-  const send = (data: unknown) => {
-    console.log(`Sending message: ${JSON.stringify(data)}`);
-    socketRef.current?.emit('message', data);
+  const send = (props: { event: string; data: unknown }) => {
+    console.log(`Sending data: ${JSON.stringify(props.data)}`);
+    socketRef.current?.emit(props.event, props.data);
+  };
+
+  const enterChat = (data: { chatId: string; profileId: string }) => {
+    socketRef.current?.emit('addToChat', data);
   };
 
   return { send };
