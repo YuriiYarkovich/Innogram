@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { ChatRepository } from './repositories/chat.repository';
 import { CreateChatDto } from './dto/create-chat.dto';
@@ -109,14 +110,23 @@ export class ChatService {
         chat.id,
         profileId,
       );
+      console.log(
+        `Last message of chat ${chat.id}: ${JSON.stringify(lastMessage)}`,
+      );
+      const avatarUrl = await this.minioService.getPublicUrl(
+        chat.avatarFilename,
+      );
       const returningChatData: ReturningChatData = {
-        ...chat,
-        lastMessageContent: lastMessage.content,
-        lastMessageCreatedAt: lastMessage.createdAt,
-        lastMessageRead: lastMessage.read,
+        id: chat.id,
+        avatarUrl,
+        title: chat.title,
+        lastMessageContent: lastMessage?.content,
+        lastMessageCreatedAt: lastMessage?.createdAt,
+        lastMessageRead: lastMessage?.read,
       };
       returningChatsData.push(returningChatData);
     }
+    console.log(`Returning chats info: ${JSON.stringify(returningChatsData)}`);
     return returningChatsData;
   }
 
@@ -142,9 +152,9 @@ export class ChatService {
 
     return {
       ...chat,
-      lastMessageContent: lastMessage.content,
-      lastMessageCreatedAt: lastMessage.createdAt,
-      lastMessageRead: lastMessage.read,
+      lastMessageContent: lastMessage?.content,
+      lastMessageCreatedAt: lastMessage?.createdAt,
+      lastMessageRead: lastMessage?.read,
     };
   }
 

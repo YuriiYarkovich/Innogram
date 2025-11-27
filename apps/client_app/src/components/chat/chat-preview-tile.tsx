@@ -1,12 +1,14 @@
 import React from 'react';
 import Image from 'next/image';
+import { MessageReadStatus } from '@innogram/core-microservice/dist/common/enums/message.enum';
+import { formatTime } from '@/utils/time';
 
 type ChatPreviewProps = {
   chatAvatarUrl?: string;
   chatTitle: string;
   lastMessageContent?: string;
   lastMessageCreatedAt?: string;
-  lastMessageRead?: boolean;
+  lastMessageRead?: MessageReadStatus;
   onClick: () => void;
 };
 
@@ -45,11 +47,11 @@ const ChatPreviewTile = ({
         <div className={'flex flex-row gap-2'}>
           <span className={'text-[15px]'}>{lastMessageContent}</span>
           <span className={'text-[15px] text-[#79747e]'}>
-            {lastMessageCreatedAt ? lastMessageCreatedAt : ''}
+            {lastMessageCreatedAt ? formatTime(lastMessageCreatedAt) : ''}
           </span>
         </div>
       </div>
-      {!lastMessageRead ? (
+      {lastMessageRead === MessageReadStatus.UNREAD ? (
         <div className={'md:w-[10px] md:h-[10px] rounded-full ml-18'} />
       ) : (
         <></>

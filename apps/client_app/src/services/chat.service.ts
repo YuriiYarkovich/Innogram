@@ -17,7 +17,9 @@ export const fetchChatsOfProfile = async (): Promise<Chat[] | undefined> => {
     return;
   }
 
-  return await response.json();
+  const receivedChats: Chat[] = await response.json();
+  console.log(`Received chats: ${JSON.stringify(receivedChats)}`);
+  return receivedChats;
 };
 
 export const enterOrCreateChat = async (
