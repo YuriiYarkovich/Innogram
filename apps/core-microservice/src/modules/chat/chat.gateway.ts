@@ -43,6 +43,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() private server: Server;
   private allConnectedUsers = new Map<string, string>(); // {profileId; socketId}
   private chatUsers = new Map<string, Set<string>>(); //{chatId; Set<profileId>}
+  private userChats = new Map<string, Set<string>>();
 
   async handleConnection(socket: Socket): Promise<void> {
     try {
@@ -90,8 +91,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!this.chatUsers.has(data.chatId)) {
       this.chatUsers.set(data.chatId, new Set());
     }
-
+    //add to chatUsers
     this.chatUsers.get(data.chatId)?.add(profileId);
+
+    if (!this.userChats.has(profileId))
+      this.userChats.set(profileId, new Set());
+    this.userChats.get(profileId)?.add(data.chatId);
   }
 
   @SubscribeMessage('exitChat')
@@ -104,7 +109,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       );
 
     this.chatUsers.get(data.chatId)?.delete(profileId);
-    //TODO add deleting of the chats from map if there are no connected allConnectedUsers
+    this.userChats.get(profileId)?.delete(data.chatId);
   }
 
   @SubscribeMessage(`message`)
@@ -206,14 +211,27 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(socket: Socket) {
-    this.allConnectedUsers.forEach((value: string, key: string): void => {
-      if (socket.id === value) {
-        this.allConnectedUsers.delete(key);
-        console.log(
-          `User with socketId: ${value} and profileId: ${key} has disconnected!`,
-        );
+    const profileId = this.getProfileIdBySocketId(socket.id);
+    if (!profileId) return;
+
+    const chats = this.userChats.get(profileId);
+    if (chats) {
+      for (const chatId of chats) {
+        this.chatUsers.get(chatId)?.delete(profileId);
+
+        //cleaning empty chats
+        if (this.chatUsers.get(chatId)?.size === 0) {
+          this.chatUsers.delete(chatId);
+        }
       }
-    });
+      this.userChats.delete(profileId);
+    }
+
+    this.allConnectedUsers.delete(profileId);
+
+    console.log(
+      `User ${profileId} has been disconnected and removed from all chats`,
+    );
   }
 
   private getProfileIdBySocketId(socketId: string): string | undefined {
