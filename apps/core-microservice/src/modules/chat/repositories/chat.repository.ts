@@ -24,15 +24,15 @@ export class ChatRepository {
     return chat;
   }
 
-  async getPrivateChatByIds(
-    firstParticipantId: string,
+  async getPrivateChatByTwoProfiles(
+    currentUserId: string,
     secondParticipantId: string,
   ) {
     const rows:
-      | { id: string; title: string; chatAvatarFilename: string }[]
+      | { id: string; chatAvatarFilename: string; title: string }[]
       | undefined = await this.chatRepository.query(
       `
-      SELECT id, title, chat_avatar_filename AS "chatAvatarFilename"
+      SELECT id, chat_avatar_filename AS "chatAvatarFilename"
       FROM main.chats AS chat
       WHERE chat_status = $1
         AND (SELECT COUNT(*) FROM main.chat_participants WHERE profile_id IN ($3, $4)) = 2
@@ -41,29 +41,12 @@ export class ChatRepository {
       [
         ChatStatus.ACTIVE,
         ChatTypes.PRIVATE,
-        firstParticipantId,
+        currentUserId,
         secondParticipantId,
       ],
     );
 
     if (rows) return rows[0];
-  }
-
-  async findPrivateChat(
-    currentProfileId: string,
-    receiverId: string,
-  ): Promise<{ chatId: string | null }> {
-    return await this.chatRepository.query(
-      `
-      SELECT cp.chat_id
-      FROM main.chat_participants cp
-      WHERE cp.profile_id IN ($1, $2)
-      GROUP BY cp.chat_id
-      HAVING COUNT(*) = 2
-         AND COUNT(DISTINCT cp.profile_id) = 2;
-    `,
-      [currentProfileId, receiverId],
-    );
   }
 
   async getAllChatsOfProfile(profileId: string): Promise<FindingChatData[]> {

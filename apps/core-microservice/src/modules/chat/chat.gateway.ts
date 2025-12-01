@@ -129,8 +129,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       });
     } else if (!receivedMessage.chatId && receivedMessage.receiverId) {
       const chat = await this.chatService.getPrivateChatByIds(
-        receivedMessage.receiverId,
         receivedMessage.senderId,
+        receivedMessage.receiverId,
       );
       if (chat) {
         receivedMessage.chatId = chat.id;

@@ -94,7 +94,35 @@ export class ChatParticipantRepository {
     });
   }
 
-  async findAllParticipantsOfChat(chatId: string): Promise<ChatParticipant[]> {
-    return await this.chatParticipantRepository.find({ where: { chatId } });
+  async findAllParticipantsOfChat(
+    chatId: string,
+  ): Promise<{ id: string; username: string; profileId: string }[]> {
+    return await this.chatParticipantRepository.query(
+      `
+      SELECT cp.id, p.username, p.id AS "profileId"
+      FROM main.chat_participants AS cp
+      LEFT JOIN main.profiles AS p ON cp.profile_id=p.id
+      WHERE chat_id=$1
+    `,
+      [chatId],
+    );
+  }
+
+  async getSecondParticipantOfPrivateChat(
+    chatId: string,
+    currentProfileId: string,
+  ): Promise<{ id: string; username: string; avatarFilename: string }> {
+    const rows: { id: string; username: string; avatarFilename: string }[] =
+      await this.chatParticipantRepository.query(
+        `
+      SELECT cp.id, p.username, p.avatar_filename AS "avatarFilename"
+      FROM main.chat_participants AS cp
+             LEFT JOIN main.profiles p on cp.profile_id = p.id
+      WHERE cp.profile_id!=$1 AND cp.chat_id=$2
+    `,
+        [currentProfileId, chatId],
+      );
+
+    return rows[0];
   }
 }

@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { ChatRepository } from './repositories/chat.repository';
 import { CreateChatDto } from './dto/create-chat.dto';
@@ -45,15 +44,6 @@ export class ChatService {
     currentProfileId: string,
   ): Promise<ReturningChatData> {
     const queryRunner: QueryRunner = await this.createTransaction();
-
-    if (!dto.title && dto.otherParticipantsIds.length === 1) {
-      const firstProfile =
-        await this.profilesService.getProfileInfo(currentProfileId);
-      const secondProfile = await this.profilesService.getProfileInfo(
-        dto.otherParticipantsIds[0],
-      );
-      dto.title = `${firstProfile?.username}/${secondProfile?.username}`;
-    }
 
     try {
       const createdChat: Chat = await this.chatRepository.createChat(
@@ -111,13 +101,27 @@ export class ChatService {
   }
 
   async getPrivateChatByIds(
-    firstParticipantId: string,
+    currentUserId: string,
     secondParticipantId: string,
   ) {
-    return await this.chatRepository.getPrivateChatByIds(
-      firstParticipantId,
+    const chat = await this.chatRepository.getPrivateChatByTwoProfiles(
+      currentUserId,
       secondParticipantId,
     );
+
+    if (!chat)
+      throw new BadRequestException('These users dont have private chat');
+
+    const chatParticipants =
+      await this.chatParticipantRepository.findAllParticipantsOfChat(chat.id);
+
+    for (const cp of chatParticipants) {
+      if (cp.profileId === secondParticipantId) {
+        chat.title = cp.username;
+      }
+    }
+
+    return chat;
   }
 
   async getAllChatsOfProfile(profileId: string) {
@@ -132,13 +136,29 @@ export class ChatService {
       console.log(
         `Last message of chat ${chat.id}: ${JSON.stringify(lastMessage)}`,
       );
-      const avatarUrl = await this.minioService.getPublicUrl(
-        chat.avatarFilename,
-      );
+
+      let avatarUrl = await this.minioService.getPublicUrl(chat.avatarFilename);
+      console.log(`1. Avatar url: ${avatarUrl}, chatTitle: ${chat.title}`);
+      let chatTitle: string = '';
+      if (!chat.title && !avatarUrl) {
+        const receiver =
+          await this.chatParticipantRepository.getSecondParticipantOfPrivateChat(
+            chat.id,
+            profileId,
+          );
+        console.log(`1.5 Receiver: ${JSON.stringify(receiver)}`);
+        avatarUrl = await this.minioService.getPublicUrl(
+          receiver.avatarFilename,
+        );
+        chatTitle = receiver.username;
+        console.log(`1.7 Avatar url: ${avatarUrl}, chatTitle: ${chatTitle}`);
+      }
+
+      console.log(`2. Avatar url: ${avatarUrl}, chatTitle: ${chatTitle}`);
       const returningChatData: ReturningChatData = {
         id: chat.id,
         avatarUrl,
-        title: chat.title,
+        title: chat.title || chatTitle,
         lastMessageContent: lastMessage?.content,
         lastMessageCreatedAt: lastMessage?.createdAt,
         lastMessageRead: lastMessage?.read,
@@ -150,7 +170,7 @@ export class ChatService {
   }
 
   async getPrivateChatInfo(currentProfileId: string, receiverId: string) {
-    return await this.chatRepository.findPrivateChat(
+    return await this.chatRepository.getPrivateChatByTwoProfiles(
       currentProfileId,
       receiverId,
     );
@@ -247,7 +267,7 @@ export class ChatService {
     return await this.chatRepository.archiveChat(chatId);
   }
 
-  async getAllChatParticipants(chatId: string): Promise<ChatParticipant[]> {
+  async getAllChatParticipants(chatId: string) {
     return await this.chatParticipantRepository.findAllParticipantsOfChat(
       chatId,
     );
