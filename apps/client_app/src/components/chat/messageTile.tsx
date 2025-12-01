@@ -12,14 +12,18 @@ const MessageTile = ({
 }) => {
   return (
     <div className={'flex flex-col w-full h-[80px] pl-3 pt-1.5 gap-1'}>
-      <span className={'text-[15px] text-[#79747e]'}>
+      <a
+        className={'text-[15px] text-[#79747e] cursor-pointer'}
+        href={`/profile/${message.authorUsername}`}
+      >
         {message.authorUsername}
-      </span>
+      </a>
       <div className={'flex flex-row gap-3'}>
-        <div
+        <a
           className={
-            'flex rounded-full outline-[#79747e] outline-1 md:w-[40px] md:h-[40px]'
+            'flex rounded-full outline-[#79747e] outline-1 md:w-[40px] md:h-[40px] cursor-pointer'
           }
+          href={`/profile/${message.authorUsername}`}
         >
           <Image
             src={message.authorAvatarUrl || '/images/avaTest.png'}
@@ -30,7 +34,7 @@ const MessageTile = ({
             draggable={false}
             className={'rounded-[inherit]'}
           />
-        </div>
+        </a>
         <div
           className={
             'flex min-w-[150px] bg-[#efefef] rounded-[20px] pl-3 items-center pr-2.5 gap-6'
