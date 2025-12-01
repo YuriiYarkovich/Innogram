@@ -13,7 +13,7 @@ import { fetchChatsOfProfile, findChatById } from '@/services/chat.service';
 import { fetchMessagesOfChat } from '@/services/messages.service';
 import { useSocket } from '@/hooks/useSocket';
 
-type MessageSendFormValues = {
+export type MessageSendFormValues = {
   content: string;
   file: File | null;
 };
@@ -24,6 +24,7 @@ export default function ChatPage() {
     handleSubmit,
     control,
     watch,
+    reset,
     formState: { isSubmitting },
   } = useForm<MessageSendFormValues>({
     defaultValues: {
@@ -142,7 +143,7 @@ export default function ChatPage() {
       },
     });
 
-    messageData.content = '';
+    reset({ content: '' });
   };
 
   return (

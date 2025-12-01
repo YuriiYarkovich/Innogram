@@ -4,9 +4,9 @@ import { ChatTypes } from '../../../common/enums/chat.enum';
 
 export class CreateChatDto {
   constructor(
-    title: string,
     otherParticipantsIds: string[],
-    chatType: ChatTypes,
+    title?: string,
+    chatType?: ChatTypes,
   ) {
     this.chatType = chatType;
     this.title = title;
@@ -19,14 +19,14 @@ export class CreateChatDto {
   })
   @IsString()
   @IsIn(['private', 'group'])
-  readonly chatType: ChatTypes;
+  readonly chatType?: ChatTypes;
 
   @ApiProperty({
     example: 'Great chat',
     description: 'Chat title',
   })
   @IsString()
-  readonly title: string;
+  title?: string;
 
   @ApiProperty({
     example: [

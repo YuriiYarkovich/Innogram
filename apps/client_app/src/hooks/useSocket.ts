@@ -4,7 +4,7 @@ import { io, Socket } from 'socket.io-client';
 import { Message } from '@/types';
 
 export const useSocket = (
-  onMessageToUserInChat: (message: Message) => void,
+  onMessageToUserInChat?: (message: Message) => void,
 ) => {
   const socketRef = useRef<Socket | null>(null);
 
@@ -24,7 +24,7 @@ export const useSocket = (
     });
 
     socket.on('messageToUserInChat', (message: Message) => {
-      onMessageToUserInChat(message);
+      if (onMessageToUserInChat) onMessageToUserInChat(message);
     });
 
     return () => {

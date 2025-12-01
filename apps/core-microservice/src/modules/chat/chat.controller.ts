@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -73,6 +74,7 @@ export class ChatController {
   @UseGuards(AuthGuard)
   async editChat(@Param('chatId') chatId: string, @Body() dto: CreateChatDto) {
     const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    if (!dto.title) throw new BadRequestException('Title is not provided!');
     return this.chatService.updateChatTitle(chatId, dto.title, profileId);
   }
 

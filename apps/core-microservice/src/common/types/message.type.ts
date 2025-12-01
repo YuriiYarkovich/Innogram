@@ -3,9 +3,10 @@ import { MessageReadStatus } from '../enums/message.enum';
 
 export interface ReceivingMessage {
   senderId: string;
+  chatId?: string;
+  receiverId?: string;
+  replyToMessageId?: string;
   content: string;
-  chatId: string;
-  replyMessageId?: string;
   files: MulterFile[] | undefined;
 }
 

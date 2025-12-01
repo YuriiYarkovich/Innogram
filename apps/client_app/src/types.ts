@@ -91,7 +91,8 @@ export type Message = {
 
 export type SendingMessage = {
   senderId: string;
-  chatId: string;
+  chatId?: string;
+  receiverId?: string;
   replyToMessageId?: string;
   content: string;
   files: File[];

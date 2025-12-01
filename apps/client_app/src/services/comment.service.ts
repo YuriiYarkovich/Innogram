@@ -1,5 +1,6 @@
 import { SERVER } from '@/config/apiRoutes';
 import returnErrorMessage from '@/utils/showAuthError';
+import { Post, PostComment } from '@/types';
 
 export const addComment = async (
   commentContent: string,

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { QueryRunner, Repository } from 'typeorm';
 import { Chat } from '../../../common/entities/chat/chat.entity';
 import { CreateChatDto } from '../dto/create-chat.dto';
-import { ChatStatus } from '../../../common/enums/chat.enum';
+import { ChatStatus, ChatTypes } from '../../../common/enums/chat.enum';
 import { FindingChatData } from '../../../common/types/chat.types';
 
 @Injectable()
@@ -22,6 +22,31 @@ export class ChatRepository {
     });
     await queryRunner.manager.save(chat);
     return chat;
+  }
+
+  async getPrivateChatByIds(
+    firstParticipantId: string,
+    secondParticipantId: string,
+  ) {
+    const rows:
+      | { id: string; title: string; chatAvatarFilename: string }[]
+      | undefined = await this.chatRepository.query(
+      `
+      SELECT id, title, chat_avatar_filename AS "chatAvatarFilename"
+      FROM main.chats AS chat
+      WHERE chat_status = $1
+        AND (SELECT COUNT(*) FROM main.chat_participants WHERE profile_id IN ($3, $4)) = 2
+        AND chat_type = $2
+    `,
+      [
+        ChatStatus.ACTIVE,
+        ChatTypes.PRIVATE,
+        firstParticipantId,
+        secondParticipantId,
+      ],
+    );
+
+    if (rows) return rows[0];
   }
 
   async findPrivateChat(

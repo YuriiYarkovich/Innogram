@@ -7,6 +7,8 @@ import Line from '@/components/line';
 import { deletePost, likeOrUnlikePost } from '@/services/posts.service';
 import { addComment, fetchComments } from '@/services/comment.service';
 import { PostPreviewModalProps, PostComment } from '@/types';
+import { Cross } from 'next/dist/next-devtools/dev-overlay/icons/cross';
+import CrossAngleButton from '@/components/crossAngle.button';
 
 export default function PostViewModal({
   post,
@@ -35,8 +37,10 @@ export default function PostViewModal({
     const response: Response = await likeOrUnlikePost(liked, post);
 
     if (response.ok) {
+      if (liked) setLikesCount((prev) => prev - 1);
+      else setLikesCount((prev) => prev + 1);
+
       setLiked((prev) => !prev);
-      setLikesCount((prev) => prev - 1);
     }
   };
   useEffect(() => {
@@ -55,16 +59,7 @@ export default function PostViewModal({
     <div
       className={`fixed inset-0 z-50 flex justify-center items-center backdrop-blur-xs bg-black/50 min-h-screen`}
     >
-      <button className={`fixed top-0 right-0`} onClick={onClose}>
-        <Image
-          src={`/images/icons/cross.svg`}
-          alt={'Cross'}
-          width={50}
-          height={50}
-          className={`hover:md:w-[57px] hover:md:h-[57px] cursor-pointer`}
-          draggable={false}
-        />
-      </button>
+      <CrossAngleButton onClose={onClose} />
       <div className={`flex w-full h-3/4 justify-center`}>
         <div
           className={`flex flex-row items-center md:w-[1054px] max-h-full bg-[#eaddff] rounded-4xl`}
@@ -246,7 +241,7 @@ export default function PostViewModal({
                   <div className={`flex w-1/4 items-center`}>
                     <button
                       className={`rounded-3xl bg-[#4f378a] w-full h-1/3 text-white hover:bg-[#d0bcff] hover:text-black cursor-pointer`}
-                      onClick={() =>
+                      onClick={() => {
                         addComment(
                           commentContent,
                           post,
@@ -255,8 +250,8 @@ export default function PostViewModal({
                           setIsRespondingOnComment,
                           setCommentsLoading,
                           setComments,
-                        )
-                      }
+                        ).then(() => setCommentContent(''));
+                      }}
                     >
                       Submit
                     </button>

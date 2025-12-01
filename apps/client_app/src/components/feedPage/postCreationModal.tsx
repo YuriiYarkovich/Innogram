@@ -5,6 +5,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import AddFilePlaceholder from '@/components/add-file-placeholder';
 import { createPost } from '@/services/posts.service';
+import { CreatePostModalProps } from '@/types';
 
 type PostCreationFormValues = {
   content: string;

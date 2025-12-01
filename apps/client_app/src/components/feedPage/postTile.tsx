@@ -4,6 +4,7 @@ import Image from 'next/image';
 import React, { useState } from 'react';
 import PostViewModal from '@/components/post/post-view.modal';
 import { likeOrUnlikePost } from '@/services/posts.service';
+import { Post } from '@/types';
 
 export default function PostTile({ post }: { post: Post }) {
   const [liked, setLiked] = useState(post.liked);
@@ -17,8 +18,10 @@ export default function PostTile({ post }: { post: Post }) {
     const response: Response = await likeOrUnlikePost(liked, post);
 
     if (response.ok) {
+      if (liked) setLikesCount((prev) => prev - 1);
+      else setLikesCount((prev) => prev + 1);
+
       setLiked((prev) => !prev);
-      setLikesCount((prev) => prev - 1);
     }
   };
 

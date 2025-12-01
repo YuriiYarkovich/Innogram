@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import AddFilePlaceholder from '@/components/add-file-placeholder';
 import { editProfile } from '@/services/profile.service';
+import { EditProfileModalProps } from '@/types';
 
 type ProfileEditFormValues = {
   username: string;

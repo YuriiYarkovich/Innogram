@@ -46,6 +46,15 @@ export class ChatService {
   ): Promise<ReturningChatData> {
     const queryRunner: QueryRunner = await this.createTransaction();
 
+    if (!dto.title && dto.otherParticipantsIds.length === 1) {
+      const firstProfile =
+        await this.profilesService.getProfileInfo(currentProfileId);
+      const secondProfile = await this.profilesService.getProfileInfo(
+        dto.otherParticipantsIds[0],
+      );
+      dto.title = `${firstProfile?.username}/${secondProfile?.username}`;
+    }
+
     try {
       const createdChat: Chat = await this.chatRepository.createChat(
         dto,
@@ -99,6 +108,16 @@ export class ChatService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async getPrivateChatByIds(
+    firstParticipantId: string,
+    secondParticipantId: string,
+  ) {
+    return await this.chatRepository.getPrivateChatByIds(
+      firstParticipantId,
+      secondParticipantId,
+    );
   }
 
   async getAllChatsOfProfile(profileId: string) {

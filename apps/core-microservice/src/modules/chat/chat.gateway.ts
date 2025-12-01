@@ -6,6 +6,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import {
+  BadRequestException,
   HttpException,
   Injectable,
   InternalServerErrorException,
@@ -19,19 +20,14 @@ import { AuthService } from '../auth/auth.service';
 import * as cookie from 'cookie';
 import type {
   MessageReceiver,
-  MessageToDelete,
-  MessageToEdit,
-  MessageToEmitToEnteredUser,
   ReceivingMessage,
   ReturningMessageData,
 } from '../../common/types/message.type';
-import { Message } from '../../common/entities/chat/message.entity';
-import { ChatParticipant } from '../../common/entities/chat/chat-participant.entity';
-import { EditMessageDto } from '../messages/dto/edit-message.dto';
 import { Logger } from 'nestjs-pino';
 import { MessageReadStatus } from '../../common/enums/message.enum';
 import { CreateMessageDto } from '../messages/dto/create-message.dto';
 import { MinioService } from '../minio/minio.service';
+import { CreateChatDto } from './dto/create-chat.dto';
 
 @WebSocketGateway(3004, { cors: { origin: '*', credentials: true } })
 @Injectable()
@@ -52,7 +48,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const cookiesHeader: string | undefined = socket.handshake.headers.cookie;
       if (!cookiesHeader) {
-        this.logger.log(`No cookies found in handshake! Disconnect`);
+        console.log(`No cookies found in handshake! Disconnect`);
         socket.disconnect();
         return;
       }
@@ -62,7 +58,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const accessToken: string | undefined = cookies['accessToken'];
 
       if (!accessToken) {
-        this.logger.log(`No access token provided! Disconnect`);
+        console.log(`No access token provided! Disconnect`);
         socket.disconnect();
         return;
       }
@@ -71,7 +67,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const profileId: string = user.profileId;
 
       this.allConnectedUsers.set(profileId, socket.id);
-      this.logger.log(
+      console.log(
         `Client connected! ProfileId(key): ${user.profileId}, socketId:${socket.id}`,
       );
     } catch (e) {
@@ -111,121 +107,48 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     //TODO add deleting of the chats from map if there are no connected allConnectedUsers
   }
 
-  @SubscribeMessage(`deleteMessage`)
-  async handleDeletingMessage(client: Socket, data: MessageToDelete) {
-    const senderProfileId: string = this.findSenderProfileId(client);
-
-    const receiverSocketIds: string[] = await this.getReceiverSocketIds(
-      data,
-      senderProfileId,
-    );
-
-    await this.messagesService.deleteMessage(data.messageId, senderProfileId);
-    this.emitDeleteMessageEvent(receiverSocketIds, senderProfileId, data);
-  }
-
-  private emitDeleteMessageEvent(
-    receiverSocketIds: string[],
-    senderProfileId: string,
-    messageData: MessageToDelete,
-  ) {
-    receiverSocketIds.forEach((receiverSocketId: string) => {
-      this.server.to(receiverSocketId).emit(
-        'deleted',
-        JSON.stringify({
-          senderProfileId,
-          message: messageData.messageId,
-        }),
-      );
-      this.logger.log(
-        `Message with id: ${messageData.messageId} has been deleted`,
-      );
-    });
-  }
-
-  private async getReceiverSocketIds(
-    data: MessageToEdit | MessageToDelete,
-    senderProfileId: string,
-  ): Promise<string[]> {
-    const receiverSocketIds: string[] = [];
-
-    const receiverProfileIds: string[] = await this.getReceiverProfileIds(
-      data,
-      senderProfileId,
-    );
-
-    receiverProfileIds.forEach((profileId: string) => {
-      const socketId: string | undefined =
-        this.allConnectedUsers.get(profileId);
-      if (socketId) {
-        receiverSocketIds.push(socketId);
-      }
-    });
-
-    return receiverSocketIds;
-  }
-
-  /* @SubscribeMessage(`editMessage`)
-  async handleEditMessage(client: Socket, data: MessageToEdit) {
-    const senderProfileId: string = this.findSenderProfileId(client);
-
-    const receiverSocketIds: string[] = await this.getReceiverSocketIds(
-      data,
-      senderProfileId,
-    );
-
-    const dto: EditMessageDto = {
-      content: data.updatedContent,
-    };
-
-    const updatedMessage: Message | null =
-      await this.messagesService.editMessage(
-        data.messageId,
-        dto,
-        senderProfileId,
-        data.files,
-      );
-
-    if (!updatedMessage)
-      throw new InternalServerErrorException(
-        `Something went wrong while updating message`,
-      );
-
-    this.emitEditMessageEvent(receiverSocketIds, senderProfileId, data);
-  }*/
-
-  private emitEditMessageEvent(
-    receiverSocketIds: string[],
-    senderProfileId: string,
-    messageData: MessageToEdit,
-  ) {
-    receiverSocketIds.forEach((receiverSocketId: string) => {
-      this.server.to(receiverSocketId).emit(
-        'edited',
-        JSON.stringify({
-          senderProfileId,
-          message: messageData.updatedContent,
-        }),
-      );
-      this.logger.log(
-        `Message with id: ${messageData.messageId} has been edited`,
-      );
-    });
-  }
-
   @SubscribeMessage(`message`)
   async handleMessage(client: Socket, receivedMessage: ReceivingMessage) {
     const connectedToChatSockets: string[] = [];
     const notConnectedToChatSockets: string[] = [];
     const messageReceivers: MessageReceiver[] = [];
 
-    const allReceivers = await this.chatService.getAllChatParticipants(
-      receivedMessage.chatId,
-    );
     const allReceiversProfileIds: string[] = [];
-    allReceivers.forEach((receiver) => {
-      allReceiversProfileIds.push(receiver.profileId);
-    });
+    if (!receivedMessage.receiverId && receivedMessage.chatId) {
+      const allReceivers = await this.chatService.getAllChatParticipants(
+        receivedMessage.chatId,
+      );
+
+      allReceivers.forEach((receiver) => {
+        allReceiversProfileIds.push(receiver.profileId);
+      });
+    } else if (!receivedMessage.chatId && receivedMessage.receiverId) {
+      const chat = await this.chatService.getPrivateChatByIds(
+        receivedMessage.receiverId,
+        receivedMessage.senderId,
+      );
+      if (chat) {
+        receivedMessage.chatId = chat.id;
+      } else {
+        const dto: CreateChatDto = {
+          otherParticipantsIds: [receivedMessage.receiverId],
+        };
+        const createdChat = await this.chatService.createChat(
+          dto,
+          receivedMessage.senderId,
+        );
+        receivedMessage.chatId = createdChat.id;
+      }
+    } else if (!receivedMessage.chatId && !receivedMessage.receiverId) {
+      throw new BadRequestException(
+        'There are nor chatId and receiverId in received message!',
+      );
+    }
+
+    if (!receivedMessage.chatId)
+      throw new InternalServerErrorException(
+        'Something went wrong while setting chat id',
+      );
 
     for (const receiverProfileId of allReceiversProfileIds) {
       const socketId = this.getSocketIdByProfileId(receiverProfileId);
@@ -286,7 +209,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.allConnectedUsers.forEach((value: string, key: string): void => {
       if (socket.id === value) {
         this.allConnectedUsers.delete(key);
-        this.logger.log(
+        console.log(
           `User with socketId: ${value} and profileId: ${key} has disconnected!`,
         );
       }
@@ -300,23 +223,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
     }
     return undefined;
-  }
-
-  private async getReceiverProfileIds(
-    data: ReceivingMessage | MessageToEdit | MessageToDelete,
-    senderProfileId: string,
-  ): Promise<string[]> {
-    const chatParticipants: ChatParticipant[] =
-      await this.chatService.getAllChatParticipants(data.chatId);
-
-    const receiverProfileIds: string[] = [];
-
-    chatParticipants.forEach((chatParticipant: ChatParticipant) => {
-      if (chatParticipant.profileId !== senderProfileId)
-        receiverProfileIds.push(chatParticipant.profileId);
-    });
-
-    return receiverProfileIds;
   }
 
   private findSenderProfileId(client: Socket): string {

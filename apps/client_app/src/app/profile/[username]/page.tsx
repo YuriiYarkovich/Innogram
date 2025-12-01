@@ -17,8 +17,8 @@ import {
   handleProfileUnfollow,
 } from '@/services/profile.service';
 import { fetchPostsOfProfile } from '@/services/posts.service';
-import { enterOrCreateChat, fetchChatInfo } from '@/services/chat.service';
 import { Chat, Post, Profile } from '@/types';
+import MessageWritingModal from '@/components/profilePage/message-writing.modal';
 
 const Page = () => {
   const router: AppRouterInstance = useRouter();
@@ -47,8 +47,14 @@ const Page = () => {
   const [followersAmount, setFollowersAmount] = useState<number>(
     Number(profile.subscribersAmount),
   );
+  const [isWritingMessageModalOpen, setIsWritingMessageModalOpen] =
+    useState(false);
 
   const { username } = useParams<{ username?: string }>();
+
+  const onWritingMessageModalClose = () => {
+    setIsWritingMessageModalOpen(false);
+  };
 
   useEffect(() => {
     fetchProfile().then((data: Profile) => setCurProfile(data));
@@ -113,13 +119,6 @@ const Page = () => {
     setIsFollowed(false);
   };
 
-  const openChatWithUser = async () => {
-    const chat: Chat | undefined = await enterOrCreateChat(profile.id);
-    if (!chat) router.push(`/chat/0`);
-
-    router.push(`/chat/${chat?.id}`);
-  };
-
   return (
     <div>
       <EditProfileModal
@@ -134,6 +133,12 @@ const Page = () => {
           setIsPostPreviewModalOpen(false);
           await updatePostsArray(profile.id);
         }}
+      />
+      <MessageWritingModal
+        isOpen={isWritingMessageModalOpen}
+        onClose={onWritingMessageModalClose}
+        currentProfile={curProfile}
+        receiverProfileId={profile.id}
       />
       <div
         className={`flex flex-row min-h-screen w-full justify-center items-center`}
@@ -235,7 +240,7 @@ const Page = () => {
                     </button>
                     <button
                       className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                      onClick={() => openChatWithUser()}
+                      onClick={() => setIsWritingMessageModalOpen(true)}
                     >
                       Send message
                     </button>
