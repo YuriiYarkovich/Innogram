@@ -36,20 +36,22 @@ export class MessagesRepository {
   ): Promise<FindingMessageData[] | null> {
     return await this.messageRepository.query(
       `
-        SELECT message.id,
-               message.chat_id             AS "chatId",
-               message.reply_to_message_id AS "respondingMessageId",
-               profile.username            AS "authorUsername",
-               profile.avatar_filename     AS "authorAvatarFilename",
-               message.content,
-               message.created_at          AS "createdAt"
-        FROM main.messages AS message
-               LEFT JOIN main.profiles AS profile ON profile.id = message.sender_id
-        WHERE message.chat_id = $1
-          AND message.created_at > $2
-          AND message.visible_status IN ($3, $4)
-        ORDER BY message.created_at
-        LIMIT 10
+        SELECT *
+        FROM (SELECT message.id,
+                     message.chat_id             AS "chatId",
+                     message.reply_to_message_id AS "respondingMessageId",
+                     profile.username            AS "authorUsername",
+                     profile.avatar_filename     AS "authorAvatarFilename",
+                     message.content,
+                     message.created_at          AS "createdAt"
+              FROM main.messages AS message
+                     LEFT JOIN main.profiles AS profile ON profile.id = message.sender_id
+              WHERE message.chat_id = $1
+                AND message.created_at > $2
+                AND message.visible_status IN ($3, $4)
+              ORDER BY message.created_at DESC
+              LIMIT 10) sub
+        ORDER BY "createdAt"
       `,
       [
         chatId,

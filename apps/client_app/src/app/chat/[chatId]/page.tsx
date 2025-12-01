@@ -177,38 +177,24 @@ export default function ChatPage() {
             )}
           </div>
         </div>
-        <div className={`flex flex-col w-5/8 h-full gap-2 overflow-y-scroll `}>
-          <div
-            className={`flex w-full min-h-[800px] border-black border-1 pb-1.5`}
-          >
+        <div className={`flex flex-col w-5/8 h-full gap-2`}>
+          <div className={`flex w-full h-[800px] border-black border-1 pb-1.5`}>
             {!currentChat ? (
-              <p
-                className={
-                  'flex items-center justify-center w-full min-h-[800px]'
-                }
-              >
+              <p className={'flex items-center justify-center w-full h-full'}>
                 Pick chat
               </p>
             ) : messagesLoading ? (
-              <p
-                className={
-                  'flex items-center justify-center w-full min-h-[800px]'
-                }
-              >
+              <p className={'flex items-center justify-center w-full h-full'}>
                 Messages loading...
               </p>
             ) : messages?.length === 0 ? (
-              <p
-                className={
-                  'flex items-center justify-center w-full min-h-[800px]'
-                }
-              >
+              <p className={'flex items-center justify-center w-full h-full'}>
                 There are no messages yet
               </p>
             ) : (
               <div
                 className={
-                  'flex flex-col justify-end w-full min-h-[800px] overflow-y-auto'
+                  'flex flex-col justify-end w-full h-full overflow-y-auto'
                 }
               >
                 {messages?.map((message) => (

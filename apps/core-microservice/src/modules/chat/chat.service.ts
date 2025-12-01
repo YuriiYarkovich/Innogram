@@ -108,19 +108,14 @@ export class ChatService {
       currentUserId,
       secondParticipantId,
     );
-
-    if (!chat)
-      throw new BadRequestException('These users dont have private chat');
-
+    if (!chat) return null;
     const chatParticipants =
       await this.chatParticipantRepository.findAllParticipantsOfChat(chat.id);
-
     for (const cp of chatParticipants) {
       if (cp.profileId === secondParticipantId) {
         chat.title = cp.username;
       }
     }
-
     return chat;
   }
 
@@ -133,12 +128,8 @@ export class ChatService {
         chat.id,
         profileId,
       );
-      console.log(
-        `Last message of chat ${chat.id}: ${JSON.stringify(lastMessage)}`,
-      );
 
       let avatarUrl = await this.minioService.getPublicUrl(chat.avatarFilename);
-      console.log(`1. Avatar url: ${avatarUrl}, chatTitle: ${chat.title}`);
       let chatTitle: string = '';
       if (!chat.title && !avatarUrl) {
         const receiver =
@@ -146,15 +137,12 @@ export class ChatService {
             chat.id,
             profileId,
           );
-        console.log(`1.5 Receiver: ${JSON.stringify(receiver)}`);
         avatarUrl = await this.minioService.getPublicUrl(
           receiver.avatarFilename,
         );
         chatTitle = receiver.username;
-        console.log(`1.7 Avatar url: ${avatarUrl}, chatTitle: ${chatTitle}`);
       }
 
-      console.log(`2. Avatar url: ${avatarUrl}, chatTitle: ${chatTitle}`);
       const returningChatData: ReturningChatData = {
         id: chat.id,
         avatarUrl,
@@ -165,7 +153,6 @@ export class ChatService {
       };
       returningChatsData.push(returningChatData);
     }
-    console.log(`Returning chats info: ${JSON.stringify(returningChatsData)}`);
     return returningChatsData;
   }
 
