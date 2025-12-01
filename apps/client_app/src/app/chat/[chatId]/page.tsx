@@ -212,12 +212,7 @@ export default function ChatPage() {
                 }
               >
                 {messages?.map((message) => (
-                  <MessageTile
-                    key={message.id}
-                    authorUsername={message.authorUsername}
-                    authorAvatarUrl={message?.authorAvatarUrl}
-                    content={message.content}
-                  />
+                  <MessageTile key={message.id} message={message} />
                 ))}
                 <div ref={messagesEndRef} />
               </div>
