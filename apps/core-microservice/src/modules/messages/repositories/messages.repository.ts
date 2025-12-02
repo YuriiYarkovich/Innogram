@@ -70,22 +70,26 @@ export class MessagesRepository {
     createdAt: string;
     read: MessageReadStatus;
   } | null> {
-    const rows = await this.messageRepository.query(
+    const rows: {
+      content: string;
+      createdAt: string;
+      read: MessageReadStatus;
+    }[] = await this.messageRepository.query(
       `
-        SELECT message.content,
-               message.created_at AS "createdAt",
-               CASE
-                 WHEN messages_receiver.receiver_id = $2
-                   THEN messages_receiver.read_status
-                 ELSE 'read'
-                 END              AS "read"
-        FROM main.messages AS message
-               LEFT JOIN main.messages_receiver AS messages_receiver
-                         ON messages_receiver.message_id = message.id
-        WHERE message.chat_id = $1
-        ORDER BY message.created_at DESC 
-        LIMIT 1
-      `,
+          SELECT message.content,
+                 message.created_at AS "createdAt",
+                 CASE
+                   WHEN messages_receiver.receiver_id = $2
+                     THEN messages_receiver.read_status
+                   ELSE 'read'
+                   END              AS "read"
+          FROM main.messages AS message
+                 LEFT JOIN main.messages_receiver AS messages_receiver
+                           ON messages_receiver.message_id = message.id
+          WHERE message.chat_id = $1
+          ORDER BY message.created_at DESC
+          LIMIT 1
+        `,
       [chatId, currentProfileId],
     );
 

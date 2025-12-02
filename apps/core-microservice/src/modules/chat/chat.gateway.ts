@@ -119,15 +119,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const messageReceivers: MessageReceiver[] = [];
 
     const allReceiversProfileIds: string[] = [];
+    //in next block -- finding chat id
     if (!receivedMessage.receiverId && receivedMessage.chatId) {
+      //getting all chat participants
       const allReceivers = await this.chatService.getAllChatParticipants(
         receivedMessage.chatId,
       );
 
+      //filling an array with receivers ids
       allReceivers.forEach((receiver) => {
         allReceiversProfileIds.push(receiver.profileId);
       });
     } else if (!receivedMessage.chatId && receivedMessage.receiverId) {
+      //trying to get the chat
       const chat = await this.chatService.getPrivateChatByIds(
         receivedMessage.senderId,
         receivedMessage.receiverId,
@@ -135,6 +139,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (chat) {
         receivedMessage.chatId = chat.id;
       } else {
+        //if there are no chat - creating it
         const dto: CreateChatDto = {
           otherParticipantsIds: [receivedMessage.receiverId],
         };
@@ -144,6 +149,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         );
         receivedMessage.chatId = createdChat.id;
       }
+      allReceiversProfileIds.push(receivedMessage.receiverId);
     } else if (!receivedMessage.chatId && !receivedMessage.receiverId) {
       throw new BadRequestException(
         'There are nor chatId and receiverId in received message!',
@@ -187,6 +193,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       chatId: receivedMessage.chatId,
       content: receivedMessage.content,
     };
+    console.log(`Message receivers: ${JSON.stringify(messageReceivers)}`);
     const createdMessage = await this.messagesService.createMessage(
       dto,
       messageReceivers,

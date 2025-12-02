@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { QueryRunner, Repository } from 'typeorm';
+import { In, QueryRunner, Repository } from 'typeorm';
 import { MessageReceiver } from '../../../common/entities/chat/Message-Receiver.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MessageReadStatus } from '../../../common/enums/message.enum';
@@ -40,12 +40,15 @@ export class MessageReceiverRepository {
     return messages.map((m: MessageReceiver): string => m.messageId);
   }
 
-  async updateReadStatus(messageId: string) {
+  async changeStatusToRead(messageIds: string[]) {
     await this.messageReceiverRepository.update(
       {
-        messageId,
+        messageId: In(messageIds),
+        readStatus: MessageReadStatus.UNREAD,
       },
-      { readStatus: MessageReadStatus.READ },
+      {
+        readStatus: MessageReadStatus.READ,
+      },
     );
   }
 }

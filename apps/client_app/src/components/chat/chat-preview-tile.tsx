@@ -52,7 +52,9 @@ const ChatPreviewTile = ({
         </div>
       </div>
       {lastMessageRead === MessageReadStatus.UNREAD ? (
-        <div className={'md:w-[10px] md:h-[10px] rounded-full ml-18'} />
+        <div
+          className={'md:w-[10px] md:h-[10px] rounded-full ml-18 bg-blue-500'}
+        />
       ) : (
         <></>
       )}

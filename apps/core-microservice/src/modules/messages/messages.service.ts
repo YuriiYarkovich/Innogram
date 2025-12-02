@@ -140,6 +140,11 @@ export class MessagesService {
 
     if (!foundMessages) return null;
 
+    const messagesIds: string[] = [];
+    foundMessages.forEach((message) => messagesIds.push(message.id));
+
+    await this.messageReceiverRepository.changeStatusToRead(messagesIds);
+
     const returningMessagesData: ReturningMessageData[] = [];
     for (const message of foundMessages) {
       const messageAssets =
@@ -254,11 +259,5 @@ export class MessagesService {
 
   async deleteMessage(messageId: string, profileId: string) {
     await this.messagesRepository.deleteMessage(messageId);
-  }
-
-  async updateReadStatusOfMessages(messages: MessageToEmitToEnteredUser[]) {
-    for (const message of messages) {
-      await this.messageReceiverRepository.updateReadStatus(message.messageId);
-    }
   }
 }

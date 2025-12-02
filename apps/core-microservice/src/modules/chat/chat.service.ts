@@ -128,6 +128,7 @@ export class ChatService {
         chat.id,
         profileId,
       );
+      console.log(`Last message: ${JSON.stringify(lastMessage)}`);
 
       let avatarUrl = await this.minioService.getPublicUrl(chat.avatarFilename);
       let chatTitle: string = '';
