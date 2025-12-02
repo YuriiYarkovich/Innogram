@@ -12,6 +12,7 @@ import { Chat, Message, Profile } from '@/types';
 import { fetchChatsOfProfile, findChatById } from '@/services/chat.service';
 import { fetchMessagesOfChat } from '@/services/messages.service';
 import { useSocket } from '@/hooks/useSocket';
+import { MessageReadStatus } from '@innogram/core-microservice/dist/common/enums/message.enum';
 
 export type MessageSendFormValues = {
   content: string;
@@ -104,6 +105,7 @@ export default function ChatPage() {
         .then((messagesData: Message[] | undefined) => {
           if (!messagesData) return;
           setMessages(messagesData);
+          currentChat.lastMessageRead = MessageReadStatus.READ;
         })
         .finally(() => setMessagesLoading(false));
     }
