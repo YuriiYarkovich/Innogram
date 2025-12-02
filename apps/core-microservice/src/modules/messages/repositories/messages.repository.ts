@@ -52,6 +52,7 @@ export class MessagesRepository {
                      LEFT JOIN main.profiles AS profile ON profile.id = message.sender_id
                      LEFT JOIN main.messages_receiver AS messages_receiver
                                ON messages_receiver.message_id = message.id
+                                 AND messages_receiver.receiver_id = $2
               WHERE message.chat_id = $1
                 AND message.created_at > $3
                 AND message.visible_status IN ($4, $5)
@@ -125,6 +126,7 @@ export class MessagesRepository {
                LEFT JOIN main.profiles AS profile ON message.sender_id = profile.id
                LEFT JOIN main.messages_receiver AS messages_receiver
                          ON messages_receiver.message_id = message.id
+                           AND messages_receiver.receiver_id = $2
         WHERE message.id = $1
         LIMIT 1
       `,

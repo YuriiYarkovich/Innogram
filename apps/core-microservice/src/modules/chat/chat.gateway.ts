@@ -214,6 +214,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
 
     notConnectedToChatSockets.forEach((socketId) => {
+      if (returningMessage.read === MessageReadStatus.READ)
+        returningMessage.read = MessageReadStatus.UNREAD;
       this.server.to(socketId).emit('messageToUserInServer', returningMessage);
     });
   }

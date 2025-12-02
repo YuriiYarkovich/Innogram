@@ -60,23 +60,11 @@ export default function ChatPage() {
     null,
   );
 
-  const onMessageToChatReceived = (receivedMessage: Message) => {
-    console.log(`Received message: ${JSON.stringify(receivedMessage)}`);
-    setMessages((prev) =>
-      prev ? [...prev, receivedMessage] : [receivedMessage],
-    );
-  };
-
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
 
-  const onMessageToServerReceived = (receivedMessage: Message) => {
-    console.log(
-      `Received message to server: ${JSON.stringify(receivedMessage)}`,
-    );
+  const updateParticularChatInChatLists = (receivedMessage: Message) => {
     setChats((prevChats) => {
+      console.log(`UPDATING CHAT LIST!`);
       if (!prevChats) return prevChats;
 
       return prevChats.map((chat) => {
@@ -90,6 +78,22 @@ export default function ChatPage() {
         };
       });
     });
+  };
+
+  const onMessageToChatReceived = (receivedMessage: Message) => {
+    console.log(`Received message: ${JSON.stringify(receivedMessage)}`);
+    setMessages((prev) =>
+      prev ? [...prev, receivedMessage] : [receivedMessage],
+    );
+
+    updateParticularChatInChatLists(receivedMessage);
+  };
+
+  const onMessageToServerReceived = (receivedMessage: Message) => {
+    console.log(
+      `Received message to server: ${JSON.stringify(receivedMessage)}`,
+    );
+    updateParticularChatInChatLists(receivedMessage);
   };
 
   const { send } = useSocket(
@@ -106,37 +110,6 @@ export default function ChatPage() {
       })
       .finally(() => setChatsLoading(false));
   };
-
-  useEffect(() => {
-    updateChats();
-  }, []);
-
-  useEffect(() => {
-    if (chatIdParam.chatId === '0') {
-      setCurrentChat(null);
-      return;
-    }
-    const currentChat = findChatById(chatIdParam.chatId, chats);
-    if (!currentChat) return;
-    setCurrentChat(currentChat);
-  }, [chats, chatIdParam]);
-
-  useEffect(() => {
-    fetchProfile().then((data: Profile) => setCurProfile(data));
-  }, []);
-
-  useEffect(() => {
-    if (currentChat) {
-      setMessagesLoading(true);
-      fetchMessagesOfChat(currentChat?.lastMessageCreatedAt, currentChat?.id)
-        .then((messagesData: Message[] | undefined) => {
-          if (!messagesData) return;
-          setMessages(messagesData);
-          currentChat.lastMessageRead = MessageReadStatus.READ;
-        })
-        .finally(() => setMessagesLoading(false));
-    }
-  }, [currentChat]);
 
   const onChatTileClick = (chatId: string) => {
     if (currentChat) {
@@ -174,6 +147,41 @@ export default function ChatPage() {
 
     reset({ content: '' });
   };
+
+  useEffect(() => {
+    updateChats();
+  }, []);
+
+  useEffect(() => {
+    if (!currentChat && chatIdParam.chatId === '0') {
+      setCurrentChat(null);
+      return;
+    }
+    const pickedChat = findChatById(chatIdParam.chatId, chats);
+    if (!pickedChat) return;
+    setCurrentChat(pickedChat);
+  }, [chats, chatIdParam, currentChat]);
+
+  useEffect(() => {
+    fetchProfile().then((data: Profile) => setCurProfile(data));
+  }, []);
+
+  useEffect(() => {
+    if (currentChat) {
+      setMessagesLoading(true);
+      fetchMessagesOfChat(currentChat?.lastMessageCreatedAt, currentChat?.id)
+        .then((messagesData: Message[] | undefined) => {
+          if (!messagesData) return;
+          setMessages(messagesData);
+          currentChat.lastMessageRead = MessageReadStatus.READ;
+        })
+        .finally(() => setMessagesLoading(false));
+    }
+  }, [currentChat]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   return (
     <div
