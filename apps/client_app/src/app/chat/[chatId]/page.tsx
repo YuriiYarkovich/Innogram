@@ -72,9 +72,32 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const { send } = useSocket(onMessageToChatReceived);
+  const onMessageToServerReceived = (receivedMessage: Message) => {
+    console.log(
+      `Received message to server: ${JSON.stringify(receivedMessage)}`,
+    );
+    setChats((prevChats) => {
+      if (!prevChats) return prevChats;
 
-  useEffect(() => {
+      return prevChats.map((chat) => {
+        if (chat.id !== receivedMessage.chatId) return chat;
+
+        return {
+          ...chat,
+          lastMessageRead: receivedMessage.read,
+          lastMessageCreatedAt: receivedMessage.createdAt,
+          lastMessageContent: receivedMessage.content,
+        };
+      });
+    });
+  };
+
+  const { send } = useSocket(
+    onMessageToChatReceived,
+    onMessageToServerReceived,
+  );
+
+  const updateChats = () => {
     setChatsLoading(true);
     fetchChatsOfProfile()
       .then((chatsData: Chat[] | undefined) => {
@@ -82,6 +105,10 @@ export default function ChatPage() {
         setChats(chatsData);
       })
       .finally(() => setChatsLoading(false));
+  };
+
+  useEffect(() => {
+    updateChats();
   }, []);
 
   useEffect(() => {

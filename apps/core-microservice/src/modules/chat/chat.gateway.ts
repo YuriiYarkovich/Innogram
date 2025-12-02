@@ -196,6 +196,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Message receivers: ${JSON.stringify(messageReceivers)}`);
     const createdMessage = await this.messagesService.createMessage(
       dto,
+      receivedMessage.senderId,
       messageReceivers,
       receivedMessage.files,
     );

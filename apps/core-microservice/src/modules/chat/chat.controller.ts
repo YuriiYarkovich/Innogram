@@ -43,8 +43,8 @@ export class ChatController {
   @Get(`/allChatsOfProfile/`)
   @UseGuards(AuthGuard)
   async getAllChatsOfUser(): Promise<ReturningChatData[]> {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
-    return await this.chatService.getAllChatsOfProfile(profileId);
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.chatService.getAllChatsOfProfile(currentProfileId);
   }
 
   @ApiOperation({

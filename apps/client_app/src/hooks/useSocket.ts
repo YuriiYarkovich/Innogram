@@ -5,6 +5,7 @@ import { Message } from '@/types';
 
 export const useSocket = (
   onMessageToUserInChat?: (message: Message) => void,
+  onMessageToUserInServer?: (message: Message) => void,
 ) => {
   const socketRef = useRef<Socket | null>(null);
 
@@ -25,6 +26,10 @@ export const useSocket = (
 
     socket.on('messageToUserInChat', (message: Message) => {
       if (onMessageToUserInChat) onMessageToUserInChat(message);
+    });
+
+    socket.on('messageToUserInServer', (message: Message) => {
+      if (onMessageToUserInServer) onMessageToUserInServer(message);
     });
 
     return () => {

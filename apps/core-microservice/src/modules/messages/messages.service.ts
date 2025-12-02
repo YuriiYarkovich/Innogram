@@ -16,7 +16,6 @@ import { MessageReceiverRepository } from './repositories/message-receiver.repos
 import {
   FindingMessageData,
   MessageReceiver,
-  MessageToEmitToEnteredUser,
   ReturningMessageData,
 } from '../../common/types/message.type';
 import { ChatParticipant } from '../../common/entities/chat/chat-participant.entity';
@@ -41,6 +40,7 @@ export class MessagesService {
 
   async createMessage(
     dto: CreateMessageDto,
+    currentProfileId: string,
     receiverProfiles: MessageReceiver[],
     files: MulterFile | undefined = null,
   ) {
@@ -75,7 +75,10 @@ export class MessagesService {
 
       await queryRunner.commitTransaction();
 
-      return await this.messagesRepository.getMessageById(createdMessage.id);
+      return await this.messagesRepository.getMessageById(
+        createdMessage.id,
+        currentProfileId,
+      );
     } catch (e) {
       await queryRunner.rollbackTransaction();
       throw e;
@@ -126,15 +129,16 @@ export class MessagesService {
   }
 
   async getMessagesFromChat(
-    profileId: string,
+    currentProfileId: string,
     chatId: string,
     lastLoadedMessageCreatedAt: string,
   ) {
-    await this.checkIfUserIsChatParticipant(profileId, chatId);
+    await this.checkIfUserIsChatParticipant(currentProfileId, chatId);
 
     const foundMessages: FindingMessageData[] | null =
       await this.messagesRepository.getMessagesFromChat(
         chatId,
+        currentProfileId,
         lastLoadedMessageCreatedAt,
       );
 
@@ -257,7 +261,7 @@ export class MessagesService {
     }
   }*/
 
-  async deleteMessage(messageId: string, profileId: string) {
+  /*async deleteMessage(messageId: string, profileId: string) {
     await this.messagesRepository.deleteMessage(messageId);
-  }
+  }*/
 }

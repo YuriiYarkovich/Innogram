@@ -18,6 +18,7 @@ export interface FindingMessageData {
   authorAvatarFilename?: string;
   content: string;
   createdAt: string;
+  read: MessageReadStatus;
 }
 
 export interface ReturningMessageData {
@@ -29,6 +30,7 @@ export interface ReturningMessageData {
   content: string;
   createdAt: string;
   messageAssetsUrls?: string[];
+  read: MessageReadStatus;
 }
 
 export interface MessageReceiver {

@@ -119,14 +119,14 @@ export class ChatService {
     return chat;
   }
 
-  async getAllChatsOfProfile(profileId: string) {
+  async getAllChatsOfProfile(currentProfileId: string) {
     const foundChats =
-      await this.chatRepository.getAllChatsOfProfile(profileId);
+      await this.chatRepository.getAllChatsOfProfile(currentProfileId);
     const returningChatsData: ReturningChatData[] = [];
     for (const chat of foundChats) {
       const lastMessage = await this.messagesRepository.getLastMessageOfChat(
         chat.id,
-        profileId,
+        currentProfileId,
       );
       console.log(`Last message: ${JSON.stringify(lastMessage)}`);
 
@@ -136,7 +136,7 @@ export class ChatService {
         const receiver =
           await this.chatParticipantRepository.getSecondParticipantOfPrivateChat(
             chat.id,
-            profileId,
+            currentProfileId,
           );
         avatarUrl = await this.minioService.getPublicUrl(
           receiver.avatarFilename,

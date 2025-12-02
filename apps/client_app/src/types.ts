@@ -87,6 +87,7 @@ export type Message = {
   content: string;
   createdAt: string;
   messageAssetsUrls?: string[];
+  read: MessageReadStatus;
 };
 
 export type SendingMessage = {

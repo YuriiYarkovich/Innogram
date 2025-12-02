@@ -66,12 +66,12 @@ export class MessagesController {
     );
   }*/
 
-  @ApiOperation({ summary: 'Deletes messages' })
+  /*@ApiOperation({ summary: 'Deletes messages' })
   @ApiResponse({ status: 200, type: Message })
   @Delete(`/delete/:messageId`)
   @UseGuards(AuthGuard)
   async deleteMessage(@Param('messageId') messageId: string) {
     const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.messagesService.deleteMessage(messageId, profileId);
-  }
+  }*/
 }
