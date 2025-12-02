@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { MouseEvent, useEffect, useRef, useState } from 'react';
 import { fetchProfile } from '@/services/profile.service';
 import SidePanel from '@/components/sidePanel';
 import ChatPreviewTile from '@/components/chat/chat-preview-tile';
@@ -13,11 +13,19 @@ import { fetchChatsOfProfile, findChatById } from '@/services/chat.service';
 import { fetchMessagesOfChat } from '@/services/messages.service';
 import { useSocket } from '@/hooks/useSocket';
 import { MessageReadStatus } from '@innogram/core-microservice/dist/common/enums/message.enum';
+import MessageContextMenu from '@/components/chat/message-context-menu';
 
 export type MessageSendFormValues = {
   content: string;
   file: File | null;
 };
+
+export type ContextMenuPosition = {
+  x: number;
+  y: number;
+};
+
+type MenuAction = `Edit` | 'delete' | 'reply';
 
 export default function ChatPage() {
   const {
@@ -59,6 +67,9 @@ export default function ChatPage() {
   const [replyingMessageId, setReplyingMessageId] = useState<string | null>(
     null,
   );
+  const [contextMenuPosition, setContextMenuPosition] =
+    useState<ContextMenuPosition | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -148,6 +159,47 @@ export default function ChatPage() {
     reset({ content: '' });
   };
 
+  const handleContextMenu = (e: MouseEvent<HTMLDivElement>): void => {
+    e.preventDefault();
+    setContextMenuPosition({
+      x: e.pageX,
+      y: e.pageY,
+    });
+  };
+
+  const handleMenuAction = (action: MenuAction) => {
+    console.log(`Picked action: ${action}`);
+    setContextMenuPosition(null);
+  };
+
+  useEffect(() => {
+    const handleClick = (e: Event) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setContextMenuPosition(null);
+      }
+    };
+
+    if (contextMenuPosition) {
+      document.addEventListener('click', handleClick);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClick);
+    };
+  }, [contextMenuPosition]);
+
+  useEffect(() => {
+    const handleScroll = () => setContextMenuPosition(null);
+
+    if (contextMenuPosition) {
+      window.addEventListener('scroll', handleScroll);
+    }
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [contextMenuPosition]);
+
   useEffect(() => {
     updateChats();
   }, []);
@@ -230,6 +282,7 @@ export default function ChatPage() {
               </p>
             ) : (
               <div
+                onContextMenu={handleContextMenu}
                 className={
                   'flex flex-col justify-end w-full h-full overflow-y-auto'
                 }
@@ -280,6 +333,12 @@ export default function ChatPage() {
             </form>
           )}
         </div>
+        {contextMenuPosition && (
+          <MessageContextMenu
+            menuRef={menuRef}
+            contextMenuPosition={contextMenuPosition}
+          />
+        )}
       </div>
     </div>
   );

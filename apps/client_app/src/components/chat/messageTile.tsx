@@ -1,4 +1,3 @@
-import React from 'react';
 import Image from 'next/image';
 import { formatTime } from '@/utils/time';
 import { Message } from '@/types';
