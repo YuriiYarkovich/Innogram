@@ -1,4 +1,7 @@
-import { MessageReadStatus } from '@innogram/core-microservice/dist/common/enums/message.enum';
+import {
+  MessageReadStatus,
+  MessageVisibilityStatus,
+} from '@innogram/core-microservice/dist/common/enums/message.enum';
 
 export type Post = {
   postId: string;
@@ -80,7 +83,7 @@ export enum ChatTypes {
 
 export type Message = {
   id: string;
-  replyingMessage?: Message;
+  replyingMessage?: ReplyingMessage;
   chatId: string;
   authorUsername: string;
   authorAvatarUrl?: string;
@@ -88,6 +91,14 @@ export type Message = {
   createdAt: string;
   messageAssetsUrls?: string[];
   read: MessageReadStatus;
+};
+
+export type ReplyingMessage = {
+  id: string;
+  chatId: string;
+  authorUsername: string;
+  content: string;
+  visibleStatus: MessageVisibilityStatus;
 };
 
 export type SendingMessage = {

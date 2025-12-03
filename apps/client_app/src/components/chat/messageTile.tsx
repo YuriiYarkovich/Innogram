@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { formatTime } from '@/utils/time';
 import { Message } from '@/types';
+import { MessageVisibilityStatus } from '@innogram/core-microservice/dist/common/enums/message.enum';
 
 const MessageTile = ({
   message,
@@ -48,16 +49,21 @@ const MessageTile = ({
               <div
                 className={'min-h-fit bg-[#686868] md:w-[4px] ml-1.5 mt-2 mb-2'}
               />
-              <div className={'flex flex-col gap-1.5 w-full h-full'}>
-                <span className={'font-bold whitespace-nowrap mr-2'}>
-                  {message.replyingMessage.authorUsername}
+              {message.replyingMessage.visibleStatus ===
+              MessageVisibilityStatus.DELETED ? (
+                <span className={'whitespace-nowrap mr-2 pt-4 pb-4'}>
+                  Message has been deleted
                 </span>
-                <span>{message.replyingMessage.content}</span>
-              </div>
+              ) : (
+                <div className={'flex flex-col gap-1.5 w-full h-full'}>
+                  <span className={'font-bold whitespace-nowrap mr-2'}>
+                    {message.replyingMessage.authorUsername}
+                  </span>
+                  <span>{message.replyingMessage.content}</span>
+                </div>
+              )}
             </div>
-          ) : (
-            <></>
-          )}
+          ) : null}
           <div
             className={'flex flex-row min-w-[150px] pl-3 items-center pr-2.5'}
           >

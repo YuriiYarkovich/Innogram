@@ -1,5 +1,8 @@
 import { File as MulterFile } from 'multer';
-import { MessageReadStatus } from '../enums/message.enum';
+import {
+  MessageReadStatus,
+  MessageVisibilityStatus,
+} from '../enums/message.enum';
 
 export interface ReceivingMessage {
   id?: string;
@@ -27,6 +30,7 @@ export interface ReplyingMessage {
   chatId: string;
   authorUsername: string;
   content: string;
+  visibleStatus: MessageVisibilityStatus;
 }
 
 export interface ReturningMessageData {

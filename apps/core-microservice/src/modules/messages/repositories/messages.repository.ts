@@ -39,7 +39,7 @@ export class MessagesRepository {
         FROM (SELECT message.id,
                      message.chat_id                            AS "chatId",
                      (SELECT json_build_object('id', m.id, 'chatId', m.chat_id, 'authorUsername', p.username, 'content',
-                                               m.content)
+                                               m.content, 'visibleStatus', m.visible_status)
                       FROM main.messages m
                              LEFT JOIN main.profiles p ON p.id = m.sender_id
                       WHERE m.id = message.reply_to_message_id) AS "replyingMessage",

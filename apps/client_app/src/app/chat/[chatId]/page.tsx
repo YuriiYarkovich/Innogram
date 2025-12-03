@@ -12,7 +12,10 @@ import { Chat, Message, Profile } from '@/types';
 import { fetchChatsOfProfile, findChatById } from '@/services/chat.service';
 import { fetchMessagesOfChat } from '@/services/messages.service';
 import { useSocket } from '@/hooks/useSocket';
-import { MessageReadStatus } from '@innogram/core-microservice/dist/common/enums/message.enum';
+import {
+  MessageReadStatus,
+  MessageVisibilityStatus,
+} from '@innogram/core-microservice/dist/common/enums/message.enum';
 import MessageContextMenu from '@/components/chat/message-context-menu';
 import Line from '@/components/line';
 import Separator from '@/components/auth/separator';
@@ -74,13 +77,17 @@ export default function ChatPage() {
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const updateParticularChatInChatLists = (receivedMessage: Message) => {
+  const updateParticularChatInChatList = (receivedMessage: Message) => {
+    console.log('pidoras');
     setChats((prevChats) => {
       if (!prevChats) return prevChats;
 
       return prevChats.map((chat) => {
         if (chat.id !== receivedMessage.chatId) return chat;
 
+        console.log(
+          `Setting previous last message to chat preview. Message: ${JSON.stringify(receivedMessage)}`,
+        );
         return {
           ...chat,
           lastMessageRead: receivedMessage.read,
@@ -96,17 +103,43 @@ export default function ChatPage() {
       prev ? [...prev, receivedMessage] : [receivedMessage],
     );
 
-    updateParticularChatInChatLists(receivedMessage);
+    updateParticularChatInChatList(receivedMessage);
   };
 
   const onMessageToServerReceived = (receivedMessage: Message) => {
-    updateParticularChatInChatLists(receivedMessage);
+    updateParticularChatInChatList(receivedMessage);
   };
 
   const onMessageDeleted = (messageId: string) => {
     setMessages((prevMessages) => {
       if (!prevMessages) return prevMessages;
-      return prevMessages.filter((message) => message.id !== messageId);
+
+      // Deleting message
+      const updatedMessages = prevMessages.filter(
+        (message) => message.id !== messageId,
+      );
+
+      // Updating status of all messages that references original one
+      const messagesWithUpdatedReplies = updatedMessages.map((message) => {
+        if (message.replyingMessage?.id === messageId) {
+          return {
+            ...message,
+            replyingMessage: {
+              ...message.replyingMessage,
+              visibleStatus: MessageVisibilityStatus.DELETED,
+            },
+          };
+        }
+        return message;
+      });
+
+      if (messagesWithUpdatedReplies.length > 0) {
+        updateParticularChatInChatList(
+          messagesWithUpdatedReplies[messagesWithUpdatedReplies.length - 1],
+        );
+      }
+
+      return messagesWithUpdatedReplies;
     });
   };
 
