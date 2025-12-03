@@ -13,7 +13,7 @@ export interface ReceivingMessage {
 export interface FindingMessageData {
   id: string;
   chatId: string;
-  respondingMessageId?: string;
+  replyingMessage?: ReplyingMessage;
   authorUsername: string;
   authorAvatarFilename?: string;
   content: string;
@@ -21,9 +21,16 @@ export interface FindingMessageData {
   read: MessageReadStatus;
 }
 
+export interface ReplyingMessage {
+  id: string;
+  chatId: string;
+  authorUsername: string;
+  content: string;
+}
+
 export interface ReturningMessageData {
   id: string;
-  respondingMessageId?: string;
+  replyingMessage?: ReplyingMessage;
   chatId: string;
   authorUsername: string;
   authorAvatarUrl?: string;

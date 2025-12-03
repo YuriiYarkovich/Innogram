@@ -14,18 +14,21 @@ import { fetchMessagesOfChat } from '@/services/messages.service';
 import { useSocket } from '@/hooks/useSocket';
 import { MessageReadStatus } from '@innogram/core-microservice/dist/common/enums/message.enum';
 import MessageContextMenu from '@/components/chat/message-context-menu';
+import Line from '@/components/line';
+import Separator from '@/components/auth/separator';
 
 export type MessageSendFormValues = {
   content: string;
   file: File | null;
 };
 
-export type ContextMenuPosition = {
+export type ContextMenuState = {
   x: number;
   y: number;
+  message: Message | null;
 };
 
-type MenuAction = `Edit` | 'delete' | 'reply';
+export type MenuAction = `edit` | 'delete' | 'reply';
 
 export default function ChatPage() {
   const {
@@ -64,18 +67,15 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [messagesLoading, setMessagesLoading] = useState<boolean>(false);
   const [currentChat, setCurrentChat] = useState<Chat | null>(null);
-  const [replyingMessageId, setReplyingMessageId] = useState<string | null>(
-    null,
-  );
-  const [contextMenuPosition, setContextMenuPosition] =
-    useState<ContextMenuPosition | null>(null);
+  const [replyingMessage, setReplyingMessage] = useState<Message | null>(null);
+  const [contextMenuState, setContextMenuState] =
+    useState<ContextMenuState | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const updateParticularChatInChatLists = (receivedMessage: Message) => {
     setChats((prevChats) => {
-      console.log(`UPDATING CHAT LIST!`);
       if (!prevChats) return prevChats;
 
       return prevChats.map((chat) => {
@@ -92,7 +92,6 @@ export default function ChatPage() {
   };
 
   const onMessageToChatReceived = (receivedMessage: Message) => {
-    console.log(`Received message: ${JSON.stringify(receivedMessage)}`);
     setMessages((prev) =>
       prev ? [...prev, receivedMessage] : [receivedMessage],
     );
@@ -101,9 +100,6 @@ export default function ChatPage() {
   };
 
   const onMessageToServerReceived = (receivedMessage: Message) => {
-    console.log(
-      `Received message to server: ${JSON.stringify(receivedMessage)}`,
-    );
     updateParticularChatInChatLists(receivedMessage);
   };
 
@@ -151,54 +147,70 @@ export default function ChatPage() {
       data: {
         senderId: curProfile.id,
         chatId: currentChat?.id,
-        replyToMessageId: replyingMessageId,
+        replyToMessageId: replyingMessage?.id,
         content: messageData.content,
       },
     });
 
     reset({ content: '' });
+    setReplyingMessage(null);
   };
 
-  const handleContextMenu = (e: MouseEvent<HTMLDivElement>): void => {
+  const handleContextMenu = (
+    e: MouseEvent<HTMLDivElement>,
+    message: Message,
+  ): void => {
     e.preventDefault();
-    setContextMenuPosition({
+    setContextMenuState({
       x: e.pageX,
       y: e.pageY,
+      message,
     });
   };
 
   const handleMenuAction = (action: MenuAction) => {
-    console.log(`Picked action: ${action}`);
-    setContextMenuPosition(null);
+    if (contextMenuState?.message) {
+      console.log(
+        `Picked action: ${action} for message with id: ${contextMenuState?.message.id}`,
+      );
+      switch (action) {
+        case 'reply':
+          setReplyingMessage(contextMenuState?.message);
+          break;
+      }
+      setContextMenuState(null);
+    }
   };
 
+  //closing context menu on click outside of it
   useEffect(() => {
     const handleClick = (e: Event) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setContextMenuPosition(null);
+        setContextMenuState(null);
       }
     };
 
-    if (contextMenuPosition) {
+    if (contextMenuState) {
       document.addEventListener('click', handleClick);
     }
 
     return () => {
       document.removeEventListener('click', handleClick);
     };
-  }, [contextMenuPosition]);
+  }, [contextMenuState]);
 
+  //closing context menu on scroll
   useEffect(() => {
-    const handleScroll = () => setContextMenuPosition(null);
+    const handleScroll = () => setContextMenuState(null);
 
-    if (contextMenuPosition) {
+    if (contextMenuState) {
       window.addEventListener('scroll', handleScroll);
     }
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [contextMenuPosition]);
+  }, [contextMenuState]);
 
   useEffect(() => {
     updateChats();
@@ -282,13 +294,17 @@ export default function ChatPage() {
               </p>
             ) : (
               <div
-                onContextMenu={handleContextMenu}
                 className={
                   'flex flex-col justify-end w-full h-full overflow-y-auto'
                 }
               >
                 {messages?.map((message) => (
-                  <MessageTile key={message.id} message={message} />
+                  <div
+                    key={message.id}
+                    onContextMenu={(e) => handleContextMenu(e, message)}
+                  >
+                    <MessageTile message={message} />
+                  </div>
                 ))}
                 <div ref={messagesEndRef} />
               </div>
@@ -297,46 +313,73 @@ export default function ChatPage() {
           {!currentChat ? (
             <></>
           ) : (
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className={
-                'flex flex-row w-min-1/20 border-[#79747e] border-2 rounded-4xl p-2 gap-2 items-center'
-              }
-            >
-              <div
+            <>
+              {replyingMessage && (
+                <>
+                  <Line thickness={2} color={'#79747e'} />
+                  <div className={'flex flex-row gap-5 w-full'}>
+                    <Image
+                      src={'/images/icons/reply.svg'}
+                      alt={'Reply icon'}
+                      height={30}
+                      width={30}
+                      draggable={false}
+                    />
+                    <div className={'flex flex-col gap-1'}>
+                      <span className={'font-bold'}>
+                        Responding to {replyingMessage?.authorUsername}
+                      </span>
+                      <span>{replyingMessage.content}</span>
+                    </div>
+                    <div className={'flex items-center ml-auto'}>
+                      <button
+                        onClick={() => setReplyingMessage(null)}
+                        className={
+                          'flex items-center justify-center md:w-[37px] md:h-[37px]'
+                        }
+                      >
+                        <Image
+                          src={'/images/icons/cross.svg'}
+                          alt={'cancel replying icon'}
+                          width={30}
+                          height={30}
+                          draggable={false}
+                          className={'hover:md:w-[37px] hover:md:h-[37px]'}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <form
+                onSubmit={handleSubmit(onSubmit)}
                 className={
-                  'flex items-center justify-center md:h-[34px] md:w-[34px]'
+                  'flex flex-row w-min-1/20 border-[#79747e] border-2 rounded-4xl p-2 gap-3 items-center pl-5'
                 }
               >
-                <Image
-                  src={'/images/icons/emoji.svg'}
-                  alt={'emoji icon'}
-                  height={30}
-                  width={30}
-                  draggable={false}
-                  className={`cursor-pointer hover:md:h-[34px] hover:md:w-[34px]`}
+                <textarea
+                  {...register('content')}
+                  placeholder={'Write message'}
+                  className={`flex w-full h-full`}
                 />
-              </div>
-              <textarea
-                {...register('content')}
-                placeholder={'Write message'}
-                className={`flex w-10/12 h-full`}
-              />
-              <button
-                type={'submit'}
-                className={
-                  'cursor-pointer bg-[#4f378a] text-white hover:text-black text-center rounded-[20px] px-4 py-2 hover:bg-[#d0bcff]'
-                }
-              >
-                {isSubmitting ? 'Sending...' : 'Send'}
-              </button>
-            </form>
+                <button
+                  type={'submit'}
+                  className={
+                    'cursor-pointer bg-[#4f378a] text-white hover:text-black text-center rounded-[20px] px-4 py-2 hover:bg-[#d0bcff] ml-auto'
+                  }
+                >
+                  {isSubmitting ? 'Sending...' : 'Send'}
+                </button>
+              </form>
+            </>
           )}
         </div>
-        {contextMenuPosition && (
+        {contextMenuState && (
           <MessageContextMenu
             menuRef={menuRef}
-            contextMenuPosition={contextMenuPosition}
+            contextMenuPosition={contextMenuState}
+            handleMenuAction={handleMenuAction}
           />
         )}
       </div>

@@ -80,7 +80,7 @@ export enum ChatTypes {
 
 export type Message = {
   id: string;
-  respondingMessageId?: string;
+  replyingMessage?: Message;
   chatId: string;
   authorUsername: string;
   authorAvatarUrl?: string;

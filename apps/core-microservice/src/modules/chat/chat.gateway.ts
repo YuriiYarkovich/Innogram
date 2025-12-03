@@ -114,6 +114,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage(`message`)
   async handleMessage(client: Socket, receivedMessage: ReceivingMessage) {
+    console.log(`RECEIVED MESSAGE: ${JSON.stringify(receivedMessage)}`);
     const connectedToChatSockets: string[] = [];
     const notConnectedToChatSockets: string[] = [];
     const messageReceivers: MessageReceiver[] = [];
@@ -192,6 +193,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       senderId: receivedMessage.senderId,
       chatId: receivedMessage.chatId,
       content: receivedMessage.content,
+      replyToMessageId: receivedMessage.replyToMessageId,
     };
     console.log(`Message receivers: ${JSON.stringify(messageReceivers)}`);
     const createdMessage = await this.messagesService.createMessage(

@@ -38,7 +38,6 @@ export const useSocket = (
   }, []);
 
   const send = (props: { event: string; data: unknown }) => {
-    console.log(`Sending data: ${JSON.stringify(props.data)}`);
     socketRef.current?.emit(props.event, props.data);
   };
 

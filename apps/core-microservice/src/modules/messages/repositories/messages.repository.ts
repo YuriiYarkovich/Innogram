@@ -37,17 +37,21 @@ export class MessagesRepository {
       `
         SELECT *
         FROM (SELECT message.id,
-                     message.chat_id             AS "chatId",
-                     message.reply_to_message_id AS "respondingMessageId",
-                     profile.username            AS "authorUsername",
-                     profile.avatar_filename     AS "authorAvatarFilename",
+                     message.chat_id                            AS "chatId",
+                     (SELECT json_build_object('id', m.id, 'chatId', m.chat_id, 'authorUsername', p.username, 'content',
+                                               m.content)
+                      FROM main.messages m
+                             LEFT JOIN main.profiles p ON p.id = m.sender_id
+                      WHERE m.id = message.reply_to_message_id) AS "replyingMessage",
+                     profile.username                           AS "authorUsername",
+                     profile.avatar_filename                    AS "authorAvatarFilename",
                      message.content,
-                     message.created_at          AS "createdAt",
+                     message.created_at                         AS "createdAt",
                      CASE
                        WHEN messages_receiver.receiver_id = $2
                          THEN messages_receiver.read_status
                        ELSE 'read'
-                       END                       AS "read"
+                       END                                      AS "read"
               FROM main.messages AS message
                      LEFT JOIN main.profiles AS profile ON profile.id = message.sender_id
                      LEFT JOIN main.messages_receiver AS messages_receiver
@@ -78,7 +82,6 @@ export class MessagesRepository {
     createdAt: string;
     read: MessageReadStatus;
   } | null> {
-    console.log(`Profile id in get last message: ${currentProfileId}`);
     const rows: {
       content: string;
       createdAt: string;
@@ -103,7 +106,6 @@ export class MessagesRepository {
       [chatId, currentProfileId],
     );
 
-    console.log(`Found message loh: ${JSON.stringify(rows[0])}`);
     return rows[0] ?? null;
   }
 
@@ -111,17 +113,21 @@ export class MessagesRepository {
     const rows: FindingMessageData[] = await this.messageRepository.query(
       `
         SELECT message.id,
-               message.reply_to_message_id AS "respondingMessageId",
-               chat_id                     AS "chatId",
-               profile.username            AS "authorUsername",
-               profile.avatar_filename     AS "authorAvatarFilename",
+               (SELECT json_build_object('id', m.id, 'chatId', m.chat_id, 'authorUsername', p.username, 'content',
+                                         m.content)
+                FROM main.messages m
+                       LEFT JOIN main.profiles p ON p.id = m.sender_id
+                WHERE m.id = message.reply_to_message_id) AS "replyingMessage",
+               chat_id                                    AS "chatId",
+               profile.username                           AS "authorUsername",
+               profile.avatar_filename                    AS "authorAvatarFilename",
                content,
-               message.created_at          AS "createdAt",
+               message.created_at                         AS "createdAt",
                CASE
                  WHEN messages_receiver.receiver_id = $2
                    THEN messages_receiver.read_status
                  ELSE 'read'
-                 END                       AS "read"
+                 END                                      AS "read"
         FROM main.messages AS message
                LEFT JOIN main.profiles AS profile ON message.sender_id = profile.id
                LEFT JOIN main.messages_receiver AS messages_receiver
