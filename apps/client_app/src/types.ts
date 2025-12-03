@@ -91,6 +91,7 @@ export type Message = {
 };
 
 export type SendingMessage = {
+  id?: string;
   senderId: string;
   chatId?: string;
   receiverId?: string;

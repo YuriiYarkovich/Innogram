@@ -2,6 +2,7 @@ import { File as MulterFile } from 'multer';
 import { MessageReadStatus } from '../enums/message.enum';
 
 export interface ReceivingMessage {
+  id?: string;
   senderId: string;
   chatId?: string;
   receiverId?: string;
@@ -43,23 +44,4 @@ export interface ReturningMessageData {
 export interface MessageReceiver {
   profileId: string;
   readStatus: MessageReadStatus;
-}
-
-export interface MessageToEmitToEnteredUser {
-  messageId: string;
-  content: string;
-  chatId: string;
-  replyMessageId: string | undefined;
-}
-
-export interface MessageToEdit {
-  messageId: string;
-  updatedContent: string;
-  chatId: string;
-  files: MulterFile | undefined;
-}
-
-export interface MessageToDelete {
-  messageId: string;
-  chatId: string;
 }

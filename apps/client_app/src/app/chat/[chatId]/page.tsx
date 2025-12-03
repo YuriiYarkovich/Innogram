@@ -103,9 +103,17 @@ export default function ChatPage() {
     updateParticularChatInChatLists(receivedMessage);
   };
 
+  const onMessageDeleted = (messageId: string) => {
+    setMessages((prevMessages) => {
+      if (!prevMessages) return prevMessages;
+      return prevMessages.filter((message) => message.id !== messageId);
+    });
+  };
+
   const { send } = useSocket(
     onMessageToChatReceived,
     onMessageToServerReceived,
+    onMessageDeleted,
   );
 
   const updateChats = () => {
@@ -176,6 +184,15 @@ export default function ChatPage() {
       switch (action) {
         case 'reply':
           setReplyingMessage(contextMenuState?.message);
+          break;
+        case 'delete':
+          send({
+            event: 'deleteMessage',
+            data: {
+              chatId: currentChat?.id,
+              id: contextMenuState?.message?.id,
+            },
+          });
           break;
       }
       setContextMenuState(null);

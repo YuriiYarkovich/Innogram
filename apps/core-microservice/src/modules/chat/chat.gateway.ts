@@ -28,6 +28,7 @@ import { MessageReadStatus } from '../../common/enums/message.enum';
 import { CreateMessageDto } from '../messages/dto/create-message.dto';
 import { MinioService } from '../minio/minio.service';
 import { CreateChatDto } from './dto/create-chat.dto';
+import { all } from 'axios';
 
 @WebSocketGateway(3004, { cors: { origin: '*', credentials: true } })
 @Injectable()
@@ -114,23 +115,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage(`message`)
   async handleMessage(client: Socket, receivedMessage: ReceivingMessage) {
-    console.log(`RECEIVED MESSAGE: ${JSON.stringify(receivedMessage)}`);
     const connectedToChatSockets: string[] = [];
     const notConnectedToChatSockets: string[] = [];
     const messageReceivers: MessageReceiver[] = [];
 
-    const allReceiversProfileIds: string[] = [];
+    let allReceiversProfileIds: string[] = [];
     //in next block -- finding chat id
     if (!receivedMessage.receiverId && receivedMessage.chatId) {
-      //getting all chat participants
-      const allReceivers = await this.chatService.getAllChatParticipants(
+      allReceiversProfileIds = await this.getAllChatParticipantsIds(
         receivedMessage.chatId,
       );
-
-      //filling an array with receivers ids
-      allReceivers.forEach((receiver) => {
-        allReceiversProfileIds.push(receiver.profileId);
-      });
     } else if (!receivedMessage.chatId && receivedMessage.receiverId) {
       //trying to get the chat
       const chat = await this.chatService.getPrivateChatByIds(
@@ -222,6 +216,37 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  @SubscribeMessage(`deleteMessage`)
+  async handleMessageDeletion(
+    client: Socket,
+    receivedMessage: ReceivingMessage,
+  ) {
+    if (!receivedMessage.chatId)
+      throw new BadRequestException(
+        'There are no chat id in received message on trying to delete!',
+      );
+
+    const chatParticipantsIds: string[] = await this.getAllChatParticipantsIds(
+      receivedMessage.chatId,
+    );
+
+    const connectedToChatSockets: string[] =
+      this.getAllConnectedToChatSocketsFromGivenProfiles(
+        receivedMessage.chatId,
+        chatParticipantsIds,
+      );
+
+    if (!receivedMessage.id)
+      throw new BadRequestException(
+        'There are no message id provided when trying to delete message!',
+      );
+    await this.messagesService.deleteMessage(receivedMessage?.id);
+
+    connectedToChatSockets.forEach((socketId) => {
+      this.server.to(socketId).emit('messageDeleted', receivedMessage?.id);
+    });
+  }
+
   handleDisconnect(socket: Socket) {
     const profileId = this.getProfileIdBySocketId(socket.id);
     if (!profileId) return;
@@ -272,5 +297,34 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     for (const [value, key] of this.allConnectedUsers) {
       if (value === profileId) return key;
     }
+  }
+
+  private async getAllChatParticipantsIds(chatId: string) {
+    //getting all chat participants
+    const allParticipants =
+      await this.chatService.getAllChatParticipants(chatId);
+
+    const allChatParticipantsProfileIds: string[] = [];
+    //filling an array with receivers ids
+    allParticipants.forEach((receiver) => {
+      allChatParticipantsProfileIds.push(receiver.profileId);
+    });
+
+    return allChatParticipantsProfileIds;
+  }
+
+  private getAllConnectedToChatSocketsFromGivenProfiles(
+    chatId: string,
+    profilesIds: string[],
+  ) {
+    const allConnectedToChatSockets: string[] = [];
+    for (const profileId of profilesIds) {
+      const socketId = this.getSocketIdByProfileId(profileId);
+      if (socketId && this.chatUsers.get(chatId)?.has(profileId)) {
+        allConnectedToChatSockets.push(socketId);
+      }
+    }
+
+    return allConnectedToChatSockets;
   }
 }

@@ -6,6 +6,7 @@ import { Message } from '@/types';
 export const useSocket = (
   onMessageToUserInChat?: (message: Message) => void,
   onMessageToUserInServer?: (message: Message) => void,
+  onMessageDeleted?: (messageId: string) => void,
 ) => {
   const socketRef = useRef<Socket | null>(null);
 
@@ -30,6 +31,10 @@ export const useSocket = (
 
     socket.on('messageToUserInServer', (message: Message) => {
       if (onMessageToUserInServer) onMessageToUserInServer(message);
+    });
+
+    socket.on('messageDeleted', (messageId: string) => {
+      if (onMessageDeleted) onMessageDeleted(messageId);
     });
 
     return () => {

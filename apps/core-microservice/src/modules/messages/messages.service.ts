@@ -261,7 +261,7 @@ export class MessagesService {
     }
   }*/
 
-  /*async deleteMessage(messageId: string, profileId: string) {
+  async deleteMessage(messageId: string) {
     await this.messagesRepository.deleteMessage(messageId);
-  }*/
+  }
 }

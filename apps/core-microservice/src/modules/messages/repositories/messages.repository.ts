@@ -100,10 +100,16 @@ export class MessagesRepository {
                          ON messages_receiver.message_id = message.id
                            AND messages_receiver.receiver_id = $2
         WHERE message.chat_id = $1
+          AND message.visible_status IN ($3, $4)
         ORDER BY message.created_at DESC
         LIMIT 1
       `,
-      [chatId, currentProfileId],
+      [
+        chatId,
+        currentProfileId,
+        MessageVisibilityStatus.ACTIVE,
+        MessageVisibilityStatus.EDITED,
+      ],
     );
 
     return rows[0] ?? null;
@@ -142,7 +148,7 @@ export class MessagesRepository {
     return rows[0];
   }
 
-  /* async updateMessage(
+  /*async updateMessage(
     messageId: string,
     dto: EditMessageDto,
     queryRunner: QueryRunner,
@@ -153,12 +159,15 @@ export class MessagesRepository {
       { content: dto.content, visibleStatus: MessageVisibilityStatus.EDITED },
     );
     return await this.getMessageById(messageId);
-  }
+  }*/
 
   async deleteMessage(messageId: string) {
     await this.messageRepository.update(
       { id: messageId },
-      { visibleStatus: MessageVisibilityStatus.DELETED },
+      {
+        visibleStatus: MessageVisibilityStatus.DELETED,
+        deleted_at: new Date(),
+      },
     );
-  }*/
+  }
 }
