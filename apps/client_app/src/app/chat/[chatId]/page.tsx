@@ -18,20 +18,27 @@ import {
 } from '@innogram/core-microservice/dist/common/enums/message.enum';
 import MessageContextMenu from '@/components/chat/message-context-menu';
 import Line from '@/components/line';
-import Separator from '@/components/auth/separator';
+import ChatContextMenu from '@/components/chat/chat-context-menu';
 
 export type MessageSendFormValues = {
   content: string;
   file: File | null;
 };
 
-export type ContextMenuState = {
+export type MessageContextMenuState = {
   x: number;
   y: number;
   message: Message | null;
 };
 
-export type MenuAction = `edit` | 'delete' | 'reply';
+export type ChatContextMenuState = {
+  x: number;
+  y: number;
+  chat: Chat | null;
+};
+
+export type MessageMenuAction = `edit` | 'delete' | 'reply';
+export type ChatMenuAction = 'rename' | 'add' | 'exit';
 
 export default function ChatPage() {
   const {
@@ -71,11 +78,14 @@ export default function ChatPage() {
   const [messagesLoading, setMessagesLoading] = useState<boolean>(false);
   const [currentChat, setCurrentChat] = useState<Chat | null>(null);
   const [replyingMessage, setReplyingMessage] = useState<Message | null>(null);
-  const [contextMenuState, setContextMenuState] =
-    useState<ContextMenuState | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-
+  const [messageContextMenuState, setMessageContextMenuState] =
+    useState<MessageContextMenuState | null>(null);
+  const messageMenuRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [chatContextMenuState, setChatContextMenuState] =
+    useState<ChatContextMenuState | null>(null);
+  const chatMenuRef = useRef<HTMLDivElement>(null);
+  const chatsEndRef = useRef<HTMLDivElement | null>(null);
 
   const updateParticularChatInChatList = (receivedMessage: Message) => {
     console.log('pidoras');
@@ -197,70 +207,120 @@ export default function ChatPage() {
     setReplyingMessage(null);
   };
 
-  const handleContextMenu = (
+  const handleMessagesContextMenu = (
     e: MouseEvent<HTMLDivElement>,
     message: Message,
   ): void => {
     e.preventDefault();
-    setContextMenuState({
+    setMessageContextMenuState({
       x: e.pageX,
       y: e.pageY,
       message,
     });
   };
 
-  const handleMenuAction = (action: MenuAction) => {
-    if (contextMenuState?.message) {
+  const handleMessageMenuAction = (action: MessageMenuAction) => {
+    if (messageContextMenuState?.message) {
       console.log(
-        `Picked action: ${action} for message with id: ${contextMenuState?.message.id}`,
+        `Picked action: ${action} for message with id: ${messageContextMenuState?.message.id}`,
       );
       switch (action) {
         case 'reply':
-          setReplyingMessage(contextMenuState?.message);
+          setReplyingMessage(messageContextMenuState?.message);
           break;
         case 'delete':
           send({
             event: 'deleteMessage',
             data: {
               chatId: currentChat?.id,
-              id: contextMenuState?.message?.id,
+              id: messageContextMenuState?.message?.id,
             },
           });
           break;
       }
-      setContextMenuState(null);
+      setMessageContextMenuState(null);
     }
   };
 
-  //closing context menu on click outside of it
+  const handleChatsContextMenu = (
+    e: MouseEvent<HTMLDivElement>,
+    chat: Chat,
+  ): void => {
+    e.preventDefault();
+    setChatContextMenuState({
+      x: e.pageX,
+      y: e.pageY,
+      chat,
+    });
+  };
+
+  const handleChatsContextMenuButton = (
+    e: MouseEvent<HTMLButtonElement>,
+    chat: Chat,
+  ): void => {
+    e.preventDefault();
+    e.stopPropagation(); // to prevent click of working further
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    setChatContextMenuState({
+      x: rect.left,
+      y: rect.bottom,
+      chat,
+    });
+  };
+
+  const handleChatsMenuAction = (action: ChatMenuAction) => {
+    if (chatContextMenuState?.chat) {
+      console.log(
+        `Picked action: ${action} for chat with id: ${chatContextMenuState?.chat.id}`,
+      );
+      switch (action) {
+        case 'exit':
+          break;
+      }
+    }
+  };
+
+  //closing context menus on click outside of it
   useEffect(() => {
     const handleClick = (e: Event) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setContextMenuState(null);
+      if (
+        messageMenuRef.current &&
+        !messageMenuRef.current.contains(e.target as Node)
+      ) {
+        setMessageContextMenuState(null);
+      } else if (
+        chatMenuRef.current &&
+        !chatMenuRef.current.contains(e.target as Node)
+      ) {
+        setChatContextMenuState(null);
       }
     };
 
-    if (contextMenuState) {
+    if (messageContextMenuState || chatContextMenuState) {
       document.addEventListener('click', handleClick);
     }
 
     return () => {
       document.removeEventListener('click', handleClick);
     };
-  }, [contextMenuState]);
+  }, [messageContextMenuState, chatContextMenuState]);
 
   //closing context menu on scroll
   useEffect(() => {
-    const handleScroll = () => setContextMenuState(null);
+    const handleScroll = () => {
+      setMessageContextMenuState(null);
+      setChatContextMenuState(null);
+    };
 
-    if (contextMenuState) {
+    if (messageContextMenuState || chatContextMenuState) {
       window.addEventListener('scroll', handleScroll);
     }
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [contextMenuState]);
+  }, [messageContextMenuState, chatContextMenuState]);
 
   useEffect(() => {
     updateChats();
@@ -315,17 +375,21 @@ export default function ChatPage() {
               <p>There are no chats yet.</p>
             ) : (
               chats?.map((chat) => (
-                <ChatPreviewTile
+                <div
                   key={chat.id}
-                  chatAvatarUrl={chat?.avatarUrl}
-                  chatTitle={chat.title}
-                  lastMessageContent={chat?.lastMessageContent}
-                  lastMessageCreatedAt={chat?.lastMessageCreatedAt}
-                  lastMessageRead={chat?.lastMessageRead}
-                  onClick={() => onChatTileClick(chat.id)}
-                />
+                  onContextMenu={(e) => handleChatsContextMenu(e, chat)}
+                >
+                  <ChatPreviewTile
+                    chat={chat}
+                    onClick={() => onChatTileClick(chat.id)}
+                    onOptionsButtonClick={(e) =>
+                      handleChatsContextMenuButton(e, chat)
+                    }
+                  />
+                </div>
               ))
             )}
+            <div ref={chatsEndRef} />
           </div>
         </div>
         <div className={`flex flex-col w-5/8 h-full gap-2`}>
@@ -351,7 +415,7 @@ export default function ChatPage() {
                 {messages?.map((message) => (
                   <div
                     key={message.id}
-                    onContextMenu={(e) => handleContextMenu(e, message)}
+                    onContextMenu={(e) => handleMessagesContextMenu(e, message)}
                   >
                     <MessageTile message={message} />
                   </div>
@@ -377,7 +441,7 @@ export default function ChatPage() {
                     />
                     <div className={'flex flex-col gap-1'}>
                       <span className={'font-bold'}>
-                        Responding to {replyingMessage?.authorUsername}
+                        Replying to {replyingMessage?.authorUsername}
                       </span>
                       <span>{replyingMessage.content}</span>
                     </div>
@@ -425,11 +489,18 @@ export default function ChatPage() {
             </>
           )}
         </div>
-        {contextMenuState && (
+        {messageContextMenuState && (
           <MessageContextMenu
-            menuRef={menuRef}
-            contextMenuPosition={contextMenuState}
-            handleMenuAction={handleMenuAction}
+            menuRef={messageMenuRef}
+            contextMenuPosition={messageContextMenuState}
+            handleMenuAction={handleMessageMenuAction}
+          />
+        )}
+        {chatContextMenuState && (
+          <ChatContextMenu
+            menuRef={chatMenuRef}
+            contextMenuPosition={chatContextMenuState}
+            handleMenuAction={handleChatsMenuAction}
           />
         )}
       </div>

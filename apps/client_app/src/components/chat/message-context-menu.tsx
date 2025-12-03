@@ -1,11 +1,15 @@
 import { Ref } from 'react';
-import { ContextMenuState, MenuAction } from '@/app/chat/[chatId]/page';
+import {
+  MessageContextMenuState,
+  MessageMenuAction,
+} from '@/app/chat/[chatId]/page';
 
 type MessageContextMenuProps = {
   menuRef: Ref<HTMLDivElement> | undefined;
-  contextMenuPosition: ContextMenuState;
-  handleMenuAction: (action: MenuAction) => void;
+  contextMenuPosition: MessageContextMenuState;
+  handleMenuAction: (action: MessageMenuAction) => void;
 };
+
 const MessageContextMenu = ({
   menuRef,
   contextMenuPosition,

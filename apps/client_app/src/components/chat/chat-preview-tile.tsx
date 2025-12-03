@@ -2,38 +2,34 @@ import React from 'react';
 import Image from 'next/image';
 import { MessageReadStatus } from '@innogram/core-microservice/dist/common/enums/message.enum';
 import { formatTime } from '@/utils/time';
+import { Chat } from '@/types';
+import { MouseEvent } from 'react';
 
 type ChatPreviewProps = {
-  chatAvatarUrl?: string;
-  chatTitle: string;
-  lastMessageContent?: string;
-  lastMessageCreatedAt?: string;
-  lastMessageRead?: MessageReadStatus;
+  chat: Chat;
   onClick: () => void;
+  onOptionsButtonClick: (e: MouseEvent<HTMLButtonElement>, chat: Chat) => void;
 };
 
 const ChatPreviewTile = ({
-  chatAvatarUrl,
-  chatTitle,
-  lastMessageContent,
-  lastMessageCreatedAt,
-  lastMessageRead,
+  chat,
   onClick,
+  onOptionsButtonClick,
 }: ChatPreviewProps) => {
   return (
     <div
       className={
-        'flex flex-row w-full gap-4 p-3 items-center border-[#79747e] border-1 cursor-pointer'
+        'flex flex-row w-full gap-3 p-3 items-center border-[#79747e] border-1 cursor-pointer'
       }
       onClick={onClick}
     >
       <div
         className={
-          'flex justify-center rounded-full md:w-[70px] md:h-[70px] border-[#79747e] border-1'
+          'flex justify-center rounded-full min-w-[70px] md:h-[70px] border-[#79747e] border-1'
         }
       >
         <Image
-          src={chatAvatarUrl || '/images/avaTest.png'}
+          src={chat.avatarUrl || '/images/avaTest.png'}
           alt={'chatAvatarUrl'}
           width={70}
           height={70}
@@ -43,21 +39,38 @@ const ChatPreviewTile = ({
         />
       </div>
       <div className={'flex flex-col gap-2'}>
-        <span className={'text-[18px] font-bold'}>{chatTitle}</span>
+        <span className={'text-[18px] font-bold'}>{chat.title}</span>
         <div className={'flex flex-row gap-2'}>
-          <span className={'text-[15px]'}>{lastMessageContent}</span>
+          <span className={'text-[15px]'}>{chat.lastMessageContent}</span>
           <span className={'text-[15px] text-[#79747e]'}>
-            {lastMessageCreatedAt ? formatTime(lastMessageCreatedAt) : ''}
+            {chat.lastMessageCreatedAt
+              ? formatTime(chat.lastMessageCreatedAt)
+              : ''}
           </span>
         </div>
       </div>
-      {lastMessageRead === MessageReadStatus.UNREAD ? (
+      {chat.lastMessageRead === MessageReadStatus.UNREAD ? (
         <div
-          className={'md:w-[10px] md:h-[10px] rounded-full ml-18 bg-blue-500'}
+          className={'min-w-[10px] min-h-[10px] rounded-full ml-18 bg-blue-500'}
         />
       ) : (
         <></>
       )}
+      <button
+        className={
+          'flex items-center justify-center min-h-[32px] min-w-[32px] ml-auto'
+        }
+        onClick={(e) => onOptionsButtonClick(e, chat)}
+      >
+        <Image
+          src={'/images/icons/options.svg'}
+          alt={'options button image'}
+          height={25}
+          width={25}
+          draggable={false}
+          className={'hover:md:w-[32px] hover:md:h-[32px]'}
+        />
+      </button>
     </div>
   );
 };
