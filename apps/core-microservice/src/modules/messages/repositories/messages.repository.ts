@@ -161,13 +161,24 @@ export class MessagesRepository {
     return await this.getMessageById(messageId);
   }*/
 
-  async deleteMessage(messageId: string) {
+  async setDeleteStatusToMessage(messageId: string) {
     await this.messageRepository.update(
       { id: messageId },
       {
         visibleStatus: MessageVisibilityStatus.DELETED,
         deleted_at: new Date(),
       },
+    );
+  }
+
+  async setDeleteStatusToMessagesOfChat(
+    chatId: string,
+    queryRunner: QueryRunner,
+  ) {
+    await queryRunner.manager.update(
+      Message,
+      { chatId },
+      { visibleStatus: MessageVisibilityStatus.DELETED },
     );
   }
 }

@@ -2,6 +2,7 @@ import {
   MessageReadStatus,
   MessageVisibilityStatus,
 } from '@innogram/core-microservice/dist/common/enums/message.enum';
+import { ChatStatus } from '@innogram/core-microservice/dist/common/enums/chat.enum';
 
 export type Post = {
   postId: string;
@@ -74,6 +75,7 @@ export type Chat = {
   lastMessageContent?: string;
   lastMessageCreatedAt?: string;
   lastMessageRead?: MessageReadStatus;
+  chatStatus: ChatStatus;
 };
 
 export enum ChatTypes {

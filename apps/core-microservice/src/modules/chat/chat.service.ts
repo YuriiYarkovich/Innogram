@@ -128,7 +128,6 @@ export class ChatService {
         chat.id,
         currentProfileId,
       );
-      console.log(`Last message: ${JSON.stringify(lastMessage)}`);
 
       let avatarUrl = await this.minioService.getPublicUrl(chat.avatarFilename);
       let chatTitle: string = '';
@@ -151,6 +150,7 @@ export class ChatService {
         lastMessageContent: lastMessage?.content,
         lastMessageCreatedAt: lastMessage?.createdAt,
         lastMessageRead: lastMessage?.read,
+        chatStatus: chat.chatStatus,
       };
       returningChatsData.push(returningChatData);
     }
@@ -259,5 +259,26 @@ export class ChatService {
     return await this.chatParticipantRepository.findAllParticipantsOfChat(
       chatId,
     );
+  }
+
+  async deleteChat(chatId: string) {
+    const chat = await this.chatRepository.getChatInfo(chatId);
+    if (!chat)
+      throw new BadRequestException('Chat with provided id does not exist');
+
+    const queryRunner = await this.createTransaction();
+    try {
+      await this.chatRepository.deleteChat(chatId, queryRunner);
+      await this.messagesRepository.setDeleteStatusToMessagesOfChat(
+        chatId,
+        queryRunner,
+      );
+      await queryRunner.commitTransaction();
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      throw e;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

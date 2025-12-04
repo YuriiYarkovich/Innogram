@@ -54,25 +54,29 @@ export class ChatRepository {
       `
         SELECT chat.id,
                chat.chat_avatar_filename AS "avatarFilename",
-               chat.title
+               chat.title,
+               chat.chat_status          AS "chatStaus"
         FROM main.chats AS chat
                RIGHT JOIN main.chat_participants AS chatParticipant ON chat.id = chatParticipant.chat_id
         WHERE chatParticipant.profile_id = $1
+          AND chat_status IN ($2, $3)
       `,
-      [profileId],
+      [profileId, ChatStatus.ACTIVE, ChatStatus.ARCHIVED],
     );
   }
 
   async getChatInfo(chatId: string): Promise<FindingChatData | null> {
     return await this.chatRepository.query(
       `
-      SELECT id,
-             chat_avatar_filename AS "avatarFilename",
-             title
-      FROM main.chats
-      WHERE id = $1
-    `,
-      [chatId],
+        SELECT id,
+               chat_avatar_filename AS "avatarFilename",
+               title,
+               chat_status          AS "chatStaus"
+        FROM main.chats
+        WHERE id = $1
+          AND chat_status IN ($2, $3)
+      `,
+      [chatId, ChatStatus.ACTIVE, ChatStatus.ARCHIVED],
     );
   }
 
@@ -80,8 +84,12 @@ export class ChatRepository {
     await this.chatRepository.update({ id: chatId }, { title: newTitle });
   }
 
-  async deleteChat(chatId: string) {
-    await this.chatRepository.delete({ id: chatId });
+  async deleteChat(chatId: string, queryRunner: QueryRunner) {
+    await queryRunner.manager.update(
+      Chat,
+      { id: chatId },
+      { chatStatus: ChatStatus.DELETED },
+    );
   }
 
   async archiveChat(chatId: string): Promise<FindingChatData | null> {

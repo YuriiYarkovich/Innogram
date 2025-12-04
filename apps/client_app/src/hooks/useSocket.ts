@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { env } from '@/env';
 import { io, Socket } from 'socket.io-client';
-import { Message } from '@/types';
+import { Chat, Message } from '@/types';
 
 export const useSocket = (
   onMessageToUserInChat?: (message: Message) => void,
   onMessageToUserInServer?: (message: Message) => void,
   onMessageDeleted?: (messageId: string) => void,
+  onCurrentChatDeleted?: (chat: Chat) => void,
+  onChatDeleted?: (chat: Chat) => void,
 ) => {
   const socketRef = useRef<Socket | null>(null);
 
@@ -35,6 +37,14 @@ export const useSocket = (
 
     socket.on('messageDeleted', (messageId: string) => {
       if (onMessageDeleted) onMessageDeleted(messageId);
+    });
+
+    socket.on('currentChatDeleted', (chat: Chat) => {
+      if (onCurrentChatDeleted) onCurrentChatDeleted(chat);
+    });
+
+    socket.on('chatDeleted', (chat: Chat) => {
+      if (onChatDeleted) onChatDeleted(chat);
     });
 
     return () => {

@@ -28,6 +28,7 @@ import { MessageReadStatus } from '../../common/enums/message.enum';
 import { CreateMessageDto } from '../messages/dto/create-message.dto';
 import { MinioService } from '../minio/minio.service';
 import { CreateChatDto } from './dto/create-chat.dto';
+import { ReturningChatData } from '../../common/types/chat.types';
 import { all } from 'axios';
 
 @WebSocketGateway(3004, { cors: { origin: '*', credentials: true } })
@@ -247,6 +248,38 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  @SubscribeMessage('deleteChat')
+  async handleChatDeletion(
+    client: Socket,
+    data: { chat: ReturningChatData; currentProfileId: string },
+  ) {
+    await this.chatService.deleteChat(data.chat.id);
+    const chatParticipants = await this.getAllChatParticipantsIds(data.chat.id);
+
+    const onlineChatParticipantsConnectedToChat =
+      this.getAllConnectedToChatSocketsFromGivenProfiles(
+        data.chat.id,
+        chatParticipants,
+      );
+
+    const onlineChatParticipantsConnectedToServer =
+      this.getAllConnectedToServerSocketsFromGivenProfiles(chatParticipants);
+
+    onlineChatParticipantsConnectedToChat.forEach((connectedToChatSocket) => {
+      this.server.to(connectedToChatSocket).emit('currentChatDeleted', {
+        ...data.chat,
+      });
+    });
+
+    onlineChatParticipantsConnectedToServer.forEach(
+      (chatParticipantConnectedToServer) => {
+        this.server.to(chatParticipantConnectedToServer).emit('chatDeleted', {
+          ...data.chat,
+        });
+      },
+    );
+  }
+
   handleDisconnect(socket: Socket) {
     const profileId = this.getProfileIdBySocketId(socket.id);
     if (!profileId) return;
@@ -326,5 +359,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     return allConnectedToChatSockets;
+  }
+
+  private getAllConnectedToServerSocketsFromGivenProfiles(
+    profilesIds: string[],
+  ) {
+    const allConnectedToServerSockets: string[] = [];
+    for (const profileId of profilesIds) {
+      const socketId = this.getSocketIdByProfileId(profileId);
+      if (socketId) allConnectedToServerSockets.push(socketId);
+    }
+    return allConnectedToServerSockets;
   }
 }

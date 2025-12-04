@@ -38,7 +38,7 @@ export type ChatContextMenuState = {
 };
 
 export type MessageMenuAction = `edit` | 'delete' | 'reply';
-export type ChatMenuAction = 'rename' | 'add' | 'exit';
+export type ChatMenuAction = 'rename' | 'add' | 'delete' | 'exit';
 
 export default function ChatPage() {
   const {
@@ -153,10 +153,25 @@ export default function ChatPage() {
     });
   };
 
+  const onCurrentChatDeleted = (deletedChat: Chat) => {
+    setCurrentChat(null);
+    onChatDeleted(deletedChat);
+  };
+
+  const onChatDeleted = (deletedChat: Chat) => {
+    setChats((prevChats) => {
+      if (!prevChats) return prevChats;
+
+      return prevChats.filter((chat) => chat.id !== deletedChat.id);
+    });
+  };
+
   const { send } = useSocket(
     onMessageToChatReceived,
     onMessageToServerReceived,
     onMessageDeleted,
+    onCurrentChatDeleted,
+    onChatDeleted,
   );
 
   const updateChats = () => {
@@ -275,9 +290,17 @@ export default function ChatPage() {
         `Picked action: ${action} for chat with id: ${chatContextMenuState?.chat.id}`,
       );
       switch (action) {
-        case 'exit':
+        case 'delete':
+          send({
+            event: 'deleteChat',
+            data: {
+              chat: chatContextMenuState.chat,
+              currentProfileId: curProfile.id,
+            },
+          });
           break;
       }
+      setChatContextMenuState(null);
     }
   };
 
