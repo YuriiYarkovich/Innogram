@@ -9,7 +9,11 @@ import { useForm } from 'react-hook-form';
 import MessageTile from '@/components/chat/messageTile';
 import { useParams } from 'next/navigation';
 import { Chat, Message, Profile } from '@/types';
-import { fetchChatsOfProfile, findChatById } from '@/services/chat.service';
+import {
+  fetchChatInfo,
+  fetchChatsOfProfile,
+  findChatById,
+} from '@/services/chat.service';
 import { fetchMessagesOfChat } from '@/services/messages.service';
 import { useSocket } from '@/hooks/useSocket';
 import {
@@ -88,16 +92,21 @@ export default function ChatPage() {
   const chatsEndRef = useRef<HTMLDivElement | null>(null);
 
   const updateParticularChatInChatList = (receivedMessage: Message) => {
-    console.log('pidoras');
     setChats((prevChats) => {
       if (!prevChats) return prevChats;
+
+      const chatExists = prevChats.some(
+        (chat) => chat.id === receivedMessage.chatId,
+      );
+
+      if (!chatExists) {
+        loadAndAddNewChat(receivedMessage.chatId);
+        return prevChats;
+      }
 
       return prevChats.map((chat) => {
         if (chat.id !== receivedMessage.chatId) return chat;
 
-        console.log(
-          `Setting previous last message to chat preview. Message: ${JSON.stringify(receivedMessage)}`,
-        );
         return {
           ...chat,
           lastMessageRead: receivedMessage.read,
@@ -106,6 +115,23 @@ export default function ChatPage() {
         };
       });
     });
+  };
+
+  const loadAndAddNewChat = async (chatId: string) => {
+    try {
+      const chatInfo = await fetchChatInfo(chatId);
+      if (chatInfo) {
+        setChats((prev) => {
+          if (!prev) return prev;
+          if (prev.some((chat) => chat.id === chatId)) {
+            return prev;
+          }
+          return [chatInfo, ...prev];
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load chat info:', error);
+    }
   };
 
   const onMessageToChatReceived = (receivedMessage: Message) => {
@@ -397,20 +423,22 @@ export default function ChatPage() {
             ) : chats?.length === 0 ? (
               <p>There are no chats yet.</p>
             ) : (
-              chats?.map((chat) => (
-                <div
-                  key={chat.id}
-                  onContextMenu={(e) => handleChatsContextMenu(e, chat)}
-                >
-                  <ChatPreviewTile
-                    chat={chat}
-                    onClick={() => onChatTileClick(chat.id)}
-                    onOptionsButtonClick={(e) =>
-                      handleChatsContextMenuButton(e, chat)
-                    }
-                  />
-                </div>
-              ))
+              chats
+                /*?.filter((chat) => chat && chat.id)*/
+                ?.map((chat) => (
+                  <div
+                    key={chat.id}
+                    onContextMenu={(e) => handleChatsContextMenu(e, chat)}
+                  >
+                    <ChatPreviewTile
+                      chat={chat}
+                      onClick={() => onChatTileClick(chat.id)}
+                      onOptionsButtonClick={(e) =>
+                        handleChatsContextMenuButton(e, chat)
+                      }
+                    />
+                  </div>
+                ))
             )}
             <div ref={chatsEndRef} />
           </div>

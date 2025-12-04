@@ -66,7 +66,7 @@ export class ChatRepository {
   }
 
   async getChatInfo(chatId: string): Promise<FindingChatData | null> {
-    return await this.chatRepository.query(
+    const rows: FindingChatData[] = await this.chatRepository.query(
       `
         SELECT id,
                chat_avatar_filename AS "avatarFilename",
@@ -78,6 +78,8 @@ export class ChatRepository {
       `,
       [chatId, ChatStatus.ACTIVE, ChatStatus.ARCHIVED],
     );
+
+    return rows[0];
   }
 
   async updateChatTitle(chatId: string, newTitle: string) {

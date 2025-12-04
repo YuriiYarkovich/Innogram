@@ -100,6 +100,24 @@ export class ChatService {
     }
   }
 
+  private async getAdditionalInfoForPrivateChat(
+    chat: FindingChatData,
+    currentProfileId: string,
+  ): Promise<{ avatarUrl: string | undefined; chatTitle: string }> {
+    let avatarUrl = await this.minioService.getPublicUrl(chat.avatarFilename);
+    let chatTitle: string = '';
+    if (!chat.title && !avatarUrl) {
+      const receiver =
+        await this.chatParticipantRepository.getSecondParticipantOfPrivateChat(
+          chat.id,
+          currentProfileId,
+        );
+      avatarUrl = await this.minioService.getPublicUrl(receiver.avatarFilename);
+      chatTitle = receiver.username;
+    }
+    return { avatarUrl, chatTitle };
+  }
+
   async getPrivateChatByIds(
     currentUserId: string,
     secondParticipantId: string,
@@ -129,24 +147,15 @@ export class ChatService {
         currentProfileId,
       );
 
-      let avatarUrl = await this.minioService.getPublicUrl(chat.avatarFilename);
-      let chatTitle: string = '';
-      if (!chat.title && !avatarUrl) {
-        const receiver =
-          await this.chatParticipantRepository.getSecondParticipantOfPrivateChat(
-            chat.id,
-            currentProfileId,
-          );
-        avatarUrl = await this.minioService.getPublicUrl(
-          receiver.avatarFilename,
-        );
-        chatTitle = receiver.username;
-      }
+      const additionalInfo = await this.getAdditionalInfoForPrivateChat(
+        chat,
+        currentProfileId,
+      );
 
       const returningChatData: ReturningChatData = {
         id: chat.id,
-        avatarUrl,
-        title: chat.title || chatTitle,
+        avatarUrl: additionalInfo.avatarUrl,
+        title: chat.title || additionalInfo.chatTitle,
         lastMessageContent: lastMessage?.content,
         lastMessageCreatedAt: lastMessage?.createdAt,
         lastMessageRead: lastMessage?.read,
@@ -166,23 +175,33 @@ export class ChatService {
 
   async getChatInfo(
     chatId: string,
-    profileId: string,
+    currentProfileId: string,
   ): Promise<ReturningChatData> {
-    await this.checkIfParticipantExists(chatId, profileId);
+    await this.checkIfParticipantExists(chatId, currentProfileId);
     const chat: FindingChatData | null =
       await this.chatRepository.getChatInfo(chatId);
     if (!chat) throw new BadRequestException(`This chat doesn't exist!`);
     const lastMessage = await this.messagesRepository.getLastMessageOfChat(
       chat.id,
-      profileId,
+      currentProfileId,
     );
 
-    return {
-      ...chat,
+    const additionalInfo = await this.getAdditionalInfoForPrivateChat(
+      chat,
+      currentProfileId,
+    );
+
+    const returningChatData: ReturningChatData = {
+      id: chat.id,
+      avatarUrl: additionalInfo.avatarUrl,
+      title: chat.title || additionalInfo.chatTitle,
       lastMessageContent: lastMessage?.content,
       lastMessageCreatedAt: lastMessage?.createdAt,
       lastMessageRead: lastMessage?.read,
+      chatStatus: chat.chatStatus,
     };
+
+    return returningChatData;
   }
 
   async updateChatTitle(chatId: string, title: string, profileId: string) {
