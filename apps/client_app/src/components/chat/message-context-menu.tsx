@@ -8,12 +8,16 @@ type MessageContextMenuProps = {
   menuRef: Ref<HTMLDivElement> | undefined;
   contextMenuPosition: MessageContextMenuState;
   handleMenuAction: (action: MessageMenuAction) => void;
+  currentProfileId: string;
+  messageAuthorId: string;
 };
 
 const MessageContextMenu = ({
   menuRef,
   contextMenuPosition,
   handleMenuAction,
+  currentProfileId,
+  messageAuthorId,
 }: MessageContextMenuProps) => {
   return (
     <div
@@ -33,13 +37,17 @@ const MessageContextMenu = ({
         <span>Reply</span>
       </button>
 
-      <button
-        className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700 flex items-center gap-2"
-        onClick={() => handleMenuAction('edit')}
-      >
-        <span>✏️</span>
-        <span>Edit</span>
-      </button>
+      {messageAuthorId === currentProfileId ? (
+        <button
+          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700 flex items-center gap-2"
+          onClick={() => handleMenuAction('edit')}
+        >
+          <span>✏️</span>
+          <span>Edit</span>
+        </button>
+      ) : (
+        <></>
+      )}
 
       <hr className="my-2 border-gray-200" />
 

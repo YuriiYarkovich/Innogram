@@ -156,6 +156,7 @@ export class ChatService {
         id: chat.id,
         avatarUrl: additionalInfo.avatarUrl,
         title: chat.title || additionalInfo.chatTitle,
+        lastMessageId: lastMessage?.id,
         lastMessageContent: lastMessage?.content,
         lastMessageCreatedAt: lastMessage?.createdAt,
         lastMessageRead: lastMessage?.read,
@@ -191,17 +192,16 @@ export class ChatService {
       currentProfileId,
     );
 
-    const returningChatData: ReturningChatData = {
+    return {
       id: chat.id,
       avatarUrl: additionalInfo.avatarUrl,
       title: chat.title || additionalInfo.chatTitle,
+      lastMessageId: lastMessage?.id,
       lastMessageContent: lastMessage?.content,
       lastMessageCreatedAt: lastMessage?.createdAt,
       lastMessageRead: lastMessage?.read,
       chatStatus: chat.chatStatus,
     };
-
-    return returningChatData;
   }
 
   async updateChatTitle(chatId: string, title: string, profileId: string) {

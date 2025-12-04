@@ -19,6 +19,8 @@ import {
   ReturningMessageData,
 } from '../../common/types/message.type';
 import { ChatParticipant } from '../../common/entities/chat/chat-participant.entity';
+import { EditMessageDto } from './dto/edit-message.dto';
+import { MessageAsset } from '../../common/entities/chat/message_asset.entity';
 
 @Injectable()
 export class MessagesService {
@@ -151,20 +153,7 @@ export class MessagesService {
 
     const returningMessagesData: ReturningMessageData[] = [];
     for (const message of foundMessages) {
-      const messageAssets =
-        await this.messagesAssetRepository.findAssetsByMessage(message.id);
-
-      const messageAssetsUrls: string[] = [];
-      for (const messageAsset of messageAssets) {
-        const messageAssetUrl = await this.minioService.getPublicUrl(
-          messageAsset.hashedFileName,
-        );
-        if (!messageAssetUrl)
-          throw new InternalServerErrorException(
-            'Something went wrong while getting url to a message asset',
-          );
-        messageAssetsUrls.push(messageAssetUrl);
-      }
+      const messageAssetsUrls = await this.getAllMessageAssetsUrls(message.id);
 
       const authorAvatarUrl = await this.minioService.getPublicUrl(
         message?.authorAvatarFilename,
@@ -180,29 +169,49 @@ export class MessagesService {
     return returningMessagesData;
   }
 
-  /*async editMessage(
+  async getAllMessageAssetsUrls(messageId: string) {
+    const messageAssets =
+      await this.messagesAssetRepository.findAssetsByMessage(messageId);
+    const messageAssetsUrls: string[] = [];
+    for (const messageAsset of messageAssets) {
+      const messageAssetUrl = await this.minioService.getPublicUrl(
+        messageAsset.hashedFileName,
+      );
+      if (!messageAssetUrl)
+        throw new InternalServerErrorException(
+          'Something went wrong while getting url to a message asset',
+        );
+      messageAssetsUrls.push(messageAssetUrl);
+    }
+    return messageAssetsUrls;
+  }
+
+  async editMessage(
     messageId: string,
     dto: EditMessageDto,
-    profileId: string,
+    currentProfileId: string,
     files: MulterFile | undefined = null,
   ) {
     const queryRunner: QueryRunner = await this.createTransaction();
 
     try {
-      await this.checkIfMessageExistsAndProfileIsAuthor(messageId, profileId);
+      await this.checkIfMessageExistsAndProfileIsAuthor(
+        messageId,
+        currentProfileId,
+      );
 
-      const updatedMessage =
-        await this.messagesRepository.updateMessage(
-          messageId,
-          dto,
-          queryRunner,
-        );
+      const updatedMessage = await this.messagesRepository.updateMessage(
+        messageId,
+        currentProfileId,
+        dto,
+        queryRunner,
+      );
 
       if (files) {
-        const existingFileNames: string[] =
-          updatedMessage?.assets?.map(
-            (a: MessageAsset): string => a.hashedFileName,
-          ) ?? [];
+        const existingFileNames =
+          await this.messagesAssetRepository.findFilenamesOfMessageAssets(
+            updatedMessage.id,
+          );
         const newFileNames: string[] = files.map(
           (f: MulterFile) => f.originalname,
         );
@@ -252,16 +261,48 @@ export class MessagesService {
       }
 
       await queryRunner.commitTransaction();
-      return await this.messagesRepository.getMessageById(messageId);
+
+      const message = await this.messagesRepository.getMessageById(
+        messageId,
+        currentProfileId,
+      );
+
+      const authorAvatarUrl = await this.minioService.getPublicUrl(
+        message?.authorAvatarFilename,
+      );
+
+      const messageAssetsUrls = await this.getAllMessageAssetsUrls(message.id);
+      const returningMessage: ReturningMessageData = {
+        ...message,
+        authorAvatarUrl,
+        messageAssetsUrls,
+      };
+
+      return returningMessage;
     } catch (e) {
       await queryRunner.rollbackTransaction();
       throw e;
     } finally {
       await queryRunner.release();
     }
-  }*/
+  }
 
   async deleteMessage(messageId: string) {
     await this.messagesRepository.setDeleteStatusToMessage(messageId);
+  }
+
+  private async checkIfMessageExistsAndProfileIsAuthor(
+    messageId: string,
+    currentProfileId: string,
+  ) {
+    const message = await this.messagesRepository.findMessageByIdAndAuthor(
+      messageId,
+      currentProfileId,
+    );
+
+    if (!message)
+      throw new BadRequestException(
+        'There is no message with provided id by provided author',
+      );
   }
 }

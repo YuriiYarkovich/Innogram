@@ -72,6 +72,7 @@ export type Chat = {
   id: string;
   avatarUrl?: string;
   title: string;
+  lastMessageId?: string;
   lastMessageContent?: string;
   lastMessageCreatedAt?: string;
   lastMessageRead?: MessageReadStatus;
@@ -87,6 +88,7 @@ export type Message = {
   id: string;
   replyingMessage?: ReplyingMessage;
   chatId: string;
+  authorProfileId: string;
   authorUsername: string;
   authorAvatarUrl?: string;
   content: string;

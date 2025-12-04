@@ -5,6 +5,7 @@ export interface ReturningChatData {
   id: string;
   avatarUrl?: string;
   title: string;
+  lastMessageId?: string;
   lastMessageContent?: string;
   lastMessageCreatedAt?: string;
   lastMessageRead?: MessageReadStatus;

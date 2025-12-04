@@ -8,6 +8,7 @@ import {
   MessageVisibilityStatus,
 } from '../../../common/enums/message.enum';
 import { FindingMessageData } from '../../../common/types/message.type';
+import { EditMessageDto } from '../dto/edit-message.dto';
 
 @Injectable()
 export class MessagesRepository {
@@ -43,6 +44,7 @@ export class MessagesRepository {
                       FROM main.messages m
                              LEFT JOIN main.profiles p ON p.id = m.sender_id
                       WHERE m.id = message.reply_to_message_id) AS "replyingMessage",
+                     profile.id                                 AS "authorProfileId",
                      profile.username                           AS "authorUsername",
                      profile.avatar_filename                    AS "authorAvatarFilename",
                      message.content,
@@ -78,17 +80,20 @@ export class MessagesRepository {
     chatId: string,
     currentProfileId: string,
   ): Promise<{
+    id: string;
     content: string;
     createdAt: string;
     read: MessageReadStatus;
   } | null> {
     const rows: {
+      id: string;
       content: string;
       createdAt: string;
       read: MessageReadStatus;
     }[] = await this.messageRepository.query(
       `
-        SELECT message.content,
+        SELECT message.id,
+               message.content,
                message.created_at AS "createdAt",
                CASE
                  WHEN messages_receiver.receiver_id = $2
@@ -125,6 +130,7 @@ export class MessagesRepository {
                        LEFT JOIN main.profiles p ON p.id = m.sender_id
                 WHERE m.id = message.reply_to_message_id) AS "replyingMessage",
                chat_id                                    AS "chatId",
+               profile.id                                 AS "authorProfileId",
                profile.username                           AS "authorUsername",
                profile.avatar_filename                    AS "authorAvatarFilename",
                content,
@@ -148,18 +154,23 @@ export class MessagesRepository {
     return rows[0];
   }
 
-  /*async updateMessage(
+  async updateMessage(
     messageId: string,
+    currentProfileId: string,
     dto: EditMessageDto,
     queryRunner: QueryRunner,
   ) {
     await queryRunner.manager.update(
       Message,
       { id: messageId },
-      { content: dto.content, visibleStatus: MessageVisibilityStatus.EDITED },
+      {
+        content: dto.content,
+        visibleStatus: MessageVisibilityStatus.EDITED,
+        updated_at: new Date(),
+      },
     );
-    return await this.getMessageById(messageId);
-  }*/
+    return await this.getMessageById(messageId, currentProfileId);
+  }
 
   async setDeleteStatusToMessage(messageId: string) {
     await this.messageRepository.update(
@@ -183,5 +194,14 @@ export class MessagesRepository {
         deleted_at: new Date(),
       },
     );
+  }
+
+  async findMessageByIdAndAuthor(messageId: string, authorId: string) {
+    return await this.messageRepository.findOne({
+      where: {
+        id: messageId,
+        senderId: authorId,
+      },
+    });
   }
 }

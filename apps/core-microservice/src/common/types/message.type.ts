@@ -18,6 +18,7 @@ export interface FindingMessageData {
   id: string;
   chatId: string;
   replyingMessage?: ReplyingMessage;
+  authorProfileId: string;
   authorUsername: string;
   authorAvatarFilename?: string;
   content: string;
@@ -37,6 +38,7 @@ export interface ReturningMessageData {
   id: string;
   replyingMessage?: ReplyingMessage;
   chatId: string;
+  authorProfileId: string;
   authorUsername: string;
   authorAvatarUrl?: string;
   content: string;

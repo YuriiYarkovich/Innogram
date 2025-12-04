@@ -48,4 +48,11 @@ export class MessageAssetsRepository {
       where: { messageId: messageId },
     });
   }
+
+  async findFilenamesOfMessageAssets(messageId: string) {
+    const filenames: string[] = [];
+    const assets = await this.findAssetsByMessage(messageId);
+    assets.forEach((asset) => filenames.push(asset.hashedFileName));
+    return filenames;
+  }
 }

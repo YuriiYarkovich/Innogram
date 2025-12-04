@@ -29,7 +29,7 @@ import { CreateMessageDto } from '../messages/dto/create-message.dto';
 import { MinioService } from '../minio/minio.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { ReturningChatData } from '../../common/types/chat.types';
-import { all } from 'axios';
+import { EditMessageDto } from '../messages/dto/edit-message.dto';
 
 @WebSocketGateway(3004, { cors: { origin: '*', credentials: true } })
 @Injectable()
@@ -215,6 +215,56 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         returningMessage.read = MessageReadStatus.UNREAD;
       this.server.to(socketId).emit('messageToUserInServer', returningMessage);
     });
+  }
+
+  @SubscribeMessage('editMessage')
+  async handleMessageEditing(client: Socket, editingMessage: ReceivingMessage) {
+    if (!editingMessage.chatId || !editingMessage.id)
+      throw new BadRequestException(
+        'No chat id or message id provided in received editing message!',
+      );
+
+    const chatParticipants = await this.getAllChatParticipantsIds(
+      editingMessage?.chatId,
+    );
+
+    const dto: EditMessageDto = { content: editingMessage.content };
+    const currentProfileId = this.getProfileIdBySocketId(client.id);
+
+    if (!currentProfileId)
+      throw new InternalServerErrorException(
+        'Something went wrong while getting profile id by socket id',
+      );
+    const updatedMessage = await this.messagesService.editMessage(
+      editingMessage.id,
+      dto,
+      currentProfileId,
+      editingMessage.files,
+    );
+
+    const connectedToChatParticipantsSocketsIds =
+      this.getAllConnectedToChatSocketsFromGivenProfiles(
+        editingMessage.chatId,
+        chatParticipants,
+      );
+
+    const connectedToServerChatParticipantsSocketIds =
+      this.getAllConnectedToServerSocketsFromGivenProfiles(chatParticipants);
+    connectedToChatParticipantsSocketsIds.forEach(
+      (connectedToChatParticipantId) => {
+        this.server
+          .to(connectedToChatParticipantId)
+          .emit('messageEditedInChat', updatedMessage);
+      },
+    );
+
+    connectedToServerChatParticipantsSocketIds.forEach(
+      (connectedToServerChatParticipant) => {
+        this.server
+          .to(connectedToServerChatParticipant)
+          .emit('messageEditedInServer', updatedMessage);
+      },
+    );
   }
 
   @SubscribeMessage(`deleteMessage`)

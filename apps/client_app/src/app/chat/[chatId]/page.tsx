@@ -23,6 +23,8 @@ import {
 import MessageContextMenu from '@/components/chat/message-context-menu';
 import Line from '@/components/line';
 import ChatContextMenu from '@/components/chat/chat-context-menu';
+import ReplyingMessageHint from '@/components/chat/replying-message-hint';
+import EditingMessageHint from '@/components/chat/editing-message-hint';
 
 export type MessageSendFormValues = {
   content: string;
@@ -82,6 +84,7 @@ export default function ChatPage() {
   const [messagesLoading, setMessagesLoading] = useState<boolean>(false);
   const [currentChat, setCurrentChat] = useState<Chat | null>(null);
   const [replyingMessage, setReplyingMessage] = useState<Message | null>(null);
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const [messageContextMenuState, setMessageContextMenuState] =
     useState<MessageContextMenuState | null>(null);
   const messageMenuRef = useRef<HTMLDivElement>(null);
@@ -148,12 +151,10 @@ export default function ChatPage() {
       prev ? [...prev, receivedMessage] : [receivedMessage],
     );
 
-    console.log(`In on message to chat received`);
     updateParticularChatInChatList(receivedMessage);
   };
 
   const onMessageToServerReceived = (receivedMessage: Message) => {
-    console.log(`In on message to server received`);
     updateParticularChatInChatList(receivedMessage);
   };
 
@@ -181,7 +182,6 @@ export default function ChatPage() {
       });
 
       if (messagesWithUpdatedReplies.length > 0) {
-        console.log(`In on message deleted`);
         updateParticularChatInChatList(
           messagesWithUpdatedReplies[messagesWithUpdatedReplies.length - 1],
         );
@@ -204,12 +204,41 @@ export default function ChatPage() {
     });
   };
 
+  const onMessageUpdatedInChat = (updatedMessage: Message) => {
+    setMessages((prevMessages) => {
+      if (!prevMessages) return prevMessages;
+
+      return prevMessages.map((message) => {
+        if (message.id === updatedMessage.id) return updatedMessage;
+        return message;
+      });
+    });
+  };
+
+  const onMessageUpdatedInServer = (updatedMessage: Message) => {
+    setChats((prevChats) => {
+      if (!prevChats) return prevChats;
+
+      return prevChats?.map((chat) => {
+        if (chat.lastMessageId === updatedMessage.id) {
+          return {
+            ...chat,
+            lastMessageContent: updatedMessage.content,
+          };
+        }
+        return chat;
+      });
+    });
+  };
+
   const { send } = useSocket(
     onMessageToChatReceived,
     onMessageToServerReceived,
     onMessageDeleted,
     onCurrentChatDeleted,
     onChatDeleted,
+    onMessageUpdatedInChat,
+    onMessageUpdatedInServer,
   );
 
   const updateChats = () => {
@@ -246,18 +275,34 @@ export default function ChatPage() {
   };
 
   const onSubmit = async (messageData: MessageSendFormValues) => {
-    send({
-      event: 'message',
-      data: {
-        senderId: curProfile.id,
-        chatId: currentChat?.id,
-        replyToMessageId: replyingMessage?.id,
-        content: messageData.content,
-      },
-    });
+    if (!editingMessage) {
+      send({
+        event: 'message',
+        data: {
+          senderId: curProfile.id,
+          chatId: currentChat?.id,
+          replyToMessageId: replyingMessage?.id,
+          content: messageData.content,
+        },
+      });
+      setReplyingMessage(null);
+    } else {
+      send({
+        event: 'editMessage',
+        data: {
+          ...editingMessage,
+          content: messageData.content,
+        },
+      });
+      setEditingMessage(null);
+    }
 
     reset({ content: '' });
-    setReplyingMessage(null);
+  };
+
+  const onEditingModeClose = () => {
+    setEditingMessage(null);
+    reset({ content: '' });
   };
 
   const handleMessagesContextMenu = (
@@ -274,9 +319,6 @@ export default function ChatPage() {
 
   const handleMessageMenuAction = (action: MessageMenuAction) => {
     if (messageContextMenuState?.message) {
-      console.log(
-        `Picked action: ${action} for message with id: ${messageContextMenuState?.message.id}`,
-      );
       switch (action) {
         case 'reply':
           setReplyingMessage(messageContextMenuState?.message);
@@ -289,6 +331,14 @@ export default function ChatPage() {
               id: messageContextMenuState?.message?.id,
             },
           });
+          break;
+        case 'edit':
+          if (
+            curProfile.id === messageContextMenuState.message.authorProfileId
+          ) {
+            setEditingMessage(messageContextMenuState?.message);
+            reset({ content: messageContextMenuState.message.content });
+          }
           break;
       }
       setMessageContextMenuState(null);
@@ -324,9 +374,6 @@ export default function ChatPage() {
 
   const handleChatsMenuAction = (action: ChatMenuAction) => {
     if (chatContextMenuState?.chat) {
-      console.log(
-        `Picked action: ${action} for chat with id: ${chatContextMenuState?.chat.id}`,
-      );
       switch (action) {
         case 'delete':
           send({
@@ -435,22 +482,20 @@ export default function ChatPage() {
             ) : chats?.length === 0 ? (
               <p>There are no chats yet.</p>
             ) : (
-              chats
-                /*?.filter((chat) => chat && chat.id)*/
-                ?.map((chat) => (
-                  <div
-                    key={chat.id}
-                    onContextMenu={(e) => handleChatsContextMenu(e, chat)}
-                  >
-                    <ChatPreviewTile
-                      chat={chat}
-                      onClick={() => onChatTileClick(chat.id)}
-                      onOptionsButtonClick={(e) =>
-                        handleChatsContextMenuButton(e, chat)
-                      }
-                    />
-                  </div>
-                ))
+              chats?.map((chat) => (
+                <div
+                  key={chat.id}
+                  onContextMenu={(e) => handleChatsContextMenu(e, chat)}
+                >
+                  <ChatPreviewTile
+                    chat={chat}
+                    onClick={() => onChatTileClick(chat.id)}
+                    onOptionsButtonClick={(e) =>
+                      handleChatsContextMenuButton(e, chat)
+                    }
+                  />
+                </div>
+              ))
             )}
             <div ref={chatsEndRef} />
           </div>
@@ -487,47 +532,20 @@ export default function ChatPage() {
               </div>
             )}
           </div>
-          {!currentChat ? (
-            <></>
-          ) : (
+          {!currentChat ? null : (
             <>
-              {replyingMessage && (
-                <>
-                  <Line thickness={2} color={'#79747e'} />
-                  <div className={'flex flex-row gap-5 w-full'}>
-                    <Image
-                      src={'/images/icons/reply.svg'}
-                      alt={'Reply icon'}
-                      height={30}
-                      width={30}
-                      draggable={false}
-                    />
-                    <div className={'flex flex-col gap-1'}>
-                      <span className={'font-bold'}>
-                        Replying to {replyingMessage?.authorUsername}
-                      </span>
-                      <span>{replyingMessage.content}</span>
-                    </div>
-                    <div className={'flex items-center ml-auto'}>
-                      <button
-                        onClick={() => setReplyingMessage(null)}
-                        className={
-                          'flex items-center justify-center md:w-[37px] md:h-[37px]'
-                        }
-                      >
-                        <Image
-                          src={'/images/icons/cross.svg'}
-                          alt={'cancel replying icon'}
-                          width={30}
-                          height={30}
-                          draggable={false}
-                          className={'hover:md:w-[37px] hover:md:h-[37px]'}
-                        />
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
+              {replyingMessage ? (
+                <ReplyingMessageHint
+                  replyingMessage={replyingMessage}
+                  setReplyingMessage={setReplyingMessage}
+                />
+              ) : editingMessage ? (
+                <EditingMessageHint
+                  editingMessage={editingMessage}
+                  setEditingMessage={setEditingMessage}
+                  onClose={onEditingModeClose}
+                />
+              ) : null}
 
               <form
                 onSubmit={handleSubmit(onSubmit)}
@@ -552,11 +570,13 @@ export default function ChatPage() {
             </>
           )}
         </div>
-        {messageContextMenuState && (
+        {messageContextMenuState && messageContextMenuState.message && (
           <MessageContextMenu
             menuRef={messageMenuRef}
             contextMenuPosition={messageContextMenuState}
             handleMenuAction={handleMessageMenuAction}
+            currentProfileId={curProfile.id}
+            messageAuthorId={messageContextMenuState.message.authorProfileId}
           />
         )}
         {chatContextMenuState && (
