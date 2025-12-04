@@ -68,13 +68,13 @@ export class Message {
     | MessageVisibilityStatus.EDITED
     | MessageVisibilityStatus.DELETED;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn({ nullable: true })
+  @UpdateDateColumn({ type: 'timestamptz', nullable: true })
   updated_at: Date;
 
-  @DeleteDateColumn({ nullable: true })
+  @DeleteDateColumn({ type: 'timestamptz', nullable: true })
   deleted_at: Date;
 
   @ManyToOne(

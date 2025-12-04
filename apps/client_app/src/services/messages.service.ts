@@ -1,6 +1,6 @@
 import { SERVER } from '@/config/apiRoutes';
 import returnErrorMessage from '@/utils/showAuthError';
-import { Message, SendingMessage } from '@/types';
+import { Message } from '@/types';
 
 export const fetchMessagesOfChat = async (
   lastLoadedMessageCreatedAt?: string,
@@ -24,6 +24,5 @@ export const fetchMessagesOfChat = async (
   }
 
   const receivedMessages: Message[] = await response.json();
-  console.log(`Received messages: ${JSON.stringify(receivedMessages)}`);
   return receivedMessages;
 };

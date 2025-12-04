@@ -78,6 +78,8 @@ export default function ChatPage() {
     isSubscribed: false,
   });
 
+  const lastLoadedMessageCreatedAt = useRef<string>('');
+  const [newMessagesLoading, setNewMessagesLoading] = useState<boolean>(false);
   const [chats, setChats] = useState<Chat[] | null>(null);
   const [chatsLoading, setChatsLoading] = useState<boolean>(false);
   const [messages, setMessages] = useState<Message[] | null>(null);
@@ -389,6 +391,54 @@ export default function ChatPage() {
     }
   };
 
+  const loadMoreMessages = async () => {
+    if (!currentChat) return;
+
+    const scrollContainer = messagesEndRef.current?.parentElement;
+    const oldScrollHeight = scrollContainer?.scrollHeight;
+
+    setNewMessagesLoading(true);
+    try {
+      const newMessages = await fetchMessagesOfChat(
+        lastLoadedMessageCreatedAt.current,
+        currentChat.id,
+      );
+
+      if (newMessages && newMessages.length > 0) {
+        setMessages((prevMessages) => {
+          if (!prevMessages) return newMessages;
+
+          //creating set with ids of already created messages
+          const existingIds = new Set(prevMessages.map((msg) => msg.id));
+          //filtering only new messages
+          const uniqueNewMessages = newMessages.filter(
+            (msg) => !existingIds.has(msg.id),
+          );
+
+          //if there are unique messages -- adding them
+          if (uniqueNewMessages.length > 0) {
+            lastLoadedMessageCreatedAt.current = uniqueNewMessages[0].createdAt;
+
+            // restoring scroll position after rendering
+            setTimeout(() => {
+              if (scrollContainer && oldScrollHeight) {
+                const newScrollHeight = scrollContainer.scrollHeight;
+                scrollContainer.scrollTop = newScrollHeight - oldScrollHeight;
+              }
+            }, 0);
+
+            //adding old messages to the beginning of an array
+            return [...uniqueNewMessages, ...prevMessages];
+          }
+
+          return prevMessages;
+        });
+      }
+    } finally {
+      setNewMessagesLoading(false);
+    }
+  };
+
   //closing context menus on click outside of it
   useEffect(() => {
     const handleClick = (e: Event) => {
@@ -451,11 +501,13 @@ export default function ChatPage() {
   useEffect(() => {
     if (currentChat) {
       setMessagesLoading(true);
+      setMessages(null);
       fetchMessagesOfChat(currentChat?.lastMessageCreatedAt, currentChat?.id)
         .then((messagesData: Message[] | undefined) => {
-          if (!messagesData) return;
+          if (!messagesData || messagesData.length === 0) return;
           setMessages(messagesData);
           currentChat.lastMessageRead = MessageReadStatus.READ;
+          lastLoadedMessageCreatedAt.current = messagesData[0].createdAt;
         })
         .finally(() => setMessagesLoading(false));
     }
@@ -500,7 +552,7 @@ export default function ChatPage() {
             <div ref={chatsEndRef} />
           </div>
         </div>
-        <div className={`flex flex-col w-5/8 h-full gap-2`}>
+        <div className={`flex flex-col w-5/8 h-screen justify-center gap-2`}>
           <div className={`flex w-full h-[800px] border-black border-1 pb-1.5`}>
             {!currentChat ? (
               <p className={'flex items-center justify-center w-full h-full'}>
@@ -517,9 +569,28 @@ export default function ChatPage() {
             ) : (
               <div
                 className={
-                  'flex flex-col justify-end w-full h-full overflow-y-auto'
+                  'flex flex-col w-full h-full overflow-y-auto overflow-x-hidden'
                 }
               >
+                <div className={'flex-1'} />
+                <>
+                  {newMessagesLoading ? (
+                    <span className={'flex w-full justify-center m-4'}>
+                      Loading...
+                    </span>
+                  ) : (
+                    <div className={'flex w-full justify-center m-4'}>
+                      <button
+                        onClick={() => loadMoreMessages()}
+                        className={
+                          'min-w-[50px] min-h-[20px] bg-[#eaddff] rounded-2xl cursor-pointer hover:bg-[#B282FF] hover:text-white'
+                        }
+                      >
+                        <span className={'m-3'}>Load more messages</span>
+                      </button>
+                    </div>
+                  )}
+                </>
                 {messages?.map((message) => (
                   <div
                     key={message.id}

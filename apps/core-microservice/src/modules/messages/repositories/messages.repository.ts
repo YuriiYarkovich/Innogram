@@ -60,7 +60,7 @@ export class MessagesRepository {
                                ON messages_receiver.message_id = message.id
                                  AND messages_receiver.receiver_id = $2
               WHERE message.chat_id = $1
-                AND message.created_at > $3
+                AND date_trunc('milliseconds', message.created_at) <= $3
                 AND message.visible_status IN ($4, $5)
               ORDER BY message.created_at DESC
               LIMIT 10) sub
@@ -116,7 +116,6 @@ export class MessagesRepository {
         MessageVisibilityStatus.EDITED,
       ],
     );
-
     return rows[0] ?? null;
   }
 
