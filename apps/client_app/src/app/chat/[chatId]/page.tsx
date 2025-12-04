@@ -91,6 +91,8 @@ export default function ChatPage() {
   const chatMenuRef = useRef<HTMLDivElement>(null);
   const chatsEndRef = useRef<HTMLDivElement | null>(null);
 
+  const loadingChatsRef = useRef<Set<string>>(new Set());
+
   const updateParticularChatInChatList = (receivedMessage: Message) => {
     setChats((prevChats) => {
       if (!prevChats) return prevChats;
@@ -118,6 +120,11 @@ export default function ChatPage() {
   };
 
   const loadAndAddNewChat = async (chatId: string) => {
+    if (loadingChatsRef.current.has(chatId)) {
+      return;
+    }
+
+    loadingChatsRef.current.add(chatId);
     try {
       const chatInfo = await fetchChatInfo(chatId);
       if (chatInfo) {
@@ -131,6 +138,8 @@ export default function ChatPage() {
       }
     } catch (error) {
       console.error('Failed to load chat info:', error);
+    } finally {
+      loadingChatsRef.current.delete(chatId);
     }
   };
 
@@ -139,10 +148,12 @@ export default function ChatPage() {
       prev ? [...prev, receivedMessage] : [receivedMessage],
     );
 
+    console.log(`In on message to chat received`);
     updateParticularChatInChatList(receivedMessage);
   };
 
   const onMessageToServerReceived = (receivedMessage: Message) => {
+    console.log(`In on message to server received`);
     updateParticularChatInChatList(receivedMessage);
   };
 
@@ -170,6 +181,7 @@ export default function ChatPage() {
       });
 
       if (messagesWithUpdatedReplies.length > 0) {
+        console.log(`In on message deleted`);
         updateParticularChatInChatList(
           messagesWithUpdatedReplies[messagesWithUpdatedReplies.length - 1],
         );
