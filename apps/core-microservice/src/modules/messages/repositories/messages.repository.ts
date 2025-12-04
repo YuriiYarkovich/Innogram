@@ -178,7 +178,10 @@ export class MessagesRepository {
     await queryRunner.manager.update(
       Message,
       { chatId },
-      { visibleStatus: MessageVisibilityStatus.DELETED },
+      {
+        visibleStatus: MessageVisibilityStatus.DELETED,
+        deleted_at: new Date(),
+      },
     );
   }
 }

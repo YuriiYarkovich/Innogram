@@ -90,7 +90,7 @@ export class ChatRepository {
     await queryRunner.manager.update(
       Chat,
       { id: chatId },
-      { chatStatus: ChatStatus.DELETED },
+      { chatStatus: ChatStatus.DELETED, deletedAt: new Date() },
     );
   }
 
