@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import SidePanel from '@/components/sidePanel';
 import { fetchProfile } from '@/services/profile.service';
 import { fetchPostsOfSubscribedOnProfiles } from '@/services/posts.service';
+import { Post, Profile } from '@/types';
 
 const Page = () => {
   const [curProfile, setCurProfile] = useState<Profile | null>(null);

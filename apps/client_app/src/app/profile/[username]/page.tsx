@@ -89,7 +89,9 @@ const Page = () => {
   }, [isEditProfileModalOpen]);
 
   const updatePostsArray = async (profileId: string) => {
-    fetchPostsOfProfile(profileId).then((data: Post[]) => setPosts(data));
+    fetchPostsOfProfile(profileId).then((data: Post[]) => {
+      setPosts(data);
+    });
   };
 
   useEffect(() => {
@@ -151,7 +153,7 @@ const Page = () => {
             <p>Error while loading profile info</p>
           ) : (
             <div className={`flex flex-col w-full`}>
-              <div className={`flex flex-row w-full gap-10`}>
+              <div className={`flex flex-row w-full gap-10 items-center`}>
                 <Image
                   className={`rounded-[270px] md:w-[155px] md:h-[155px] mt-15 ml-15`}
                   src={profile.avatarUrl || `/images/avaTest.png`}
@@ -193,7 +195,7 @@ const Page = () => {
                 </div>
                 {profile.isCurrent ? (
                   <button
-                    className={`ml-50`}
+                    className={`flex ml-auto md:w-[47px] md:h-[47px] items-center justify-center`}
                     onClick={() => handleLogout(router)}
                   >
                     <Image

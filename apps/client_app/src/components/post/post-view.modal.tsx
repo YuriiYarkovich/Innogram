@@ -7,7 +7,6 @@ import Line from '@/components/line';
 import { deletePost, likeOrUnlikePost } from '@/services/posts.service';
 import { addComment, fetchComments } from '@/services/comment.service';
 import { PostPreviewModalProps, PostComment } from '@/types';
-import { Cross } from 'next/dist/next-devtools/dev-overlay/icons/cross';
 import CrossAngleButton from '@/components/crossAngle.button';
 
 export default function PostViewModal({
@@ -15,9 +14,6 @@ export default function PostViewModal({
   isOpen,
   onClose,
 }: PostPreviewModalProps) {
-  const [profileAvatarUrl] = useState<string>(
-    post?.profileAvatarUrl || `/images/avaTest.png`,
-  );
   const [liked, setLiked] = useState(post?.liked || false);
   const [likesCount, setLikesCount] = useState<number>(
     Number(post?.likesCount) || 0,
@@ -86,7 +82,7 @@ export default function PostViewModal({
                 href={`/profile/${post.username}`}
               >
                 <Image
-                  src={profileAvatarUrl}
+                  src={post.profileAvatarUrl || '/images/avaTest.png'}
                   alt={`Profile avatar url`}
                   width={50}
                   height={50}
@@ -103,7 +99,7 @@ export default function PostViewModal({
               </span>
               {post.isCreator ? (
                 <button
-                  className={`ml-auto mr-9 cursor-pointer`}
+                  className={`ml-auto mr-9 cursor-pointer flex md:w-[37px] md:h-[37px] justify-center items-center`}
                   onClick={async () => deletePost(post, onClose)}
                 >
                   <Image
@@ -137,7 +133,7 @@ export default function PostViewModal({
                     width={33}
                     height={33}
                     draggable={false}
-                    className={`md:h-[33px] md:w-[33px] hover:md:h-[40px] hover:md:w-[40px]`}
+                    className={`hover:md:h-[40px] hover:md:w-[40px]`}
                   />
                 </button>
               </div>
@@ -153,7 +149,7 @@ export default function PostViewModal({
                     width={33}
                     height={33}
                     draggable={false}
-                    className={`md:h-[33px] md:w-[33px] ml-[16px] mt-[-2px] hover:md:h-[40px] hover:md:w-[40px]`}
+                    className={`ml-[16px] mt-[-2px] hover:md:h-[40px] hover:md:w-[40px]`}
                   />
                 </button>
               </div>
@@ -216,15 +212,21 @@ export default function PostViewModal({
                           )}
                         </span>
                       </div>
-                      <Image
-                        src={`/images/icons/cross.svg`}
-                        alt={`arrow`}
-                        height={23}
-                        width={23}
-                        draggable={false}
-                        className={`h-full hover:md:w-[30px] hover:md:h-[30px]`}
-                        onClick={() => setIsRespondingOnComment(false)}
-                      />
+                      <div
+                        className={
+                          'h-full flex items-center justify-center md:w-[30px] md:h-[30px]'
+                        }
+                      >
+                        <Image
+                          src={`/images/icons/cross.svg`}
+                          alt={`arrow`}
+                          height={23}
+                          width={23}
+                          draggable={false}
+                          className={`hover:md:w-[30px] hover:md:h-[30px]`}
+                          onClick={() => setIsRespondingOnComment(false)}
+                        />
+                      </div>
                     </div>
                   </div>
                 </>
