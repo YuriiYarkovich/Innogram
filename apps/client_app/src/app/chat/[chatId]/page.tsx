@@ -212,6 +212,15 @@ export default function ChatPage() {
 
       return prevMessages.map((message) => {
         if (message.id === updatedMessage.id) return updatedMessage;
+        if (message.replyingMessage?.id === updatedMessage.id) {
+          return {
+            ...message,
+            replyingMessage: {
+              ...message.replyingMessage,
+              content: updatedMessage.content,
+            },
+          };
+        }
         return message;
       });
     });

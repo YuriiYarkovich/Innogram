@@ -166,16 +166,6 @@ export class MessagesService {
       returningMessagesData.push(returningMessage);
     }
 
-    console.log(
-      `Content of returning messages: ${JSON.stringify(
-        returningMessagesData.map((returningMessage) => {
-          return {
-            content: returningMessage.content,
-            createdAt: returningMessage.createdAt,
-          };
-        }),
-      )}`,
-    );
     return returningMessagesData;
   }
 
