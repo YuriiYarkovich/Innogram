@@ -4,7 +4,6 @@ import { MouseEvent, useEffect, useRef, useState } from 'react';
 import { fetchProfile } from '@/services/profile.service';
 import SidePanel from '@/components/sidePanel';
 import ChatPreviewTile from '@/components/chat/chat-preview-tile';
-import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import MessageTile from '@/components/chat/message/messageTile';
 import { useParams } from 'next/navigation';
@@ -21,7 +20,6 @@ import {
   MessageVisibilityStatus,
 } from '@innogram/core-microservice/dist/common/enums/message.enum';
 import MessageContextMenu from '@/components/chat/message-context-menu';
-import Line from '@/components/line';
 import ChatContextMenu from '@/components/chat/chat-context-menu';
 import ReplyingMessageHint from '@/components/chat/replying-message-hint';
 import EditingMessageHint from '@/components/chat/editing-message-hint';
@@ -263,14 +261,9 @@ export default function ChatPage() {
   };
 
   const onChatTileClick = (chatId: string) => {
-    console.log(
-      `Current chat on switching to another: ${JSON.stringify(currentChat)}`,
-    );
-
     if (currentChat?.id === chatId) return;
 
     if (currentChat) {
-      console.log('Sending exit chat event!');
       send({
         event: 'exitChat',
         data: {
@@ -557,6 +550,7 @@ export default function ChatPage() {
                 >
                   <ChatPreviewTile
                     chat={chat}
+                    currentChatId={currentChat?.id}
                     onClick={() => onChatTileClick(chat.id)}
                     onOptionsButtonClick={(e) =>
                       handleChatsContextMenuButton(e, chat)
@@ -632,7 +626,6 @@ export default function ChatPage() {
               ) : editingMessage ? (
                 <EditingMessageHint
                   editingMessage={editingMessage}
-                  setEditingMessage={setEditingMessage}
                   onClose={onEditingModeClose}
                 />
               ) : null}

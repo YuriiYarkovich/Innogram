@@ -104,13 +104,3 @@ export type ReplyingMessage = {
   content: string;
   visibleStatus: MessageVisibilityStatus;
 };
-
-export type SendingMessage = {
-  id?: string;
-  senderId: string;
-  chatId?: string;
-  receiverId?: string;
-  replyToMessageId?: string;
-  content: string;
-  files: File[];
-};

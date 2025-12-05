@@ -1,7 +1,5 @@
 import { Message } from '@/types';
 import Image from 'next/image';
-import { MessageVisibilityStatus } from '@innogram/core-microservice/dist/common/enums/message.enum';
-import { formatTime } from '@/utils/time';
 import MessageCore from '@/components/chat/message/message-core';
 
 const StrangerMessage = ({ message }: { message: Message }) => {

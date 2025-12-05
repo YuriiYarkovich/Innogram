@@ -7,20 +7,20 @@ import { MouseEvent } from 'react';
 
 type ChatPreviewProps = {
   chat: Chat;
+  currentChatId: string | undefined;
   onClick: () => void;
   onOptionsButtonClick: (e: MouseEvent<HTMLButtonElement>, chat: Chat) => void;
 };
 
 const ChatPreviewTile = ({
   chat,
+  currentChatId,
   onClick,
   onOptionsButtonClick,
 }: ChatPreviewProps) => {
   return (
     <div
-      className={
-        'flex flex-row w-full gap-3 p-3 items-center border-[#79747e] border-1 cursor-pointer'
-      }
+      className={`flex flex-row w-full gap-3 p-3 items-center border-[#79747e] border-1 cursor-pointer ${currentChatId === chat.id ? 'bg-[#eaddff]' : ''}`}
       onClick={onClick}
     >
       <div

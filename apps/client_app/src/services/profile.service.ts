@@ -37,7 +37,6 @@ export const editProfile = async (
   formData.append('birthday', birthday);
 
   if (avatar) {
-    console.log(`Sending file`);
     formData.append('file', avatar);
   }
 
@@ -51,7 +50,7 @@ export const editProfile = async (
     const finalMessage: string | undefined = await returnErrorMessage(res);
     if (finalMessage) {
       setError(finalMessage);
-      console.log(`Error message: ${finalMessage}`);
+      console.error(`Error message: ${finalMessage}`);
     }
     return;
   }
@@ -88,6 +87,5 @@ export const fetchFullProfileData = async (username: string | undefined) => {
     );
     profileData = await resProfile.json();
   }
-  console.log(`Received profile data loh: ${JSON.stringify(profileData)}`);
   return profileData;
 };

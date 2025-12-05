@@ -33,9 +33,6 @@ export class AuthGuard implements CanActivate {
       context.set(CONTEXT_KEYS.USER, user);
       return true;
     } catch (e) {
-      console.warn('Access token invalid or expired:', e.response?.data);
-
-      console.log(`Refresh token in guard: ${refreshToken}`);
       if (!refreshToken) {
         throw new UnauthorizedException(
           'Access token expired, and no refresh token found',
@@ -52,10 +49,6 @@ export class AuthGuard implements CanActivate {
           sameSite: 'strict',
           maxAge: 15 * 60 * 1000,
         });
-
-        console.log(
-          `User before setting to context^ ${JSON.stringify(refreshData.user)}`,
-        );
 
         context.set(CONTEXT_KEYS.USER, refreshData.user);
         return true;

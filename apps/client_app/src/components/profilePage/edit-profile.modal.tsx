@@ -44,8 +44,6 @@ export default function EditProfileModal({
 
   const [error, setError] = useState<string | null>(null);
 
-  console.log(`received profile in edit modal: ${JSON.stringify(profile)}`);
-
   const onSubmit = async (data: ProfileEditFormValues) => {
     await editProfile(
       data.username,

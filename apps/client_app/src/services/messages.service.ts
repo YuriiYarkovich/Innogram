@@ -23,6 +23,5 @@ export const fetchMessagesOfChat = async (
     return;
   }
 
-  const receivedMessages: Message[] = await response.json();
-  return receivedMessages;
+  return await response.json();
 };

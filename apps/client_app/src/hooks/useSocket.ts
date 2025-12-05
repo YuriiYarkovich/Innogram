@@ -66,9 +66,5 @@ export const useSocket = (
     socketRef.current?.emit(props.event, props.data);
   };
 
-  const enterChat = (data: { chatId: string; profileId: string }) => {
-    socketRef.current?.emit('addToChat', data);
-  };
-
   return { send };
 };

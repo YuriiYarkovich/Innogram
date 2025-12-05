@@ -51,7 +51,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const cookiesHeader: string | undefined = socket.handshake.headers.cookie;
       if (!cookiesHeader) {
-        console.log(`No cookies found in handshake! Disconnect`);
+        this.logger.log(`No cookies found in handshake! Disconnect`);
         socket.disconnect();
         return;
       }
@@ -61,7 +61,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const accessToken: string | undefined = cookies['accessToken'];
 
       if (!accessToken) {
-        console.log(`No access token provided! Disconnect`);
+        this.logger.log(`No access token provided! Disconnect`);
         socket.disconnect();
         return;
       }
@@ -70,7 +70,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const profileId: string = user.profileId;
 
       this.allConnectedUsers.set(profileId, socket.id);
-      console.log(
+      this.logger.log(
         `Client connected! ProfileId(key): ${user.profileId}, socketId:${socket.id}`,
       );
     } catch (e) {
@@ -109,7 +109,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       throw new InternalServerErrorException(
         'Something went wrong while handling exiting to chat',
       );
-    console.log(
+    this.logger.log(
       `Profile with id: ${profileId} has exited chat with id: ${data.chatId}`,
     );
     this.chatUsers.get(data.chatId)?.delete(profileId);
@@ -192,7 +192,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       content: receivedMessage.content,
       replyToMessageId: receivedMessage.replyToMessageId,
     };
-    console.log(`Message receivers: ${JSON.stringify(messageReceivers)}`);
     const createdMessage = await this.messagesService.createMessage(
       dto,
       receivedMessage.senderId,
@@ -209,18 +208,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     };
 
     connectedToChatSockets.forEach((socketId) => {
-      console.log(
-        `Emitting message: \n${JSON.stringify(returningMessage)}\n to users that CONNECTED TO CHAT of the message`,
-      );
       this.server.to(socketId).emit('messageToUserInChat', returningMessage);
     });
 
     notConnectedToChatSockets.forEach((socketId) => {
       if (returningMessage.read === MessageReadStatus.READ)
         returningMessage.read = MessageReadStatus.UNREAD;
-      console.log(
-        `Emitting message: \n${JSON.stringify(returningMessage)}\n to users that NOT CONNECTED TO CHAT of the message`,
-      );
       this.server.to(socketId).emit('messageToUserInServer', returningMessage);
     });
   }
@@ -357,7 +350,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     this.allConnectedUsers.delete(profileId);
 
-    console.log(
+    this.logger.log(
       `User ${profileId} has been disconnected and removed from all chats`,
     );
   }

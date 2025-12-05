@@ -5,11 +5,9 @@ import { Message } from '@/types';
 
 const EditingMessageHint = ({
   editingMessage,
-  setEditingMessage,
   onClose,
 }: {
   editingMessage: Message | null;
-  setEditingMessage: (editingMessage: Message | null) => void;
   onClose: () => void;
 }) => {
   return (
