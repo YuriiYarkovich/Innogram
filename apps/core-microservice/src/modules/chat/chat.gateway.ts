@@ -109,7 +109,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       throw new InternalServerErrorException(
         'Something went wrong while handling exiting to chat',
       );
-
+    console.log(
+      `Profile with id: ${profileId} has exited chat with id: ${data.chatId}`,
+    );
     this.chatUsers.get(data.chatId)?.delete(profileId);
     this.userChats.get(profileId)?.delete(data.chatId);
   }
@@ -207,12 +209,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     };
 
     connectedToChatSockets.forEach((socketId) => {
+      console.log(
+        `Emitting message: \n${JSON.stringify(returningMessage)}\n to users that CONNECTED TO CHAT of the message`,
+      );
       this.server.to(socketId).emit('messageToUserInChat', returningMessage);
     });
 
     notConnectedToChatSockets.forEach((socketId) => {
       if (returningMessage.read === MessageReadStatus.READ)
         returningMessage.read = MessageReadStatus.UNREAD;
+      console.log(
+        `Emitting message: \n${JSON.stringify(returningMessage)}\n to users that NOT CONNECTED TO CHAT of the message`,
+      );
       this.server.to(socketId).emit('messageToUserInServer', returningMessage);
     });
   }

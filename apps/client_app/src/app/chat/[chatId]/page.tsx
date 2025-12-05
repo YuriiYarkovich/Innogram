@@ -263,11 +263,18 @@ export default function ChatPage() {
   };
 
   const onChatTileClick = (chatId: string) => {
+    console.log(
+      `Current chat on switching to another: ${JSON.stringify(currentChat)}`,
+    );
+
+    if (currentChat?.id === chatId) return;
+
     if (currentChat) {
+      console.log('Sending exit chat event!');
       send({
         event: 'exitChat',
         data: {
-          chatId: chatId,
+          chatId: currentChat.id,
         },
       });
       setCurrentChat(null);
