@@ -6,7 +6,7 @@ import SidePanel from '@/components/sidePanel';
 import ChatPreviewTile from '@/components/chat/chat-preview-tile';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
-import MessageTile from '@/components/chat/messageTile';
+import MessageTile from '@/components/chat/message/messageTile';
 import { useParams } from 'next/navigation';
 import { Chat, Message, Profile } from '@/types';
 import {
@@ -534,7 +534,7 @@ export default function ChatPage() {
       <div className={`flex w-5/8 h-full justify-center items-center gap-5`}>
         <div
           className={
-            'flex flex-col w-1/4 h-full justify-center overflow-y-scroll'
+            'flex flex-col w-1/3 h-full justify-center overflow-y-scroll'
           }
         >
           <div>
@@ -605,7 +605,10 @@ export default function ChatPage() {
                     key={message.id}
                     onContextMenu={(e) => handleMessagesContextMenu(e, message)}
                   >
-                    <MessageTile message={message} />
+                    <MessageTile
+                      message={message}
+                      currentUserId={curProfile.id}
+                    />
                   </div>
                 ))}
                 <div ref={messagesEndRef} />

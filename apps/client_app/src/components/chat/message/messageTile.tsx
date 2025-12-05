@@ -1,18 +1,24 @@
-import Image from 'next/image';
-import { formatTime } from '@/utils/time';
 import { Message } from '@/types';
-import { MessageVisibilityStatus } from '@innogram/core-microservice/dist/common/enums/message.enum';
+import StrangerMessage from '@/components/chat/message/stranger-message';
+import AuthorMessage from '@/components/chat/message/author-message';
 
 const MessageTile = ({
+  currentUserId,
   message,
   fileUrl,
 }: {
+  currentUserId: string;
   message: Message;
   fileUrl?: string;
 }) => {
   return (
     <div className={'flex flex-col w-full min-h-[80px] pl-3 pt-1.5 gap-1'}>
-      <a
+      {currentUserId === message.authorProfileId ? (
+        <AuthorMessage message={message} />
+      ) : (
+        <StrangerMessage message={message} />
+      )}
+      {/*<a
         className={'text-[15px] text-[#79747e] cursor-pointer'}
         href={`/profile/${message.authorUsername}`}
       >
@@ -37,7 +43,7 @@ const MessageTile = ({
         </a>
         <div
           className={
-            'flex flex-col gap-2 bg-[#efefef] rounded-[20px] justify-center pb-1.5'
+            'flex flex-col gap-2 bg-[#efefef] rounded-[20px] justify-center pb-1.5 min-w-[100px] max-w-[400px]'
           }
         >
           {message.replyingMessage ? (
@@ -65,7 +71,9 @@ const MessageTile = ({
             </div>
           ) : null}
           <div
-            className={'flex flex-row min-w-[150px] pl-3 items-center pr-2.5'}
+            className={
+              'flex flex-row min-w-[150px] pl-3 items-center pr-2.5 pt-2 pb-2'
+            }
           >
             <span className={'text-[17px] w-full'}>{message.content}</span>
 
@@ -74,7 +82,7 @@ const MessageTile = ({
             </span>
           </div>
         </div>
-      </div>
+      </div>*/}
     </div>
   );
 };

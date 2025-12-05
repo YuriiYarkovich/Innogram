@@ -41,7 +41,9 @@ const ChatPreviewTile = ({
       <div className={'flex flex-col gap-2'}>
         <span className={'text-[18px] font-bold'}>{chat.title}</span>
         <div className={'flex flex-row gap-2'}>
-          <span className={'text-[15px]'}>{chat.lastMessageContent}</span>
+          <span className={'text-[15px] line-clamp-2'}>
+            {chat.lastMessageContent}
+          </span>
           <span className={'text-[15px] text-[#79747e]'}>
             {chat.lastMessageCreatedAt
               ? formatTime(chat.lastMessageCreatedAt)
@@ -51,7 +53,9 @@ const ChatPreviewTile = ({
       </div>
       {chat.lastMessageRead === MessageReadStatus.UNREAD ? (
         <div
-          className={'min-w-[10px] min-h-[10px] rounded-full ml-18 bg-blue-500'}
+          className={
+            'min-w-[10px] min-h-[10px] rounded-full ml-auto bg-blue-500'
+          }
         />
       ) : (
         <></>
