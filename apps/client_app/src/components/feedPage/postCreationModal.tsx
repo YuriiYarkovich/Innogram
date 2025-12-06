@@ -65,7 +65,7 @@ export default function PostCreationModal({
         </div>
         {/*file field*/}
         <div
-          className={`flex justify-center items-center md:h-[400px] md:w-[400px] border-black bg-[#d9d9d9] mt-5`}
+          className={`flex justify-center items-center md:h-[400px] md:w-[400px] border-black  mt-5`}
         >
           <AddFilePlaceholder
             control={control}

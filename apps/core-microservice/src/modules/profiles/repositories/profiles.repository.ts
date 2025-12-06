@@ -115,4 +115,28 @@ export class ProfilesRepository {
       );
     }
   }
+
+  async getAllSubscriptions(profileId: string, currentProfileId: string) {
+    return await this.profileRepository.query<FindingProfileInfoById[]>(
+      `
+        SELECT p.id,
+               p.birthday,
+               p.username,
+               p.bio,
+               p.avatar_filename                                                             AS "avatarFilename",
+               p.is_public                                                                   AS "isPublic",
+               (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id AND status = $3)     AS "postsAmount",
+               (SELECT COUNT(*) FROM main.profiles_follows WHERE follower_profile_id = p.id) AS "subscriptionsAmount",
+               (SELECT COUNT(*) FROM main.profiles_follows WHERE followed_profile_id = p.id) AS "subscribersAmount",
+               (SELECT EXISTS (SELECT 1
+                               FROM main.profiles_follows
+                               WHERE follower_profile_id = $2
+                                 AND followed_profile_id = p.id))                            AS "isSubscribed"
+        FROM main.profiles_follows AS prf
+               RIGHT JOIN main.profiles p on prf.follower_profile_id = p.id
+        WHERE prf.followed_profile_id = $1
+      `,
+      [profileId, currentProfileId, PostStatus.ACTIVE],
+    );
+  }
 }

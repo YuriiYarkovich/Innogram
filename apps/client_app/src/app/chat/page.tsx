@@ -23,6 +23,8 @@ import MessageContextMenu from '@/components/chat/message-context-menu';
 import ChatContextMenu from '@/components/chat/chat-context-menu';
 import ReplyingMessageHint from '@/components/chat/replying-message-hint';
 import EditingMessageHint from '@/components/chat/editing-message-hint';
+import Image from 'next/image';
+import ChatCreationModal from '@/components/chat/chatCreationModal';
 
 export type MessageSendFormValues = {
   content: string;
@@ -77,6 +79,7 @@ export default function ChatPage() {
   });
 
   const lastLoadedMessageCreatedAt = useRef<string>('');
+  const [chatCreationModalOpened, setChatCreationModalOpened] = useState(false);
   const [newMessagesLoading, setNewMessagesLoading] = useState<boolean>(false);
   const [chats, setChats] = useState<Chat[] | null>(null);
   const [chatsLoading, setChatsLoading] = useState<boolean>(false);
@@ -448,6 +451,14 @@ export default function ChatPage() {
     }
   };
 
+  const onAddChatButtonClick = () => {
+    setChatCreationModalOpened(true);
+  };
+
+  const onCreatingChatMenuExitButtonClick = () => {
+    setChatCreationModalOpened(false);
+  };
+
   //closing context menus on click outside of it
   useEffect(() => {
     const handleClick = (e: Event) => {
@@ -527,149 +538,184 @@ export default function ChatPage() {
   }, [messages]);
 
   return (
-    <div
-      className={`flex flex-row min-h-screen w-full justify-center items-center`}
-    >
-      <SidePanel curProfile={curProfile} />
-      <div className={`flex w-5/8 h-full justify-center items-center gap-5`}>
-        <div
-          className={
-            'flex flex-col w-1/3 h-full justify-center overflow-y-scroll'
-          }
-        >
-          <div>
-            {chatsLoading ? (
-              <p>Chats list is loading...</p>
-            ) : chats?.length === 0 ? (
-              <p>There are no chats yet.</p>
-            ) : (
-              chats?.map((chat) => (
-                <div
-                  key={chat.id}
-                  onContextMenu={(e) => handleChatsContextMenu(e, chat)}
-                >
-                  <ChatPreviewTile
-                    chat={chat}
-                    currentChatId={currentChat?.id}
-                    onClick={() => onChatTileClick(chat.id)}
-                    onOptionsButtonClick={(e) =>
-                      handleChatsContextMenuButton(e, chat)
-                    }
-                  />
-                </div>
-              ))
-            )}
-            <div ref={chatsEndRef} />
-          </div>
-        </div>
-        <div className={`flex flex-col w-5/8 h-screen justify-center gap-2`}>
-          <div className={`flex w-full h-[800px] border-black border-1 pb-1.5`}>
-            {!currentChat ? (
-              <p className={'flex items-center justify-center w-full h-full'}>
-                Pick chat
-              </p>
-            ) : messagesLoading ? (
-              <p className={'flex items-center justify-center w-full h-full'}>
-                Messages loading...
-              </p>
-            ) : messages?.length === 0 ? (
-              <p className={'flex items-center justify-center w-full h-full'}>
-                There are no messages yet
-              </p>
-            ) : (
-              <div
-                className={
-                  'flex flex-col w-full h-full overflow-y-auto overflow-x-hidden'
-                }
-              >
-                <div className={'flex-1'} />
-                <>
-                  {newMessagesLoading ? (
-                    <span className={'flex w-full justify-center m-4'}>
-                      Loading...
-                    </span>
-                  ) : (
-                    <div className={'flex w-full justify-center m-4'}>
-                      <button
-                        onClick={() => loadMoreMessages()}
-                        className={
-                          'min-w-[50px] min-h-[20px] bg-[#eaddff] rounded-2xl cursor-pointer hover:bg-[#B282FF] hover:text-white'
+    <>
+      <ChatCreationModal
+        currentProfile={curProfile}
+        isOpened={chatCreationModalOpened}
+        onClose={onCreatingChatMenuExitButtonClick}
+      ></ChatCreationModal>
+      <div
+        className={`flex flex-row min-h-screen w-full justify-center items-center`}
+      >
+        <SidePanel curProfile={curProfile} />
+        <div className={`flex w-5/8 h-full justify-center items-center gap-5`}>
+          <div
+            className={
+              'flex flex-col w-1/3 h-full justify-center overflow-y-scroll'
+            }
+          >
+            <div>
+              {chatsLoading ? (
+                <p>Chats list is loading...</p>
+              ) : chats?.length === 0 ? (
+                <p>There are no chats yet.</p>
+              ) : (
+                <div className={'flex flex-col gap-3'}>
+                  {chats?.map((chat) => (
+                    <div
+                      key={chat.id}
+                      onContextMenu={(e) => handleChatsContextMenu(e, chat)}
+                    >
+                      <ChatPreviewTile
+                        chat={chat}
+                        currentChatId={currentChat?.id}
+                        onClick={() => onChatTileClick(chat.id)}
+                        onOptionsButtonClick={(e) =>
+                          handleChatsContextMenuButton(e, chat)
                         }
-                      >
-                        <span className={'m-3'}>Load more messages</span>
-                      </button>
+                      />
                     </div>
-                  )}
-                </>
-                {messages?.map((message) => (
+                  ))}
                   <div
-                    key={message.id}
-                    onContextMenu={(e) => handleMessagesContextMenu(e, message)}
+                    className={
+                      'flex w-full min-h-[25px] items-center justify-center'
+                    }
                   >
-                    <MessageTile
-                      message={message}
-                      currentUserId={curProfile.id}
-                    />
+                    <button
+                      onClick={onAddChatButtonClick}
+                      className={
+                        'flex items-center justify-center min-h-[47px] min-w-[47px] rounded-full cursor-pointer'
+                      }
+                    >
+                      <Image
+                        src={'/images/icons/add.svg'}
+                        alt={'Add icon'}
+                        width={40}
+                        height={40}
+                        className={
+                          'rounded-[inherit] hover:md:w-[47px] hover:md:h-[47px] '
+                        }
+                      />
+                    </button>
                   </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            )}
+                </div>
+              )}
+              <div ref={chatsEndRef} />
+            </div>
           </div>
-          {!currentChat ? null : (
-            <>
-              {replyingMessage ? (
-                <ReplyingMessageHint
-                  replyingMessage={replyingMessage}
-                  setReplyingMessage={setReplyingMessage}
-                />
-              ) : editingMessage ? (
-                <EditingMessageHint
-                  editingMessage={editingMessage}
-                  onClose={onEditingModeClose}
-                />
-              ) : null}
-
-              <form
-                onSubmit={handleSubmit(onSubmit)}
-                className={
-                  'flex flex-row w-min-1/20 border-[#79747e] border-2 rounded-4xl p-2 gap-3 items-center pl-5'
-                }
-              >
-                <textarea
-                  {...register('content')}
-                  placeholder={'Write message'}
-                  className={`flex w-full h-full`}
-                />
-                <button
-                  type={'submit'}
+          <div className={`flex flex-col w-5/8 h-screen justify-center gap-2`}>
+            <div
+              className={`flex w-full h-[800px] border-black border-1 pb-1.5`}
+            >
+              {!currentChat ? (
+                <p className={'flex items-center justify-center w-full h-full'}>
+                  Pick chat
+                </p>
+              ) : messagesLoading ? (
+                <p className={'flex items-center justify-center w-full h-full'}>
+                  Messages loading...
+                </p>
+              ) : messages?.length === 0 ? (
+                <p className={'flex items-center justify-center w-full h-full'}>
+                  There are no messages yet
+                </p>
+              ) : (
+                <div
                   className={
-                    'cursor-pointer bg-[#4f378a] text-white hover:text-black text-center rounded-[20px] px-4 py-2 hover:bg-[#d0bcff] ml-auto'
+                    'flex flex-col w-full h-full overflow-y-auto overflow-x-hidden'
                   }
                 >
-                  {isSubmitting ? 'Sending...' : 'Send'}
-                </button>
-              </form>
-            </>
+                  <div className={'flex-1'} />
+                  <>
+                    {newMessagesLoading ? (
+                      <span className={'flex w-full justify-center m-4'}>
+                        Loading...
+                      </span>
+                    ) : (
+                      <div className={'flex w-full justify-center m-4'}>
+                        <button
+                          onClick={() => loadMoreMessages()}
+                          className={
+                            'min-w-[50px] min-h-[20px] bg-[#eaddff] rounded-2xl cursor-pointer hover:bg-[#B282FF] hover:text-white'
+                          }
+                        >
+                          <span className={'m-3'}>Load more messages</span>
+                        </button>
+                      </div>
+                    )}
+                  </>
+                  {messages?.map((message) => (
+                    <div
+                      key={message.id}
+                      onContextMenu={(e) =>
+                        handleMessagesContextMenu(e, message)
+                      }
+                    >
+                      <MessageTile
+                        message={message}
+                        currentUserId={curProfile.id}
+                      />
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </div>
+            {!currentChat ? null : (
+              <>
+                {replyingMessage ? (
+                  <ReplyingMessageHint
+                    replyingMessage={replyingMessage}
+                    setReplyingMessage={setReplyingMessage}
+                  />
+                ) : editingMessage ? (
+                  <EditingMessageHint
+                    editingMessage={editingMessage}
+                    onClose={onEditingModeClose}
+                  />
+                ) : null}
+
+                <form
+                  onSubmit={handleSubmit(onSubmit)}
+                  className={
+                    'flex flex-row w-min-1/20 border-[#79747e] border-2 rounded-4xl p-2 gap-3 items-center pl-5'
+                  }
+                >
+                  <textarea
+                    {...register('content')}
+                    placeholder={'Write message'}
+                    className={`flex w-full h-full`}
+                  />
+                  <button
+                    type={'submit'}
+                    className={
+                      'cursor-pointer bg-[#4f378a] text-white hover:text-black text-center rounded-[20px] px-4 py-2 hover:bg-[#d0bcff] ml-auto'
+                    }
+                  >
+                    {isSubmitting ? 'Sending...' : 'Send'}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+          {messageContextMenuState && messageContextMenuState.message && (
+            <MessageContextMenu
+              menuRef={messageMenuRef}
+              contextMenuPosition={messageContextMenuState}
+              handleMenuAction={handleMessageMenuAction}
+              currentProfileId={curProfile.id}
+              messageAuthorId={messageContextMenuState.message.authorProfileId}
+            />
+          )}
+          {chatContextMenuState && (
+            <ChatContextMenu
+              menuRef={chatMenuRef}
+              contextMenuPosition={chatContextMenuState}
+              handleMenuAction={handleChatsMenuAction}
+            />
           )}
         </div>
-        {messageContextMenuState && messageContextMenuState.message && (
-          <MessageContextMenu
-            menuRef={messageMenuRef}
-            contextMenuPosition={messageContextMenuState}
-            handleMenuAction={handleMessageMenuAction}
-            currentProfileId={curProfile.id}
-            messageAuthorId={messageContextMenuState.message.authorProfileId}
-          />
-        )}
-        {chatContextMenuState && (
-          <ChatContextMenu
-            menuRef={chatMenuRef}
-            contextMenuPosition={chatContextMenuState}
-            handleMenuAction={handleChatsMenuAction}
-          />
-        )}
       </div>
-    </div>
+    </>
   );
 }

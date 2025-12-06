@@ -3,7 +3,7 @@ import {
   MessageContextMenuState,
   ChatMenuAction,
   ChatContextMenuState,
-} from '@/app/chat/[chatId]/page';
+} from '@/app/chat/page';
 
 type ChatContextMenuProps = {
   menuRef: Ref<HTMLDivElement> | undefined;

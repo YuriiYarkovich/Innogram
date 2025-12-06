@@ -11,6 +11,7 @@ export const SERVER = {
     GEL_ALL_POSTS_OF_PROFILE: `${env.NEXT_PUBLIC_API_URL}/posts/allOfProfile/`,
     DELETE_POST: `${env.NEXT_PUBLIC_API_URL}/posts/delete/`,
     GET_CURRENT_PROFILE_INFO: `${env.NEXT_PUBLIC_API_URL}/profiles/info`,
+    GET_ALL_SUBSCRIPTIONS: `${env.NEXT_PUBLIC_API_URL}/profiles/allSubscriptionsOf/`,
     FOLLOW: `${env.NEXT_PUBLIC_API_URL}/profiles/follow/`,
     UNFOLLOW: `${env.NEXT_PUBLIC_API_URL}/profiles/unfollow/`,
     CREATE_POST: `${env.NEXT_PUBLIC_API_URL}/posts/create`,

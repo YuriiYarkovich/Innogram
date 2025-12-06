@@ -1,7 +1,7 @@
 import CrossAngleButton from '@/components/crossAngle.button';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
-import { MessageSendFormValues } from '@/app/chat/[chatId]/page';
+import { MessageSendFormValues } from '@/app/chat/page';
 import { useSocket } from '@/hooks/useSocket';
 import { Profile } from '@/types';
 

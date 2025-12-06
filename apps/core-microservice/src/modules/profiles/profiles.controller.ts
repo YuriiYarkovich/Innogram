@@ -94,4 +94,16 @@ export class ProfilesController {
       followingProfileId,
     );
   }
+
+  @ApiOperation({ summary: 'Returns all subscriptions of the profile' })
+  @ApiResponse({ status: 200, type: Profile })
+  @Get('/allSubscriptionsOf/:profileId')
+  @UseGuards(AuthGuard)
+  async getAllSubscriptions(@Param('profileId') profileId: string) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.profilesService.getAllSubscriptionsOfProfile(
+      profileId,
+      currentProfileId,
+    );
+  }
 }

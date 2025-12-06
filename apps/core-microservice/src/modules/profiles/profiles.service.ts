@@ -152,4 +152,33 @@ export class ProfilesService {
     );
     return { message: 'Success' };
   }
+
+  async getAllSubscriptionsOfProfile(
+    profileId: string,
+    currentProfileId: string,
+  ) {
+    const foundProfiles = await this.profilesRepository.getAllSubscriptions(
+      profileId,
+      currentProfileId,
+    );
+
+    const returningProfiles: ReturningProfileInfo[] = [];
+
+    for (const profile of foundProfiles) {
+      let avatarUrl: string | undefined = undefined;
+      if (profile.avatarFilename) {
+        avatarUrl = await this.minioService.getPublicUrl(
+          profile.avatarFilename,
+        );
+      }
+      returningProfiles.push({
+        ...profile,
+        avatarUrl,
+        id: profileId,
+        isCurrent: currentProfileId === profileId,
+      });
+    }
+
+    return returningProfiles;
+  }
 }

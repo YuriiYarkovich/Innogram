@@ -1,6 +1,7 @@
 import { SERVER } from '@/config/apiRoutes';
 import returnErrorMessage from '@/utils/showAuthError';
 import { Profile } from '@/types';
+import js from '@eslint/js';
 
 export const handleOnProfileFollowing = async (profile: Profile) => {
   const response: Response = await fetch(`${SERVER.API.FOLLOW}${profile.id}`, {
@@ -88,4 +89,20 @@ export const fetchFullProfileData = async (username: string | undefined) => {
     profileData = await resProfile.json();
   }
   return profileData;
+};
+
+export const fetchAllSubscriptions = async (
+  currentProfileId: string,
+): Promise<Profile[]> => {
+  const response: Response = await fetch(
+    `${SERVER.API.GET_ALL_SUBSCRIPTIONS}${currentProfileId}`,
+    {
+      credentials: 'include',
+      method: 'GET',
+    },
+  );
+
+  if (!response.ok) console.error(response.json());
+
+  return await response.json();
 };
