@@ -299,6 +299,38 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  @SubscribeMessage('createChat')
+  async handleChatCreation(
+    dto: CreateChatDto,
+    currentProfileId: string,
+    file: File | undefined,
+  ) {
+    const createdChat = await this.chatService.createChat(
+      dto,
+      currentProfileId,
+      file,
+    );
+
+    const chatParticipants = await this.chatService.getAllChatParticipants(
+      createdChat.id,
+    );
+
+    const chatParticipantsIds = chatParticipants.map((chatParticipant) => {
+      return chatParticipant.id;
+    });
+
+    const onlineChatParticipantsSocketsIds =
+      this.getAllConnectedToServerSocketsFromGivenProfiles(chatParticipantsIds);
+
+    onlineChatParticipantsSocketsIds.forEach(
+      (onlineChatParticipantsSocketsId) => {
+        this.server
+          .to(onlineChatParticipantsSocketsId)
+          .emit('chatCreated', createdChat);
+      },
+    );
+  }
+
   @SubscribeMessage('deleteChat')
   async handleChatDeletion(
     client: Socket,

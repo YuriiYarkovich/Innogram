@@ -243,6 +243,17 @@ export default function ChatPage() {
     });
   };
 
+  const onChatCreated = (createdChat: Chat) => {
+    setChats((prevChats) => {
+      if (!prevChats) return [createdChat];
+
+      const chatExists = prevChats.some((chat) => chat.id === createdChat.id);
+      if (chatExists) return prevChats;
+
+      return [createdChat, ...prevChats];
+    });
+  };
+
   const { send } = useSocket(
     onMessageToChatReceived,
     onMessageToServerReceived,
@@ -251,6 +262,7 @@ export default function ChatPage() {
     onChatDeleted,
     onMessageUpdatedInChat,
     onMessageUpdatedInServer,
+    onChatCreated,
   );
 
   const updateChats = () => {

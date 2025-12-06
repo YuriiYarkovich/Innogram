@@ -174,7 +174,6 @@ export class ProfilesService {
       returningProfiles.push({
         ...profile,
         avatarUrl,
-        id: profileId,
         isCurrent: currentProfileId === profileId,
       });
     }

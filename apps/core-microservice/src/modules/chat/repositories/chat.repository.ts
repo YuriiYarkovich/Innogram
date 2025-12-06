@@ -15,10 +15,12 @@ export class ChatRepository {
   async createChat(
     dto: CreateChatDto,
     queryRunner: QueryRunner,
+    chatAvatarFilename?: string,
   ): Promise<Chat> {
     const chat: Chat = queryRunner.manager.create(Chat, {
       title: dto.title,
       chatType: dto.chatType,
+      chatAvatarFilename,
     });
     await queryRunner.manager.save(chat);
     return chat;

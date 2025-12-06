@@ -11,6 +11,7 @@ export const useSocket = (
   onChatDeleted?: (chat: Chat) => void,
   onMessageUpdatedInChat?: (message: Message) => void,
   onMessageUpdatedInServer?: (message: Message) => void,
+  onChatCreated?: (chat: Chat) => void,
 ) => {
   const socketRef = useRef<Socket | null>(null);
 
@@ -55,6 +56,10 @@ export const useSocket = (
 
     socket.on('messageEditedInServer', (updatedMessage: Message) => {
       if (onMessageUpdatedInServer) onMessageUpdatedInServer(updatedMessage);
+    });
+
+    socket.on('chatCreated', (createdChat: Chat) => {
+      if (onChatCreated) onChatCreated(createdChat);
     });
 
     return () => {

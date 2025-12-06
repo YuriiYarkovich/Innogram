@@ -42,13 +42,17 @@ export class ChatService {
   async createChat(
     dto: CreateChatDto,
     currentProfileId: string,
+    file?: File,
   ): Promise<ReturningChatData> {
     const queryRunner: QueryRunner = await this.createTransaction();
+
+    const chatAvatarFilename = await this.minioService.uploadFile(file);
 
     try {
       const createdChat: Chat = await this.chatRepository.createChat(
         dto,
         queryRunner,
+        chatAvatarFilename.hashedFileName,
       );
 
       const chatParticipantsIds: string[] = dto.otherParticipantsIds;

@@ -5,6 +5,7 @@ import { ChatTypes, Profile } from '@/types';
 import ChatCandidateTile from '@/components/chat/chat-candidate-tile';
 import { fetchAllSubscriptions } from '@/services/profile.service';
 import Image from 'next/image';
+import { useSocket } from '@/hooks/useSocket';
 
 type ChatCreationModalProps = {
   currentProfile: Profile;
@@ -44,8 +45,24 @@ const ChatCreationModal = ({
   const [subscriptions, setSubscriptions] = useState<Profile[] | null>(null);
   const [subscriptionsLoading, setSubscriptionsLoading] = useState(false);
 
+  const { send } = useSocket();
+
   const onSubmit = async (data: ChatCreationFormValues) => {
-    console.log('submit');
+    data.chatType =
+      data.otherParticipantsIds.length > 1
+        ? ChatTypes.GROUP
+        : ChatTypes.PRIVATE;
+
+    send({
+      event: 'createChat',
+      data: {
+        dto: { ...data },
+        currentProfileId: currentProfile.id,
+        file,
+      },
+    });
+
+    onClose();
   };
 
   const onCandidatePick = (isPicked: boolean, profileId: string) => {

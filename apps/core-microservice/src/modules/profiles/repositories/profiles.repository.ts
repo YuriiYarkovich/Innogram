@@ -3,6 +3,7 @@ import { Profile } from '../../../common/entities/account/profile.entity';
 import { In, QueryRunner, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import {
+  FindingProfileInfo,
   FindingProfileInfoById,
   FindingProfileInfoByUsername,
 } from '../../../common/types/profile.type';
@@ -117,7 +118,7 @@ export class ProfilesRepository {
   }
 
   async getAllSubscriptions(profileId: string, currentProfileId: string) {
-    return await this.profileRepository.query<FindingProfileInfoById[]>(
+    return await this.profileRepository.query<FindingProfileInfo[]>(
       `
         SELECT p.id,
                p.birthday,
@@ -133,8 +134,8 @@ export class ProfilesRepository {
                                WHERE follower_profile_id = $2
                                  AND followed_profile_id = p.id))                            AS "isSubscribed"
         FROM main.profiles_follows AS prf
-               RIGHT JOIN main.profiles p on prf.follower_profile_id = p.id
-        WHERE prf.followed_profile_id = $1
+               INNER JOIN main.profiles p on prf.followed_profile_id = p.id
+        WHERE prf.follower_profile_id = $1
       `,
       [profileId, currentProfileId, PostStatus.ACTIVE],
     );
