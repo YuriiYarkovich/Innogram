@@ -316,7 +316,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     },
   ) {
     let file: MulterFile | undefined;
-
     if (payload.file) {
       file = {
         buffer: Buffer.from(payload.file.buffer),
@@ -331,24 +330,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         stream: null,
       } as MulterFile;
     }
-
     const createdChat = await this.chatService.createChat(
       payload.dto,
       payload.currentProfileId,
       file,
     );
-
-    const chatParticipants = await this.chatService.getAllChatParticipants(
+    const chatParticipantsIds = await this.getAllChatParticipantsIds(
       createdChat.id,
     );
 
-    const chatParticipantsIds = chatParticipants.map((chatParticipant) => {
-      return chatParticipant.id;
-    });
-
     const onlineChatParticipantsSocketsIds =
       this.getAllConnectedToServerSocketsFromGivenProfiles(chatParticipantsIds);
-
     onlineChatParticipantsSocketsIds.forEach(
       (onlineChatParticipantsSocketsId) => {
         this.server
@@ -364,16 +356,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     data: { chat: ReturningChatData; currentProfileId: string },
   ) {
     await this.chatService.deleteChat(data.chat.id);
-    const chatParticipants = await this.getAllChatParticipantsIds(data.chat.id);
+    const chatParticipantsIds = await this.getAllChatParticipantsIds(
+      data.chat.id,
+    );
 
     const onlineChatParticipantsConnectedToChat =
       this.getAllConnectedToChatSocketsFromGivenProfiles(
         data.chat.id,
-        chatParticipants,
+        chatParticipantsIds,
       );
 
     const onlineChatParticipantsConnectedToServer =
-      this.getAllConnectedToServerSocketsFromGivenProfiles(chatParticipants);
+      this.getAllConnectedToServerSocketsFromGivenProfiles(chatParticipantsIds);
 
     onlineChatParticipantsConnectedToChat.forEach((connectedToChatSocket) => {
       this.server.to(connectedToChatSocket).emit('currentChatDeleted', {
@@ -421,19 +415,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
     }
     return undefined;
-  }
-
-  private findSenderProfileId(client: Socket): string {
-    const senderProfileId: string | undefined = this.getProfileIdBySocketId(
-      client.id,
-    );
-
-    if (!senderProfileId)
-      throw new InternalServerErrorException(
-        `Client id is not in connected users list!`,
-      );
-
-    return senderProfileId;
   }
 
   private getSocketIdByProfileId(profileId: string) {

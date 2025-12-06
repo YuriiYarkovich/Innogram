@@ -76,6 +76,7 @@ const ChatCreationModal = ({
         file: fileData,
       },
     });
+    onClose();
   };
 
   const onCandidatePick = (wasPickedBefore: boolean, profileId: string) => {

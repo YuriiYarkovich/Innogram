@@ -247,7 +247,6 @@ export default function ChatPage() {
   const onChatCreated = (createdChat: Chat) => {
     setChats((prevChats) => {
       if (!prevChats) return [createdChat];
-
       const chatExists = prevChats.some((chat) => chat.id === createdChat.id);
       if (chatExists) return prevChats;
 

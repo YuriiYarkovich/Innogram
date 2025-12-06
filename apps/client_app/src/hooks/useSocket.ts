@@ -59,7 +59,9 @@ export const useSocket = (
     });
 
     socket.on('chatCreated', (createdChat: Chat) => {
-      if (onChatCreated) onChatCreated(createdChat);
+      if (onChatCreated) {
+        onChatCreated(createdChat);
+      }
     });
 
     return () => {
