@@ -1,4 +1,5 @@
 import {
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -23,6 +24,7 @@ import type {
   ReceivingMessage,
   ReturningMessageData,
 } from '../../common/types/message.type';
+import { File as MulterFile } from 'multer';
 import { Logger } from 'nestjs-pino';
 import { MessageReadStatus } from '../../common/enums/message.enum';
 import { CreateMessageDto } from '../messages/dto/create-message.dto';
@@ -301,13 +303,38 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('createChat')
   async handleChatCreation(
-    dto: CreateChatDto,
-    currentProfileId: string,
-    file: File | undefined,
+    @MessageBody()
+    payload: {
+      dto: CreateChatDto;
+      currentProfileId: string;
+      file?: {
+        buffer: ArrayBuffer;
+        originalname: string;
+        mimetype: string;
+        size: number;
+      };
+    },
   ) {
+    let file: MulterFile | undefined;
+
+    if (payload.file) {
+      file = {
+        buffer: Buffer.from(payload.file.buffer),
+        originalname: payload.file.originalname,
+        mimetype: payload.file.mimetype,
+        size: payload.file.size,
+        fieldname: 'file',
+        encoding: '7bit',
+        destination: '',
+        filename: '',
+        path: '',
+        stream: null,
+      } as MulterFile;
+    }
+
     const createdChat = await this.chatService.createChat(
-      dto,
-      currentProfileId,
+      payload.dto,
+      payload.currentProfileId,
       file,
     );
 

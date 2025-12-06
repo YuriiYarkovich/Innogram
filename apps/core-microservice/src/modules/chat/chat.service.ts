@@ -20,6 +20,7 @@ import { MessagesRepository } from '../messages/repositories/messages.repository
 import { ProfilesService } from '../profiles/profiles.service';
 import { ChatParticipantRole } from '../../common/enums/chat.enum';
 import { MinioService } from '../minio/minio.service';
+import { File as MulterFile } from 'multer';
 
 @Injectable()
 export class ChatService {
@@ -42,17 +43,22 @@ export class ChatService {
   async createChat(
     dto: CreateChatDto,
     currentProfileId: string,
-    file?: File,
+    file?: MulterFile,
   ): Promise<ReturningChatData> {
     const queryRunner: QueryRunner = await this.createTransaction();
 
-    const chatAvatarFilename = await this.minioService.uploadFile(file);
+    let chatAvatarFilename = '';
+
+    if (file) {
+      const fileObj = await this.minioService.uploadFile(file);
+      chatAvatarFilename = fileObj.hashedFileName;
+    }
 
     try {
       const createdChat: Chat = await this.chatRepository.createChat(
         dto,
         queryRunner,
-        chatAvatarFilename.hashedFileName,
+        chatAvatarFilename,
       );
 
       const chatParticipantsIds: string[] = dto.otherParticipantsIds;

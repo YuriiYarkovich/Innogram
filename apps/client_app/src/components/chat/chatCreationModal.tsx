@@ -48,25 +48,38 @@ const ChatCreationModal = ({
   const { send } = useSocket();
 
   const onSubmit = async (data: ChatCreationFormValues) => {
+    console.log('IN ON SUBMIT CHAT CREATION METHOD!!!!');
     data.chatType =
       data.otherParticipantsIds.length > 1
         ? ChatTypes.GROUP
         : ChatTypes.PRIVATE;
+
+    let fileData = null;
+
+    if (file) {
+      const arrayBuffer = await file.arrayBuffer();
+      fileData = {
+        buffer: arrayBuffer,
+        originalname: file.name,
+        mimetype: file.type,
+        size: file.size,
+      };
+    }
+
+    console.log(`filedata before sending: ${JSON.stringify(fileData)}`);
 
     send({
       event: 'createChat',
       data: {
         dto: { ...data },
         currentProfileId: currentProfile.id,
-        file,
+        file: fileData,
       },
     });
-
-    onClose();
   };
 
-  const onCandidatePick = (isPicked: boolean, profileId: string) => {
-    if (isPicked) {
+  const onCandidatePick = (wasPickedBefore: boolean, profileId: string) => {
+    if (!wasPickedBefore) {
       if (!otherParticipantsIds.includes(profileId)) {
         setValue('otherParticipantsIds', [...otherParticipantsIds, profileId]);
       }
@@ -126,7 +139,7 @@ const ChatCreationModal = ({
             <span className={'text-[14px] text-[#79747e]'}>Chat name</span>
             <input
               className={'border-b-1 border-[#79747e]'}
-              {...register('title')}
+              {...register('title', { required: 'Title is required!' })}
             />
           </div>
         </div>

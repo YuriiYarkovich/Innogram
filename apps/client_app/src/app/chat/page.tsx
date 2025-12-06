@@ -25,6 +25,7 @@ import ReplyingMessageHint from '@/components/chat/replying-message-hint';
 import EditingMessageHint from '@/components/chat/editing-message-hint';
 import Image from 'next/image';
 import ChatCreationModal from '@/components/chat/chatCreationModal';
+import AddChatButton from '@/components/chat/addChat.button';
 
 export type MessageSendFormValues = {
   content: string;
@@ -570,7 +571,14 @@ export default function ChatPage() {
               {chatsLoading ? (
                 <p>Chats list is loading...</p>
               ) : chats?.length === 0 ? (
-                <p>There are no chats yet.</p>
+                <div
+                  className={
+                    'flex flex-col gap-2 items-center justify-center w-full'
+                  }
+                >
+                  <p>There are no chats yet.</p>
+                  <AddChatButton onAddChatButtonClick={onAddChatButtonClick} />
+                </div>
               ) : (
                 <div className={'flex flex-col gap-3'}>
                   {chats?.map((chat) => (
@@ -593,22 +601,9 @@ export default function ChatPage() {
                       'flex w-full min-h-[25px] items-center justify-center'
                     }
                   >
-                    <button
-                      onClick={onAddChatButtonClick}
-                      className={
-                        'flex items-center justify-center min-h-[47px] min-w-[47px] rounded-full cursor-pointer'
-                      }
-                    >
-                      <Image
-                        src={'/images/icons/add.svg'}
-                        alt={'Add icon'}
-                        width={40}
-                        height={40}
-                        className={
-                          'rounded-[inherit] hover:md:w-[47px] hover:md:h-[47px] '
-                        }
-                      />
-                    </button>
+                    <AddChatButton
+                      onAddChatButtonClick={onAddChatButtonClick}
+                    />
                   </div>
                 </div>
               )}

@@ -33,9 +33,10 @@ const ChatCandidateTile = ({
       </div>
       <span className={'font-bold text-[20px]'}>{profile.username}</span>
       <button
+        type={'button'}
         onClick={() => {
-          setIsPicked((prev) => !prev);
           onPickClick(isPicked, profile.id);
+          setIsPicked((prev) => !prev);
         }}
         className={
           'flex items-center justify-center ml-auto rounded-full min-h-[20px] min-w-[20px] outline-1 mr-4'
