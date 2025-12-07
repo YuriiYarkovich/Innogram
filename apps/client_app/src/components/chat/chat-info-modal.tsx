@@ -5,6 +5,7 @@ import { loadFromS3 } from '@/services/files.service';
 import Image from 'next/image';
 import { fetchChatParticipants } from '@/services/chat.service';
 import ChatParticipantTile from '@/components/chat/chat-participant-tile';
+import AddFilePlaceholder from '@/components/add-file-placeholder';
 
 type ChatInfoModalProps = {
   isOpened: boolean;
@@ -15,7 +16,7 @@ type ChatInfoModalProps = {
 
 type ChatEditingFormValues = {
   title: string;
-  file?: File | null;
+  file?: File | string | null;
 };
 
 const ChatInfoModal = ({
@@ -29,6 +30,7 @@ const ChatInfoModal = ({
     ChatParticipantProfile[] | null
   >(null);
   const [chatParticipantsLoading, setChatParticipantsLoading] = useState(false);
+  const [isInEditingMode, setIsInEditingMode] = useState(false);
 
   const {
     register,
@@ -39,10 +41,17 @@ const ChatInfoModal = ({
     formState: { isSubmitting },
   } = useForm<ChatEditingFormValues>({
     defaultValues: {
-      title: currentChat?.title,
+      title: '',
       file: null,
     },
   });
+
+  useEffect(() => {
+    if (currentChat) {
+      setValue('title', currentChat.title || '');
+      setValue('file', currentChat.avatarUrl || null);
+    }
+  }, [currentChat, setValue]);
 
   useEffect(() => {
     setChat(currentChat);
@@ -92,42 +101,98 @@ const ChatInfoModal = ({
               className={`hover:min-h-[37px] hover:min-w-[37px]`}
             />
           </button>
-          {isCurrentUserAdmin && (
-            <div className={'flex flex-row ml-auto gap-2 h-full'}>
-              <button
-                type={'button'}
-                className={
-                  'flex items-center justify-center min-h-[40px] min-w-[40px] cursor-pointer'
-                }
-              >
-                <Image
-                  src={'/images/icons/edit.svg'}
-                  alt={'edit button'}
-                  width={33}
-                  height={33}
-                  draggable={false}
-                  className={'hover:min-h-[40px] hover:min-w-[40px]'}
-                />
-              </button>
-            </div>
-          )}
+          {isCurrentUserAdmin &&
+            (isInEditingMode ? (
+              <div className={'flex flex-row ml-auto gap-2 h-full'}>
+                <button
+                  type={'button'}
+                  className={
+                    'flex items-center justify-center min-h-[40px] min-w-[40px] cursor-pointer'
+                  }
+                >
+                  <Image
+                    src={'/images/icons/apply.svg'}
+                    alt={'apply button'}
+                    width={33}
+                    height={33}
+                    draggable={false}
+                    className={'hover:min-h-[40px] hover:min-w-[40px]'}
+                  />
+                </button>
+                <button
+                  type={'button'}
+                  onClick={() => setIsInEditingMode(false)}
+                  className={
+                    'flex items-center justify-center min-h-[40px] min-w-[40px] cursor-pointer'
+                  }
+                >
+                  <Image
+                    src={'/images/icons/cross.svg'}
+                    alt={'reject button'}
+                    width={33}
+                    height={33}
+                    draggable={false}
+                    className={'hover:min-h-[40px] hover:min-w-[40px]'}
+                  />
+                </button>
+              </div>
+            ) : (
+              <div className={'flex flex-row ml-auto gap-2 h-full'}>
+                <button
+                  type={'button'}
+                  onClick={() => {
+                    console.log(`Current chat: ${JSON.stringify(currentChat)}`);
+                    setIsInEditingMode(true);
+                  }}
+                  className={
+                    'flex items-center justify-center min-h-[40px] min-w-[40px] cursor-pointer'
+                  }
+                >
+                  <Image
+                    src={'/images/icons/edit.svg'}
+                    alt={'edit button'}
+                    width={33}
+                    height={33}
+                    draggable={false}
+                    className={'hover:min-h-[40px] hover:min-w-[40px]'}
+                  />
+                </button>
+              </div>
+            ))}
         </div>
         <div
           className={
             'flex items-center justify-center rounded-full md:w-[100px] md:h-[100px] outline-1'
           }
         >
-          <Image
-            src={currentChat?.avatarUrl || '/images/avaTest.png'}
-            alt={'chat avatar'}
-            width={100}
-            height={100}
-            draggable={false}
-            unoptimized
-            className={'rounded-[inherit] md:w-[100px] md:h-[100px]'}
-          />
+          {isInEditingMode ? (
+            <AddFilePlaceholder
+              control={control}
+              name={'file'}
+              isIcon={true}
+              iconSize={50}
+            />
+          ) : (
+            <Image
+              src={currentChat?.avatarUrl || '/images/avaTest.png'}
+              alt={'chat avatar'}
+              width={100}
+              height={100}
+              draggable={false}
+              unoptimized
+              className={'rounded-[inherit] md:w-[100px] md:h-[100px]'}
+            />
+          )}
         </div>
-        <span className={'font-bold text-[20px]'}>{currentChat?.title}</span>
+        {isInEditingMode ? (
+          <input
+            {...register('title')}
+            className={'font-bold text-[20px] border-b-1 border-[#79747e]'}
+          />
+        ) : (
+          <span className={'font-bold text-[20px]'}>{currentChat?.title}</span>
+        )}
+
         <span className={'font-mono text-[16xp]'}>
           {`${currentChat?.participantsAmount} participants`}
         </span>

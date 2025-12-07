@@ -23,7 +23,7 @@ import MessageContextMenu from '@/components/chat/message/message-context-menu';
 import ChatContextMenu from '@/components/chat/chat-context-menu';
 import ReplyingMessageHint from '@/components/chat/message/replying-message-hint';
 import EditingMessageHint from '@/components/chat/message/editing-message-hint';
-import ChatCreationModal from '@/components/chat/chatCreationModal';
+import ChatCreationModal from '@/components/chat/chat-creation-modal';
 import AddChatButton from '@/components/chat/addChat.button';
 import ChatInfoModal from '@/components/chat/chat-info-modal';
 
