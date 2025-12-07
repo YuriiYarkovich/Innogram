@@ -19,11 +19,10 @@ import {
   MessageReadStatus,
   MessageVisibilityStatus,
 } from '@innogram/core-microservice/dist/common/enums/message.enum';
-import MessageContextMenu from '@/components/chat/message-context-menu';
+import MessageContextMenu from '@/components/chat/message/message-context-menu';
 import ChatContextMenu from '@/components/chat/chat-context-menu';
-import ReplyingMessageHint from '@/components/chat/replying-message-hint';
-import EditingMessageHint from '@/components/chat/editing-message-hint';
-import Image from 'next/image';
+import ReplyingMessageHint from '@/components/chat/message/replying-message-hint';
+import EditingMessageHint from '@/components/chat/message/editing-message-hint';
 import ChatCreationModal from '@/components/chat/chatCreationModal';
 import AddChatButton from '@/components/chat/addChat.button';
 
@@ -718,6 +717,10 @@ export default function ChatPage() {
               menuRef={chatMenuRef}
               contextMenuPosition={chatContextMenuState}
               handleMenuAction={handleChatsMenuAction}
+              isCurrentProfileAdmin={
+                chatContextMenuState.chat?.isCurrentUserAdmin
+              }
+              chatType={chatContextMenuState.chat?.type}
             />
           )}
         </div>

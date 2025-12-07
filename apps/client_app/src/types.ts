@@ -72,11 +72,13 @@ export type Chat = {
   id: string;
   avatarUrl?: string;
   title: string;
+  type: ChatTypes;
   lastMessageId?: string;
   lastMessageContent?: string;
   lastMessageCreatedAt?: string;
   lastMessageRead?: MessageReadStatus;
   chatStatus: ChatStatus;
+  isCurrentUserAdmin?: boolean;
 };
 
 export enum ChatTypes {

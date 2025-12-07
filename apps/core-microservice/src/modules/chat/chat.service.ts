@@ -10,7 +10,6 @@ import { ChatParticipantRepository } from './repositories/chat-participant.repos
 import { AddParticipantDto } from './dto/add-participant.dto';
 import { WrongUserException } from '../../common/exceptions/wrong-user.exception';
 import { ChatParticipant } from '../../common/entities/chat/chat-participant.entity';
-import { Chat } from '../../common/entities/chat/chat.entity';
 import { UserRoles } from '../../common/enums/user-roles.enum';
 import {
   FindingChatData,
@@ -55,7 +54,7 @@ export class ChatService {
     }
 
     try {
-      const createdChat: Chat = await this.chatRepository.createChat(
+      const createdChat = await this.chatRepository.createChat(
         dto,
         queryRunner,
         chatAvatarFilename,
@@ -97,6 +96,7 @@ export class ChatService {
         await this.minioService.getPublicUrl(createdChat.chatAvatarFilename);
       const returningChatData: ReturningChatData = {
         ...createdChat,
+        type: createdChat.chatType,
         avatarUrl,
       };
 
@@ -148,8 +148,11 @@ export class ChatService {
   }
 
   async getAllChatsOfProfile(currentProfileId: string) {
-    const foundChats =
-      await this.chatRepository.getAllChatsOfProfile(currentProfileId);
+    const foundChats = await this.chatRepository.getAllChatsOfProfile(
+      currentProfileId,
+      currentProfileId,
+    ); //TODO add possibility to get the other accounts chat list
+
     const returningChatsData: ReturningChatData[] = [];
     for (const chat of foundChats) {
       const lastMessage = await this.messagesRepository.getLastMessageOfChat(
@@ -166,6 +169,8 @@ export class ChatService {
         id: chat.id,
         avatarUrl: additionalInfo.avatarUrl,
         title: chat.title || additionalInfo.chatTitle,
+        type: chat.type,
+        isCurrentUserAdmin: chat.isCurrentUserAdmin,
         lastMessageId: lastMessage?.id,
         lastMessageContent: lastMessage?.content,
         lastMessageCreatedAt: lastMessage?.createdAt,
@@ -174,6 +179,7 @@ export class ChatService {
       };
       returningChatsData.push(returningChatData);
     }
+
     return returningChatsData;
   }
 
@@ -189,8 +195,10 @@ export class ChatService {
     currentProfileId: string,
   ): Promise<ReturningChatData> {
     await this.checkIfParticipantExists(chatId, currentProfileId);
-    const chat: FindingChatData | null =
-      await this.chatRepository.getChatInfo(chatId);
+    const chat: FindingChatData | null = await this.chatRepository.getChatInfo(
+      chatId,
+      currentProfileId,
+    );
     if (!chat) throw new BadRequestException(`This chat doesn't exist!`);
     const lastMessage = await this.messagesRepository.getLastMessageOfChat(
       chat.id,
@@ -206,6 +214,8 @@ export class ChatService {
       id: chat.id,
       avatarUrl: additionalInfo.avatarUrl,
       title: chat.title || additionalInfo.chatTitle,
+      type: chat.type,
+      isCurrentUserAdmin: chat.isCurrentUserAdmin,
       lastMessageId: lastMessage?.id,
       lastMessageContent: lastMessage?.content,
       lastMessageCreatedAt: lastMessage?.createdAt,
@@ -214,15 +224,19 @@ export class ChatService {
     };
   }
 
-  async updateChatTitle(chatId: string, title: string, profileId: string) {
+  async updateChatTitle(
+    chatId: string,
+    title: string,
+    currentProfileId: string,
+  ) {
     const chatParticipant: ChatParticipant =
-      await this.checkIfParticipantExists(chatId, profileId);
+      await this.checkIfParticipantExists(chatId, currentProfileId);
 
     if (chatParticipant.role !== ChatParticipantRole.ADMIN)
       throw new ForbiddenException('Participant is not admin of this chat');
 
     await this.chatRepository.updateChatTitle(chatId, title);
-    return await this.chatRepository.getChatInfo(chatId);
+    return await this.chatRepository.getChatInfo(chatId, currentProfileId);
   }
 
   async autoUpdateChatTitle(chatId: string, title: string) {
@@ -254,11 +268,11 @@ export class ChatService {
   async addChatParticipants(
     chatId: string,
     dto: AddParticipantDto,
-    profileId: string,
+    currentProfileId: string,
   ) {
     const queryRunner: QueryRunner = await this.createTransaction();
     try {
-      await this.checkIfParticipantExists(chatId, profileId);
+      await this.checkIfParticipantExists(chatId, currentProfileId);
 
       //TODO create check if all those users exist
       for (const chatParticipantId of dto.participantsIds) {
@@ -269,7 +283,7 @@ export class ChatService {
         );
       }
       await queryRunner.commitTransaction();
-      return await this.chatRepository.getChatInfo(chatId);
+      return await this.chatRepository.getChatInfo(chatId, currentProfileId);
     } catch (e) {
       await queryRunner.rollbackTransaction();
       throw e;
@@ -278,11 +292,11 @@ export class ChatService {
     }
   }
 
-  async archiveChat(chatId: string, participantId: string) {
+  /*async archiveChat(chatId: string, participantId: string) {
     await this.checkIfParticipantExists(chatId, participantId);
 
     return await this.chatRepository.archiveChat(chatId);
-  }
+  }*/
 
   async getAllChatParticipants(chatId: string) {
     return await this.chatParticipantRepository.findAllParticipantsOfChat(
@@ -290,8 +304,11 @@ export class ChatService {
     );
   }
 
-  async deleteChat(chatId: string) {
-    const chat = await this.chatRepository.getChatInfo(chatId);
+  async deleteChat(chatId: string, currentProfileId: string) {
+    const chat = await this.chatRepository.getChatInfo(
+      chatId,
+      currentProfileId,
+    );
     if (!chat)
       throw new BadRequestException('Chat with provided id does not exist');
 

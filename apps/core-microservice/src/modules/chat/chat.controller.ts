@@ -73,9 +73,13 @@ export class ChatController {
   @Put(`/updateTitle/:chatId`)
   @UseGuards(AuthGuard)
   async editChat(@Param('chatId') chatId: string, @Body() dto: CreateChatDto) {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     if (!dto.title) throw new BadRequestException('Title is not provided!');
-    return this.chatService.updateChatTitle(chatId, dto.title, profileId);
+    return this.chatService.updateChatTitle(
+      chatId,
+      dto.title,
+      currentProfileId,
+    );
   }
 
   @ApiOperation({ summary: 'Deletes participant from chat' })
@@ -95,16 +99,20 @@ export class ChatController {
     @Param(`chatId`) chatId: string,
     @Body() dto: AddParticipantDto,
   ) {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
-    return await this.chatService.addChatParticipants(chatId, dto, profileId);
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.chatService.addChatParticipants(
+      chatId,
+      dto,
+      currentProfileId,
+    );
   }
 
-  @ApiOperation({ summary: 'Archives chat' })
+  /*@ApiOperation({ summary: 'Archives chat' })
   @ApiResponse({ status: 200, type: Chat })
   @Put(`/archive/:chatId`)
   @UseGuards(AuthGuard)
   async archiveChat(@Param(`chatId`) chatId: string) {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
-    return await this.chatService.archiveChat(chatId, profileId);
-  }
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.chatService.archiveChat(chatId, currentProfileId);
+  }*/
 }

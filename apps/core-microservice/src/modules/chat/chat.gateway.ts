@@ -355,7 +355,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client: Socket,
     data: { chat: ReturningChatData; currentProfileId: string },
   ) {
-    await this.chatService.deleteChat(data.chat.id);
+    const currentProfileId = this.getProfileIdBySocketId(client.id);
+    if (!currentProfileId)
+      throw new InternalServerErrorException(`Can't find connected user`);
+    await this.chatService.deleteChat(data.chat.id, currentProfileId);
     const chatParticipantsIds = await this.getAllChatParticipantsIds(
       data.chat.id,
     );
