@@ -6,6 +6,7 @@ export interface ReturningChatData {
   avatarUrl?: string;
   title: string;
   type: ChatTypes;
+  participantsAmount?: number;
   lastMessageId?: string;
   lastMessageContent?: string;
   lastMessageCreatedAt?: string;
@@ -19,6 +20,7 @@ export interface FindingChatData {
   avatarFilename: string;
   title: string;
   type: ChatTypes;
+  participantsAmount: number;
   chatStatus: ChatStatus;
   isCurrentUserAdmin?: boolean;
 }

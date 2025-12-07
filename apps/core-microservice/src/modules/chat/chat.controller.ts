@@ -22,6 +22,7 @@ import { AddParticipantDto } from './dto/add-participant.dto';
 import { context, CONTEXT_KEYS } from '../../common/cls/request-context';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { ReturningChatData } from '../../common/types/chat.types';
+import { Profile } from '../../common/entities/account/profile.entity';
 
 @ApiTags('Operations with chats')
 @ApiBearerAuth('access-token')
@@ -105,6 +106,14 @@ export class ChatController {
       dto,
       currentProfileId,
     );
+  }
+
+  @ApiOperation({ summary: 'Returns all participants of the chat' })
+  @ApiResponse({ status: 200, type: Profile })
+  @Get(`/addParticipant/:chatId`)
+  @UseGuards(AuthGuard)
+  async allParticipants(@Param(`chatId`) chatId: string) {
+    return await this.chatService.getAllChatParticipants(chatId);
   }
 
   /*@ApiOperation({ summary: 'Archives chat' })

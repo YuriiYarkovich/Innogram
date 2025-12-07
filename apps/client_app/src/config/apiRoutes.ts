@@ -27,7 +27,8 @@ export const SERVER = {
     FETCH_ALL_CHATS_OF_PROFILE: `${env.NEXT_PUBLIC_API_URL}/chat/allChatsOfProfile`,
     FETCH_PRIVATE_CHAT: `${env.NEXT_PUBLIC_API_URL}/chat/findInfoOfPrivate/`,
     CREATE_CHAT: `${env.NEXT_PUBLIC_API_URL}/chat/create`,
-    FETCH_CHAT_INFO: `${env.NEXT_PUBLIC_API_URL}/chat/info/`,
+    CHAT_INFO: `${env.NEXT_PUBLIC_API_URL}/chat/info/`,
     GET_MESSAGES_OF_CHAT: `${env.NEXT_PUBLIC_API_URL}/messages/fromChat/`,
+    CHAT_PARTICIPANTS: `${env.NEXT_PUBLIC_API_URL}/chat/addParticipant/`,
   },
 };

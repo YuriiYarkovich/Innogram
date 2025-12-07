@@ -58,14 +58,17 @@ export class ChatRepository {
     return await this.chatRepository.query(
       `
         SELECT chat.id,
-               chat.chat_avatar_filename AS "avatarFilename",
+               chat.chat_avatar_filename    AS "avatarFilename",
                chat.title,
-               chat.chat_status          AS "chatStatus",
-               chat.chat_type            AS "type",
+               chat.chat_status             AS "chatStatus",
+               chat.chat_type               AS "type",
+               (SELECT COUNT(*)
+                FROM main.chat_participants AS cp
+                WHERE cp.chat_id = chat.id) AS "participantsAmount",
                CASE
                  WHEN cpCurrent.role = 'admin' THEN true
                  ELSE false
-                 END                     AS "isCurrentUserAdmin"
+                 END                        AS "isCurrentUserAdmin"
         FROM main.chats AS chat
                RIGHT JOIN main.chat_participants AS chatParticipant
                           ON chat.id = chatParticipant.chat_id

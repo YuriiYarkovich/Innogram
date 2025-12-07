@@ -20,6 +20,7 @@ import { ProfilesService } from '../profiles/profiles.service';
 import { ChatParticipantRole } from '../../common/enums/chat.enum';
 import { MinioService } from '../minio/minio.service';
 import { File as MulterFile } from 'multer';
+import { ChatParticipantProfile } from '../../common/types/profile.type';
 
 @Injectable()
 export class ChatService {
@@ -170,6 +171,7 @@ export class ChatService {
         avatarUrl: additionalInfo.avatarUrl,
         title: chat.title || additionalInfo.chatTitle,
         type: chat.type,
+        participantsAmount: chat.participantsAmount,
         isCurrentUserAdmin: chat.isCurrentUserAdmin,
         lastMessageId: lastMessage?.id,
         lastMessageContent: lastMessage?.content,
@@ -215,6 +217,7 @@ export class ChatService {
       avatarUrl: additionalInfo.avatarUrl,
       title: chat.title || additionalInfo.chatTitle,
       type: chat.type,
+      participantsAmount: chat.participantsAmount,
       isCurrentUserAdmin: chat.isCurrentUserAdmin,
       lastMessageId: lastMessage?.id,
       lastMessageContent: lastMessage?.content,
@@ -299,9 +302,21 @@ export class ChatService {
   }*/
 
   async getAllChatParticipants(chatId: string) {
-    return await this.chatParticipantRepository.findAllParticipantsOfChat(
-      chatId,
-    );
+    const foundChatParticipants =
+      await this.chatParticipantRepository.findAllParticipantsOfChat(chatId);
+
+    const returningChatParticipants: ChatParticipantProfile[] = [];
+    for (const chatParticipant of foundChatParticipants) {
+      const avatarUrl = await this.minioService.getPublicUrl(
+        chatParticipant.avatarFilename,
+      );
+
+      returningChatParticipants.push({
+        ...chatParticipant,
+        avatarUrl,
+      });
+    }
+    return returningChatParticipants;
   }
 
   async deleteChat(chatId: string, currentProfileId: string) {

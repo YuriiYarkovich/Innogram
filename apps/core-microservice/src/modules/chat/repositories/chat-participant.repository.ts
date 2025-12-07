@@ -4,6 +4,7 @@ import { ChatParticipant } from '../../../common/entities/chat/chat-participant.
 import { QueryRunner, Repository } from 'typeorm';
 import { UserRoles } from '../../../common/enums/user-roles.enum';
 import { ChatParticipantRole } from '../../../common/enums/chat.enum';
+import { ChatParticipantProfile } from '../../../common/types/profile.type';
 
 @Injectable()
 export class ChatParticipantRepository {
@@ -94,16 +95,21 @@ export class ChatParticipantRepository {
     });
   }
 
-  async findAllParticipantsOfChat(
-    chatId: string,
-  ): Promise<{ id: string; username: string; profileId: string }[]> {
-    return await this.chatParticipantRepository.query(
+  async findAllParticipantsOfChat(chatId: string) {
+    return await this.chatParticipantRepository.query<
+      {
+        id: string;
+        username: string;
+        profileId: string;
+        avatarFilename: string;
+      }[]
+    >(
       `
-      SELECT cp.id, p.username, p.id AS "profileId"
-      FROM main.chat_participants AS cp
-      LEFT JOIN main.profiles AS p ON cp.profile_id=p.id
-      WHERE chat_id=$1
-    `,
+        SELECT cp.id, p.username, p.id AS "profileId", p.avatar_filename AS "avatarFilename"
+        FROM main.chat_participants AS cp
+               LEFT JOIN main.profiles AS p ON cp.profile_id = p.id
+        WHERE chat_id = $1
+      `,
       [chatId],
     );
   }

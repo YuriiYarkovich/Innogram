@@ -1,6 +1,6 @@
 import { SERVER } from '@/config/apiRoutes';
 import returnErrorMessage from '@/utils/showAuthError';
-import { Chat, ChatTypes } from '@/types';
+import { Chat, ChatParticipantProfile, ChatTypes } from '@/types';
 
 export const fetchChatsOfProfile = async (): Promise<Chat[] | undefined> => {
   const response: Response = await fetch(
@@ -18,33 +18,11 @@ export const fetchChatsOfProfile = async (): Promise<Chat[] | undefined> => {
   }
 
   const receivedChats: Chat[] = await response.json();
+  /*console.log('Received chats: ');
+  receivedChats.forEach((receivedChat) => {
+    console.log(JSON.stringify(receivedChat) + '\n');
+  });*/
   return receivedChats;
-};
-
-export const enterOrCreateChat = async (
-  receiverProfileId: string,
-): Promise<Chat | undefined> => {
-  const response: Response = await fetch(
-    `${SERVER.API.FETCH_PRIVATE_CHAT}${receiverProfileId}`,
-    {
-      method: 'GET',
-      credentials: 'include',
-    },
-  );
-
-  if (!response.ok) {
-    const finalMessage: string | undefined = await returnErrorMessage(response);
-    if (finalMessage) console.error(finalMessage);
-    return;
-  }
-
-  const chatId: string | null = await response.json();
-
-  if (!chatId) {
-    return undefined;
-  }
-
-  return await fetchChatInfo(chatId);
 };
 
 export const createChat = async (
@@ -77,13 +55,10 @@ export const createChat = async (
 export const fetchChatInfo = async (
   chatId: string,
 ): Promise<Chat | undefined> => {
-  const response: Response = await fetch(
-    `${SERVER.API.FETCH_CHAT_INFO}${chatId}`,
-    {
-      method: 'GET',
-      credentials: 'include',
-    },
-  );
+  const response: Response = await fetch(`${SERVER.API.CHAT_INFO}${chatId}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
 
   if (!response.ok) {
     const finalMessage: string | undefined = await returnErrorMessage(response);
@@ -102,4 +77,21 @@ export const findChatById = (
   for (const chat of chatsArray) {
     if (chat.id === wantedChatId) return chat;
   }
+};
+
+export const fetchChatParticipants = async (
+  chatId: string,
+): Promise<ChatParticipantProfile[] | null> => {
+  const response = await fetch(`${SERVER.API.CHAT_PARTICIPANTS}${chatId}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const finalMessage: string | undefined = await returnErrorMessage(response);
+    if (finalMessage) console.error(finalMessage);
+    return null;
+  }
+
+  return await response.json();
 };

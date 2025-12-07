@@ -73,12 +73,20 @@ export type Chat = {
   avatarUrl?: string;
   title: string;
   type: ChatTypes;
+  participantsAmount: number;
   lastMessageId?: string;
   lastMessageContent?: string;
   lastMessageCreatedAt?: string;
   lastMessageRead?: MessageReadStatus;
   chatStatus: ChatStatus;
   isCurrentUserAdmin?: boolean;
+};
+
+export type ChatParticipantProfile = {
+  id: string;
+  username: string;
+  profileId: string;
+  avatarUrl?: string;
 };
 
 export enum ChatTypes {

@@ -25,6 +25,7 @@ import ReplyingMessageHint from '@/components/chat/message/replying-message-hint
 import EditingMessageHint from '@/components/chat/message/editing-message-hint';
 import ChatCreationModal from '@/components/chat/chatCreationModal';
 import AddChatButton from '@/components/chat/addChat.button';
+import ChatInfoModal from '@/components/chat/chat-info-modal';
 
 export type MessageSendFormValues = {
   content: string;
@@ -44,7 +45,7 @@ export type ChatContextMenuState = {
 };
 
 export type MessageMenuAction = `edit` | 'delete' | 'reply';
-export type ChatMenuAction = 'rename' | 'add' | 'delete' | 'exit';
+export type ChatMenuAction = 'delete' | 'info';
 
 export default function ChatPage() {
   const {
@@ -80,6 +81,8 @@ export default function ChatPage() {
 
   const lastLoadedMessageCreatedAt = useRef<string>('');
   const [chatCreationModalOpened, setChatCreationModalOpened] = useState(false);
+  const [chatInfoModalOpened, setChatInfoModalOpened] = useState(false);
+  const lastContextMenuChat = useRef<Chat | null>(null);
   const [newMessagesLoading, setNewMessagesLoading] = useState<boolean>(false);
   const [chats, setChats] = useState<Chat[] | null>(null);
   const [chatsLoading, setChatsLoading] = useState<boolean>(false);
@@ -409,6 +412,10 @@ export default function ChatPage() {
             },
           });
           break;
+        case 'info':
+          lastContextMenuChat.current = chatContextMenuState.chat;
+          setChatInfoModalOpened(true);
+          break;
       }
       setChatContextMenuState(null);
     }
@@ -468,6 +475,10 @@ export default function ChatPage() {
 
   const onCreatingChatMenuExitButtonClick = () => {
     setChatCreationModalOpened(false);
+  };
+
+  const onChatInfoModalClose = () => {
+    setChatInfoModalOpened(false);
   };
 
   //closing context menus on click outside of it
@@ -550,11 +561,17 @@ export default function ChatPage() {
 
   return (
     <>
+      <ChatInfoModal
+        isOpened={chatInfoModalOpened}
+        onClose={onChatInfoModalClose}
+        currentChat={lastContextMenuChat.current}
+        isCurrentUserAdmin={lastContextMenuChat.current?.isCurrentUserAdmin}
+      />
       <ChatCreationModal
         currentProfile={curProfile}
         isOpened={chatCreationModalOpened}
         onClose={onCreatingChatMenuExitButtonClick}
-      ></ChatCreationModal>
+      />
       <div
         className={`flex flex-row min-h-screen w-full justify-center items-center`}
       >

@@ -48,7 +48,6 @@ const ChatCreationModal = ({
   const { send } = useSocket();
 
   const onSubmit = async (data: ChatCreationFormValues) => {
-    console.log('IN ON SUBMIT CHAT CREATION METHOD!!!!');
     data.chatType =
       data.otherParticipantsIds.length > 1
         ? ChatTypes.GROUP
@@ -65,8 +64,6 @@ const ChatCreationModal = ({
         size: file.size,
       };
     }
-
-    console.log(`filedata before sending: ${JSON.stringify(fileData)}`);
 
     send({
       event: 'createChat',
@@ -93,7 +90,6 @@ const ChatCreationModal = ({
   };
 
   useEffect(() => {
-    console.log(`current profile: ${JSON.stringify(currentProfile)}`);
     if (currentProfile.id !== '') {
       setSubscriptionsLoading(true);
       fetchAllSubscriptions(currentProfile.id)

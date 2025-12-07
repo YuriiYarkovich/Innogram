@@ -106,10 +106,5 @@ export const fetchAllSubscriptions = async (
 
   const receivedSubscriptions: Profile[] = await response.json();
 
-  console.log('Received subscriptions: ');
-  receivedSubscriptions.forEach((profile) => {
-    console.log(`${JSON.stringify(profile)}\n\n`);
-  });
-
   return receivedSubscriptions;
 };

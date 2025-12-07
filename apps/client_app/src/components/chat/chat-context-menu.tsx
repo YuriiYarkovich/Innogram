@@ -29,7 +29,7 @@ const ChatContextMenu = ({
     >
       <button
         className="w-full text-left px-4 py-2 hover:bg-red-50 flex items-center gap-2"
-        onClick={() => handleMenuAction('delete')}
+        onClick={() => handleMenuAction('info')}
       >
         <span>ℹ️</span>
         <span>Info</span>

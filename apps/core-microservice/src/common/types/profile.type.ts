@@ -37,6 +37,13 @@ export interface FindingProfileInfo {
   isSubscribed: boolean;
 }
 
+export interface ChatParticipantProfile {
+  id: string;
+  username: string;
+  profileId: string;
+  avatarUrl?: string;
+}
+
 export interface FindingProfileInfoByUsername {
   id: string;
   birthday: string;
