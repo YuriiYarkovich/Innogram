@@ -102,10 +102,11 @@ export class ChatParticipantRepository {
         username: string;
         profileId: string;
         avatarFilename: string;
+        role: ChatParticipantRole;
       }[]
     >(
       `
-        SELECT cp.id, p.username, p.id AS "profileId", p.avatar_filename AS "avatarFilename"
+        SELECT cp.id, p.username, p.id AS "profileId", p.avatar_filename AS "avatarFilename", cp.role
         FROM main.chat_participants AS cp
                LEFT JOIN main.profiles AS p ON cp.profile_id = p.id
         WHERE chat_id = $1

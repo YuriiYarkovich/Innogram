@@ -1,5 +1,6 @@
 import { ChatParticipantProfile } from '@/types';
 import Image from 'next/image';
+import { ChatParticipantRole } from '@innogram/core-microservice/dist/common/enums/chat.enum';
 
 type ChatParticipantTileCreationProps = {
   chatParticipant: ChatParticipantProfile;
@@ -31,39 +32,65 @@ const ChatParticipantTile = ({
       >
         {chatParticipant.username}
       </a>
-      {isCurrentProfileAdmin && (
-        <div className={'flex h-full ml-auto gap-2.5 mr-5'}>
-          <button
-            type={'button'}
+      {isCurrentProfileAdmin ? (
+        chatParticipant.role === ChatParticipantRole.ADMIN ? (
+          <Image
+            src={'/images/icons/admin.svg'}
+            alt={'Admin icon'}
+            height={20}
+            width={20}
+            draggable={false}
+            className={'h-full ml-auto mr-5'}
+          />
+        ) : (
+          <div
             className={
-              'flex min-h-[27px] min-w-[27px] items-center justify-center cursor-pointer'
+              'flex h-full ml-auto gap-2.5 mr-5 min-h-[27px] min-w-[27px]'
             }
           >
-            <Image
-              src={'/images/icons/make-admin.svg'}
-              alt={'Delete user'}
-              height={20}
-              width={20}
-              draggable={false}
-              className={'hover:min-w-[27px] hover:min-h-[27px]'}
-            />
-          </button>
-          <button
-            type={'button'}
-            className={
-              'flex min-h-[27px] min-w-[27px] items-center justify-center cursor-pointer'
-            }
-          >
-            <Image
-              src={'/images/icons/delete.svg'}
-              alt={'Delete user'}
-              height={20}
-              width={20}
-              draggable={false}
-              className={'hover:min-w-[27px] hover:min-h-[27px]'}
-            />
-          </button>
-        </div>
+            <button
+              type={'button'}
+              className={
+                'flex min-h-[27px] min-w-[27px] items-center justify-center cursor-pointer'
+              }
+            >
+              <Image
+                src={'/images/icons/make-admin.svg'}
+                alt={'Delete user'}
+                height={20}
+                width={20}
+                draggable={false}
+                className={'hover:min-w-[27px] hover:min-h-[27px]'}
+              />
+            </button>
+            <button
+              type={'button'}
+              className={
+                'flex min-h-[27px] min-w-[27px] items-center justify-center cursor-pointer'
+              }
+            >
+              <Image
+                src={'/images/icons/delete.svg'}
+                alt={'Delete user'}
+                height={20}
+                width={20}
+                draggable={false}
+                className={'hover:min-w-[27px] hover:min-h-[27px]'}
+              />
+            </button>
+          </div>
+        )
+      ) : (
+        chatParticipant.role === ChatParticipantRole.ADMIN && (
+          <Image
+            src={'/images/icons/admin.svg'}
+            alt={'Admin icon'}
+            height={20}
+            width={20}
+            draggable={false}
+            className={'h-full ml-auto mr-5'}
+          />
+        )
       )}
     </div>
   );

@@ -2,7 +2,10 @@ import {
   MessageReadStatus,
   MessageVisibilityStatus,
 } from '@innogram/core-microservice/dist/common/enums/message.enum';
-import { ChatStatus } from '@innogram/core-microservice/dist/common/enums/chat.enum';
+import {
+  ChatParticipantRole,
+  ChatStatus,
+} from '@innogram/core-microservice/dist/common/enums/chat.enum';
 
 export type Post = {
   postId: string;
@@ -87,6 +90,7 @@ export type ChatParticipantProfile = {
   username: string;
   profileId: string;
   avatarUrl?: string;
+  role: ChatParticipantRole;
 };
 
 export enum ChatTypes {

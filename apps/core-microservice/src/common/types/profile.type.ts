@@ -1,3 +1,5 @@
+import { ChatParticipantRole } from '../enums/chat.enum';
+
 export interface ReturningProfileInfo {
   id: string;
   username: string;
@@ -42,6 +44,7 @@ export interface ChatParticipantProfile {
   username: string;
   profileId: string;
   avatarUrl?: string;
+  role: ChatParticipantRole;
 }
 
 export interface FindingProfileInfoByUsername {

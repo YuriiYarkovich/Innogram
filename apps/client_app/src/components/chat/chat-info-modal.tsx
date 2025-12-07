@@ -92,6 +92,25 @@ const ChatInfoModal = ({
               className={`hover:min-h-[37px] hover:min-w-[37px]`}
             />
           </button>
+          {isCurrentUserAdmin && (
+            <div className={'flex flex-row ml-auto gap-2 h-full'}>
+              <button
+                type={'button'}
+                className={
+                  'flex items-center justify-center min-h-[40px] min-w-[40px] cursor-pointer'
+                }
+              >
+                <Image
+                  src={'/images/icons/edit.svg'}
+                  alt={'edit button'}
+                  width={33}
+                  height={33}
+                  draggable={false}
+                  className={'hover:min-h-[40px] hover:min-w-[40px]'}
+                />
+              </button>
+            </div>
+          )}
         </div>
         <div
           className={
