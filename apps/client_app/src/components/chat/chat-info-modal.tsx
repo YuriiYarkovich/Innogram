@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { fetchChatParticipants } from '@/services/chat.service';
 import ChatParticipantTile from '@/components/chat/chat-participant-tile';
 import AddFilePlaceholder from '@/components/add-file-placeholder';
+import { useSocket } from '@/hooks/useSocket';
 
 type ChatInfoModalProps = {
   isOpened: boolean;
@@ -45,6 +46,34 @@ const ChatInfoModal = ({
       file: null,
     },
   });
+  const file = watch('file');
+
+  const { send } = useSocket();
+
+  const onSubmit = async (newData: ChatEditingFormValues) => {
+    console.log('Subbmitting chat editing!');
+    let fileData = null;
+    if (file && file instanceof File) {
+      const arrayBuffer = await file.arrayBuffer();
+      fileData = {
+        buffer: arrayBuffer,
+        originalname: file.name,
+        mimetype: file.type,
+        size: file.size,
+      };
+    }
+    if (newData.title !== currentChat?.title || file instanceof File) {
+      console.log(`Sending new data: ${JSON.stringify(newData)}`);
+      send({
+        event: 'editChat',
+        data: {
+          title: newData.title,
+          file: fileData,
+        },
+      });
+    }
+    setIsInEditingMode(false);
+  };
 
   useEffect(() => {
     if (currentChat) {
@@ -84,6 +113,7 @@ const ChatInfoModal = ({
       className={`fixed inset-0 z-50 flex justify-center items-center backdrop-blur-xs bg-black/50 min-h-screen`}
     >
       <form
+        onSubmit={handleSubmit(onSubmit)}
         className={
           'flex flex-col min-w-[500px] rounded-[30px] bg-[#eaddff] justify-center items-center gap-3 pl-4 pr-4 pb-4 pt-2'
         }
@@ -105,7 +135,8 @@ const ChatInfoModal = ({
             (isInEditingMode ? (
               <div className={'flex flex-row ml-auto gap-2 h-full'}>
                 <button
-                  type={'button'}
+                  type={'submit'}
+                  disabled={isSubmitting}
                   className={
                     'flex items-center justify-center min-h-[40px] min-w-[40px] cursor-pointer'
                   }
@@ -140,8 +171,9 @@ const ChatInfoModal = ({
               <div className={'flex flex-row ml-auto gap-2 h-full'}>
                 <button
                   type={'button'}
-                  onClick={() => {
-                    console.log(`Current chat: ${JSON.stringify(currentChat)}`);
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     setIsInEditingMode(true);
                   }}
                   className={
@@ -196,8 +228,22 @@ const ChatInfoModal = ({
         <span className={'font-mono text-[16xp]'}>
           {`${currentChat?.participantsAmount} participants`}
         </span>
-        <div className={'flex w-full h-min-[10px] pt-4'}>
+        <div className={'flex w-full h-min-[10px]'}>
           <span className={'text-[18px]'}>Chat participants:</span>
+          <button
+            className={
+              'flex ml-auto min-h-[37px] min-w-[37px] items-center justify-center cursor-pointer'
+            }
+          >
+            <Image
+              src={'/images/icons/addUser.svg'}
+              alt={'add user'}
+              width={30}
+              height={30}
+              draggable={false}
+              className={'hover:min-h-[37px] hover:min-w-[37px]'}
+            />
+          </button>
         </div>
         <div
           className={
