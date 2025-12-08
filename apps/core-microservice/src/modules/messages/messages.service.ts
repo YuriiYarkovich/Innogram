@@ -305,4 +305,11 @@ export class MessagesService {
         'There is no message with provided id by provided author',
       );
   }
+
+  async getLastMessageOfChat(chatId: string, currentProfileId: string) {
+    return await this.messagesRepository.getLastMessageOfChat(
+      chatId,
+      currentProfileId,
+    );
+  }
 }

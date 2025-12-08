@@ -315,21 +315,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       };
     },
   ) {
-    let file: MulterFile | undefined;
-    if (payload.file) {
-      file = {
-        buffer: Buffer.from(payload.file.buffer),
-        originalname: payload.file.originalname,
-        mimetype: payload.file.mimetype,
-        size: payload.file.size,
-        fieldname: 'file',
-        encoding: '7bit',
-        destination: '',
-        filename: '',
-        path: '',
-        stream: null,
-      } as MulterFile;
-    }
+    const file = this.createFileFromPayload(payload.file);
     const createdChat = await this.chatService.createChat(
       payload.dto,
       payload.currentProfileId,
@@ -348,6 +334,67 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           .emit('chatCreated', createdChat);
       },
     );
+  }
+
+  @SubscribeMessage('editChat')
+  async handleEditChat(
+    @MessageBody()
+    payload: {
+      chatId: string;
+      title: string;
+      file?: {
+        buffer: ArrayBuffer;
+        originalname: string;
+        mimetype: string;
+        size: number;
+      };
+      currentProfileId: string;
+    },
+    client: Socket,
+  ) {
+    const file = this.createFileFromPayload(payload.file);
+    const updatedChat = await this.chatService.updateChatTitle(
+      payload.chatId,
+      payload.title,
+      payload.currentProfileId,
+      file,
+    );
+    if (!updatedChat)
+      throw new InternalServerErrorException(
+        'Something went wrong while updating chat!',
+      );
+
+    const newChatAvatarFilename = await this.minioService.getPublicUrl(
+      updatedChat.avatarFilename,
+    );
+
+    const lastMessageOfChat = await this.messagesService.getLastMessageOfChat(
+      updatedChat.id,
+      payload.currentProfileId,
+    );
+    const returningUpdatedChat: ReturningChatData = {
+      ...updatedChat,
+      avatarUrl: newChatAvatarFilename,
+      lastMessageId: lastMessageOfChat?.id,
+      lastMessageContent: lastMessageOfChat?.content,
+      lastMessageCreatedAt: lastMessageOfChat?.createdAt,
+      lastMessageRead: lastMessageOfChat?.read,
+    };
+
+    const chatParticipantsProfilesIds = await this.getAllChatParticipantsIds(
+      updatedChat?.id,
+    );
+
+    const connectedToServerSockets =
+      this.getAllConnectedToServerSocketsFromGivenProfiles(
+        chatParticipantsProfilesIds,
+      );
+
+    connectedToServerSockets.forEach((connectedToServerSocket) => {
+      this.server
+        .to(connectedToServerSocket)
+        .emit('chatUpdated', returningUpdatedChat);
+    });
   }
 
   @SubscribeMessage('deleteChat')
@@ -464,5 +511,29 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (socketId) allConnectedToServerSockets.push(socketId);
     }
     return allConnectedToServerSockets;
+  }
+
+  private createFileFromPayload(file?: {
+    buffer: ArrayBuffer;
+    originalname: string;
+    mimetype: string;
+    size: number;
+  }): MulterFile {
+    let formedFile: MulterFile | undefined;
+    if (file) {
+      formedFile = {
+        buffer: Buffer.from(file.buffer),
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+        fieldname: 'file',
+        encoding: '7bit',
+        destination: '',
+        filename: '',
+        path: '',
+        stream: null,
+      } as MulterFile;
+    }
+    return formedFile;
   }
 }

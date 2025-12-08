@@ -152,7 +152,7 @@ export default function ChatPage() {
     }
   };
 
-  const onMessageToChatReceived = (receivedMessage: Message) => {
+  const onMessageToUserInChat = (receivedMessage: Message) => {
     setMessages((prev) =>
       prev ? [...prev, receivedMessage] : [receivedMessage],
     );
@@ -160,7 +160,7 @@ export default function ChatPage() {
     updateParticularChatInChatList(receivedMessage);
   };
 
-  const onMessageToServerReceived = (receivedMessage: Message) => {
+  const onMessageToUserInServer = (receivedMessage: Message) => {
     updateParticularChatInChatList(receivedMessage);
   };
 
@@ -255,17 +255,28 @@ export default function ChatPage() {
       return [createdChat, ...prevChats];
     });
   };
+  const onServerChatUpdated = (updatedChat: Chat) => {
+    setChats((prevChats) => {
+      if (!prevChats) return prevChats;
 
-  const { send } = useSocket(
-    onMessageToChatReceived,
-    onMessageToServerReceived,
+      return prevChats.map((chat) => {
+        if (chat.id === updatedChat.id) return updatedChat;
+        return chat;
+      });
+    });
+  };
+
+  const { send } = useSocket({
+    onMessageToUserInChat,
+    onMessageToUserInServer,
     onMessageDeleted,
     onCurrentChatDeleted,
     onChatDeleted,
     onMessageUpdatedInChat,
     onMessageUpdatedInServer,
     onChatCreated,
-  );
+    onServerChatUpdated,
+  });
 
   const updateChats = () => {
     setChatsLoading(true);
@@ -566,6 +577,7 @@ export default function ChatPage() {
         onClose={onChatInfoModalClose}
         currentChat={lastContextMenuChat.current}
         isCurrentUserAdmin={lastContextMenuChat.current?.isCurrentUserAdmin}
+        currentProfile={curProfile}
       />
       <ChatCreationModal
         currentProfile={curProfile}

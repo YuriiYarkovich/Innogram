@@ -7,12 +7,12 @@ export interface ReturningChatData {
   title: string;
   type: ChatTypes;
   participantsAmount?: number;
+  chatStatus: ChatStatus;
+  isCurrentUserAdmin?: boolean;
   lastMessageId?: string;
   lastMessageContent?: string;
   lastMessageCreatedAt?: string;
   lastMessageRead?: MessageReadStatus;
-  chatStatus: ChatStatus;
-  isCurrentUserAdmin?: boolean;
 }
 
 export interface FindingChatData {

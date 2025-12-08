@@ -83,8 +83,9 @@ export class ChatParticipantRepository {
     profileId: string,
     chatId: string,
   ): Promise<ChatParticipant | null> {
+    console.log(`profile id in repository: ${profileId}`);
     return await this.chatParticipantRepository.findOne({
-      where: { profileId: profileId, chatId: chatId },
+      where: { profileId, chatId },
     });
   }
 

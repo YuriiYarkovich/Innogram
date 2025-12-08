@@ -89,6 +89,7 @@ export class ChatService {
           await this.autoUpdateChatTitle(
             createdChat.id,
             `${profiles[0].username}, ${profiles[1].username} and others`,
+            queryRunner,
           );
         }
       }
@@ -231,6 +232,7 @@ export class ChatService {
     chatId: string,
     title: string,
     currentProfileId: string,
+    file?: MulterFile,
   ) {
     const chatParticipant: ChatParticipant =
       await this.checkIfParticipantExists(chatId, currentProfileId);
@@ -238,12 +240,41 @@ export class ChatService {
     if (chatParticipant.role !== ChatParticipantRole.ADMIN)
       throw new ForbiddenException('Participant is not admin of this chat');
 
-    await this.chatRepository.updateChatTitle(chatId, title);
-    return await this.chatRepository.getChatInfo(chatId, currentProfileId);
+    const queryRunner = await this.createTransaction();
+
+    try {
+      await this.chatRepository.updateChatTitle(chatId, title, queryRunner);
+      if (file) {
+        const editingChat = await this.chatRepository.getChatInfo(
+          chatId,
+          currentProfileId,
+        );
+        if (editingChat?.avatarFilename) {
+          await this.minioService.deleteFile(editingChat?.avatarFilename);
+          const newFileObj = await this.minioService.uploadFile(file);
+          await this.chatRepository.updateChatAvatarFilename(
+            editingChat.id,
+            newFileObj.hashedFileName,
+            queryRunner,
+          );
+        }
+      }
+      await queryRunner.commitTransaction();
+      return await this.chatRepository.getChatInfo(chatId, currentProfileId);
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      throw e;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
-  async autoUpdateChatTitle(chatId: string, title: string) {
-    await this.chatRepository.updateChatTitle(chatId, title);
+  async autoUpdateChatTitle(
+    chatId: string,
+    title: string,
+    queryRunner: QueryRunner,
+  ) {
+    await this.chatRepository.updateChatTitle(chatId, title, queryRunner);
   }
 
   private async checkIfParticipantExists(

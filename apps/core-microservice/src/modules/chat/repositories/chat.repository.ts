@@ -94,7 +94,7 @@ export class ChatRepository {
                chat_status          AS "chatStatus",
                chat.chat_type       AS "type",
                CASE
-                 WHEN cp.role = 'ADMIN' THEN true
+                 WHEN cp.role = 'admin' THEN true
                  ELSE false
                  END                AS "isCurrentUserAdmin"
         FROM main.chats AS chat
@@ -110,8 +110,25 @@ export class ChatRepository {
     return rows[0];
   }
 
-  async updateChatTitle(chatId: string, newTitle: string) {
-    await this.chatRepository.update({ id: chatId }, { title: newTitle });
+  async updateChatTitle(
+    chatId: string,
+    newTitle: string,
+    queryRunner: QueryRunner,
+  ) {
+    //await this.chatRepository.update({ id: chatId }, { title: newTitle });
+    await queryRunner.manager.update(Chat, { id: chatId }, { title: newTitle });
+  }
+
+  async updateChatAvatarFilename(
+    chatId: string,
+    newAvatarFilename: string,
+    queryRunner: QueryRunner,
+  ) {
+    await queryRunner.manager.update(
+      Chat,
+      { id: chatId },
+      { chatAvatarFilename: newAvatarFilename },
+    );
   }
 
   async deleteChat(chatId: string, queryRunner: QueryRunner) {

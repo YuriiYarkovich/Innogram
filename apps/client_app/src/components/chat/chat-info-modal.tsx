@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Chat, ChatParticipantProfile } from '@/types';
+import { Chat, ChatParticipantProfile, Profile } from '@/types';
 import { loadFromS3 } from '@/services/files.service';
 import Image from 'next/image';
 import { fetchChatParticipants } from '@/services/chat.service';
@@ -13,6 +13,7 @@ type ChatInfoModalProps = {
   onClose: () => void;
   currentChat?: Chat | null | undefined;
   isCurrentUserAdmin?: boolean;
+  currentProfile: Profile;
 };
 
 type ChatEditingFormValues = {
@@ -25,6 +26,7 @@ const ChatInfoModal = ({
   onClose,
   currentChat,
   isCurrentUserAdmin = false,
+  currentProfile,
 }: ChatInfoModalProps) => {
   const [chat, setChat] = useState<Chat | null | undefined>(null);
   const [chatParticipants, setChatParticipants] = useState<
@@ -48,10 +50,9 @@ const ChatInfoModal = ({
   });
   const file = watch('file');
 
-  const { send } = useSocket();
+  const { send } = useSocket({});
 
   const onSubmit = async (newData: ChatEditingFormValues) => {
-    console.log('Subbmitting chat editing!');
     let fileData = null;
     if (file && file instanceof File) {
       const arrayBuffer = await file.arrayBuffer();
@@ -62,37 +63,40 @@ const ChatInfoModal = ({
         size: file.size,
       };
     }
-    if (newData.title !== currentChat?.title || file instanceof File) {
-      console.log(`Sending new data: ${JSON.stringify(newData)}`);
+    if (newData.title !== chat?.title || file instanceof File) {
       send({
         event: 'editChat',
         data: {
+          currentProfileId: currentProfile.id,
+          chatId: chat?.id,
           title: newData.title,
           file: fileData,
         },
       });
     }
     setIsInEditingMode(false);
+    setChat(null);
+    onClose();
   };
 
   useEffect(() => {
-    if (currentChat) {
-      setValue('title', currentChat.title || '');
-      setValue('file', currentChat.avatarUrl || null);
+    if (chat) {
+      setValue('title', chat.title || '');
+      setValue('file', chat.avatarUrl || null);
     }
-  }, [currentChat, setValue]);
+  }, [chat, setValue]);
 
   useEffect(() => {
     setChat(currentChat);
-  }, [currentChat]);
+  }, [currentChat, chat]);
 
   useEffect(() => {
-    if (currentChat?.avatarUrl) {
-      loadFromS3(currentChat?.avatarUrl).then((file) => {
+    if (chat?.avatarUrl) {
+      loadFromS3(chat?.avatarUrl).then((file) => {
         setValue('file', file);
       });
     }
-  }, [currentChat?.avatarUrl, setValue]);
+  }, [chat?.avatarUrl, setValue]);
 
   useEffect(() => {
     if (chat) {
@@ -120,7 +124,11 @@ const ChatInfoModal = ({
       >
         <div className={`flex flex-row items-center w-full min-h-[50px]`}>
           <button
-            onClick={onClose}
+            onClick={() => {
+              setIsInEditingMode(false);
+              setChat(null);
+              onClose();
+            }}
             className={`flex justify-center items-center min-w-[47px] min-h-[47px]`}
           >
             <Image
@@ -206,7 +214,7 @@ const ChatInfoModal = ({
             />
           ) : (
             <Image
-              src={currentChat?.avatarUrl || '/images/avaTest.png'}
+              src={chat?.avatarUrl || '/images/avaTest.png'}
               alt={'chat avatar'}
               width={100}
               height={100}
@@ -222,11 +230,11 @@ const ChatInfoModal = ({
             className={'font-bold text-[20px] border-b-1 border-[#79747e]'}
           />
         ) : (
-          <span className={'font-bold text-[20px]'}>{currentChat?.title}</span>
+          <span className={'font-bold text-[20px]'}>{chat?.title}</span>
         )}
 
         <span className={'font-mono text-[16xp]'}>
-          {`${currentChat?.participantsAmount} participants`}
+          {`${chat?.participantsAmount} participants`}
         </span>
         <div className={'flex w-full h-min-[10px]'}>
           <span className={'text-[18px]'}>Chat participants:</span>

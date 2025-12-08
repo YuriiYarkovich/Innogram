@@ -62,7 +62,7 @@ export const editProfile = async (
   }
 };
 
-export const fetchProfile = async () => {
+export const fetchProfile = async (): Promise<Profile> => {
   const res: Response = await fetch(SERVER.API.GET_CURRENT_PROFILE_INFO, {
     credentials: 'include',
   });

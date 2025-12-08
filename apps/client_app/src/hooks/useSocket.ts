@@ -3,16 +3,17 @@ import { env } from '@/env';
 import { io, Socket } from 'socket.io-client';
 import { Chat, Message } from '@/types';
 
-export const useSocket = (
-  onMessageToUserInChat?: (message: Message) => void,
-  onMessageToUserInServer?: (message: Message) => void,
-  onMessageDeleted?: (messageId: string) => void,
-  onCurrentChatDeleted?: (chat: Chat) => void,
-  onChatDeleted?: (chat: Chat) => void,
-  onMessageUpdatedInChat?: (message: Message) => void,
-  onMessageUpdatedInServer?: (message: Message) => void,
-  onChatCreated?: (chat: Chat) => void,
-) => {
+export const useSocket = (handlers: {
+  onMessageToUserInChat?: (message: Message) => void;
+  onMessageToUserInServer?: (message: Message) => void;
+  onMessageDeleted?: (messageId: string) => void;
+  onCurrentChatDeleted?: (chat: Chat) => void;
+  onChatDeleted?: (chat: Chat) => void;
+  onMessageUpdatedInChat?: (message: Message) => void;
+  onMessageUpdatedInServer?: (message: Message) => void;
+  onChatCreated?: (chat: Chat) => void;
+  onServerChatUpdated?: (chat: Chat) => void;
+}) => {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -31,37 +32,44 @@ export const useSocket = (
     });
 
     socket.on('messageToUserInChat', (message: Message) => {
-      if (onMessageToUserInChat) onMessageToUserInChat(message);
+      if (handlers.onMessageToUserInChat)
+        handlers.onMessageToUserInChat(message);
     });
 
     socket.on('messageToUserInServer', (message: Message) => {
-      if (onMessageToUserInServer) onMessageToUserInServer(message);
+      if (handlers.onMessageToUserInServer)
+        handlers.onMessageToUserInServer(message);
     });
 
     socket.on('messageDeleted', (messageId: string) => {
-      if (onMessageDeleted) onMessageDeleted(messageId);
+      if (handlers.onMessageDeleted) handlers.onMessageDeleted(messageId);
     });
 
     socket.on('currentChatDeleted', (chat: Chat) => {
-      if (onCurrentChatDeleted) onCurrentChatDeleted(chat);
+      if (handlers.onCurrentChatDeleted) handlers.onCurrentChatDeleted(chat);
     });
 
     socket.on('chatDeleted', (chat: Chat) => {
-      if (onChatDeleted) onChatDeleted(chat);
+      if (handlers.onChatDeleted) handlers.onChatDeleted(chat);
     });
 
     socket.on('messageEditedInChat', (updatedMessage: Message) => {
-      if (onMessageUpdatedInChat) onMessageUpdatedInChat(updatedMessage);
+      if (handlers.onMessageUpdatedInChat)
+        handlers.onMessageUpdatedInChat(updatedMessage);
     });
 
     socket.on('messageEditedInServer', (updatedMessage: Message) => {
-      if (onMessageUpdatedInServer) onMessageUpdatedInServer(updatedMessage);
+      if (handlers.onMessageUpdatedInServer)
+        handlers.onMessageUpdatedInServer(updatedMessage);
     });
 
     socket.on('chatCreated', (createdChat: Chat) => {
-      if (onChatCreated) {
-        onChatCreated(createdChat);
-      }
+      if (handlers.onChatCreated) handlers.onChatCreated(createdChat);
+    });
+
+    socket.on('chatUpdated', (updatedChat: Chat) => {
+      if (handlers.onServerChatUpdated)
+        handlers.onServerChatUpdated(updatedChat);
     });
 
     return () => {
