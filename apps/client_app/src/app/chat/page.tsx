@@ -12,6 +12,7 @@ import {
   fetchChatInfo,
   fetchChatsOfProfile,
   findChatById,
+  leaveChat,
 } from '@/services/chat.service';
 import { fetchMessagesOfChat } from '@/services/messages.service';
 import { useSocket } from '@/hooks/useSocket';
@@ -26,6 +27,7 @@ import EditingMessageHint from '@/components/chat/message/editing-message-hint';
 import ChatCreationModal from '@/components/chat/chat-creation-modal';
 import AddChatButton from '@/components/chat/addChat.button';
 import ChatInfoModal from '@/components/chat/chat-info-modal';
+import ErrorModal from '@/components/error-modal';
 
 export type MessageSendFormValues = {
   content: string;
@@ -45,7 +47,7 @@ export type ChatContextMenuState = {
 };
 
 export type MessageMenuAction = `edit` | 'delete' | 'reply';
-export type ChatMenuAction = 'delete' | 'info';
+export type ChatMenuAction = 'delete' | 'info' | 'leave';
 
 export default function ChatPage() {
   const {
@@ -79,6 +81,10 @@ export default function ChatPage() {
     isSubscribed: false,
   });
 
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState<string | null>(
+    null,
+  );
   const lastLoadedMessageCreatedAt = useRef<string>('');
   const [chatCreationModalOpened, setChatCreationModalOpened] = useState(false);
   const [chatInfoModalOpened, setChatInfoModalOpened] = useState(false);
@@ -427,6 +433,29 @@ export default function ChatPage() {
           lastContextMenuChat.current = chatContextMenuState.chat;
           setChatInfoModalOpened(true);
           break;
+        case 'leave':
+          send({
+            event: 'exitChat',
+            data: {
+              chatId: chatContextMenuState.chat.id,
+            },
+          });
+          setCurrentChat(null);
+          leaveChat(chatContextMenuState.chat.id).then((data) => {
+            if (data) {
+              setErrorModalMessage(data.message);
+              setIsErrorModalOpen(true);
+            }
+          });
+          const leftChatId: string = chatContextMenuState.chat.id;
+          setChats((prevChats) => {
+            if (!prevChats) return prevChats;
+
+            return prevChats.filter((prevChat) => {
+              if (prevChat.id !== leftChatId) return prevChat;
+            });
+          });
+          break;
       }
       setChatContextMenuState(null);
     }
@@ -572,6 +601,11 @@ export default function ChatPage() {
 
   return (
     <>
+      <ErrorModal
+        isOpen={isErrorModalOpen}
+        onClose={() => setIsErrorModalOpen(false)}
+        message={errorModalMessage}
+      />
       <ChatInfoModal
         isOpened={chatInfoModalOpened}
         onClose={onChatInfoModalClose}

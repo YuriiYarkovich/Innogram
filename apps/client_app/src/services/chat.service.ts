@@ -184,3 +184,23 @@ export const giveAdminRights = async (
     return null;
   }
 };
+
+export const leaveChat = async (chatId: string) => {
+  const response: Response = await fetch(`${SERVER.API.LEAVE_CHAT}${chatId}`, {
+    method: 'PUT',
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    const finalMessage: string | undefined = await returnErrorMessage(response);
+    if (finalMessage) console.error(finalMessage);
+    return null;
+  }
+  const text = await response.text();
+
+  if (!text) {
+    return { message: 'Chat left successfully' };
+  }
+
+  const responseMessage: { message: string } = JSON.parse(text);
+  return responseMessage;
+};

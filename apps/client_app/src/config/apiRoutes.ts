@@ -34,5 +34,6 @@ export const SERVER = {
     ADD_CHAT_PARTICIPANT: `${env.NEXT_PUBLIC_API_URL}/chat/addParticipant/`,
     DELETE_CHAT_PARTICIPANT: `${env.NEXT_PUBLIC_API_URL}/chat/deleteParticipant/`,
     GIVE_ADMIN_RIGHTS: `${env.NEXT_PUBLIC_API_URL}/chat/giveAdmin/`,
+    LEAVE_CHAT: `${env.NEXT_PUBLIC_API_URL}/chat/leave/`,
   },
 };

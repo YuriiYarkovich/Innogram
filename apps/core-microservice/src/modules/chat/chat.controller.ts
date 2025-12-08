@@ -84,13 +84,13 @@ export class ChatController {
     );
   }
 
-  @ApiOperation({ summary: 'Deletes participant from chat' })
+  @ApiOperation({ summary: 'Deletes current user from chat' })
   @ApiResponse({ status: 200 })
   @Put(`/leave/:chatId`)
   @UseGuards(AuthGuard)
   async leaveChat(@Param('chatId') chatId: string) {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
-    return await this.chatService.leaveChat(chatId, profileId);
+    const currentpProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.chatService.leaveChat(chatId, currentpProfileId);
   }
 
   @ApiOperation({ summary: 'Adds participants to chat' })

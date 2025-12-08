@@ -296,10 +296,36 @@ export class ChatService {
     return participant;
   }
 
-  async leaveChat(chatId: string, profileId: string) {
-    await this.checkIfParticipantExists(chatId, profileId);
+  async leaveChat(chatId: string, currentProfileId: string) {
+    const chat = await this.chatRepository.getChatInfo(
+      chatId,
+      currentProfileId,
+    );
+    if (!chat) throw new BadRequestException('This chat does not exists');
 
-    return await this.chatParticipantRepository.leaveChat(chatId, profileId);
+    if (chat.type === ChatTypes.GROUP) {
+      const chatParticipants = await this.getAllChatParticipants(chatId);
+      let isThereOtherAdmin = false;
+      for (const chatParticipant of chatParticipants) {
+        if (
+          chatParticipant.role === ChatParticipantRole.ADMIN &&
+          chatParticipant.profileId !== currentProfileId
+        ) {
+          isThereOtherAdmin = true;
+          break;
+        }
+      }
+
+      if (!isThereOtherAdmin)
+        return { message: 'You must create other admin before leave chat!' };
+    }
+
+    await this.checkIfParticipantExists(chatId, currentProfileId);
+
+    return await this.chatParticipantRepository.leaveChat(
+      currentProfileId,
+      chatId,
+    );
   }
 
   async addChatParticipants(

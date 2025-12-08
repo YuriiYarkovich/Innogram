@@ -34,17 +34,30 @@ const ChatContextMenu = ({
         <span>ℹ️</span>
         <span>Info</span>
       </button>
+      {chatType === ChatTypes.GROUP && (
+        <>
+          <hr className="my-2 border-gray-200" />
+          <button
+            className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 flex items-center gap-2"
+            onClick={() => handleMenuAction('leave')}
+          >
+            <span>🚪</span>
+            <span>Leave chat</span>
+          </button>
+        </>
+      )}
       {(isCurrentProfileAdmin || chatType === ChatTypes.PRIVATE) && (
         <>
-          {' '}
-          <hr className="my-2 border-gray-200" />
+          {chatType !== ChatTypes.GROUP && (
+            <hr className="my-2 border-gray-200" />
+          )}
           <button
             className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 flex items-center gap-2"
             onClick={() => handleMenuAction('delete')}
           >
             <span>🗑️</span>
             <span>Delete</span>
-          </button>{' '}
+          </button>
         </>
       )}
     </div>
