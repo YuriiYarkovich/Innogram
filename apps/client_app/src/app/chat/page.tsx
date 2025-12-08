@@ -440,20 +440,22 @@ export default function ChatPage() {
               chatId: chatContextMenuState.chat.id,
             },
           });
-          setCurrentChat(null);
           leaveChat(chatContextMenuState.chat.id).then((data) => {
             if (data) {
               setErrorModalMessage(data.message);
               setIsErrorModalOpen(true);
-            }
-          });
-          const leftChatId: string = chatContextMenuState.chat.id;
-          setChats((prevChats) => {
-            if (!prevChats) return prevChats;
+            } else {
+              setCurrentChat(null);
+              if (!chatContextMenuState.chat?.id) return;
+              const leftChatId: string = chatContextMenuState.chat.id;
+              setChats((prevChats) => {
+                if (!prevChats) return prevChats;
 
-            return prevChats.filter((prevChat) => {
-              if (prevChat.id !== leftChatId) return prevChat;
-            });
+                return prevChats.filter((prevChat) => {
+                  if (prevChat.id !== leftChatId) return prevChat;
+                });
+              });
+            }
           });
           break;
       }

@@ -190,17 +190,26 @@ export const leaveChat = async (chatId: string) => {
     method: 'PUT',
     credentials: 'include',
   });
+
   if (!response.ok) {
     const finalMessage: string | undefined = await returnErrorMessage(response);
     if (finalMessage) console.error(finalMessage);
-    return null;
+    return { message: finalMessage || 'Failed to leave chat' };
   }
+
+  // Проверяем наличие контента
   const text = await response.text();
 
-  if (!text) {
-    return { message: 'Chat left successfully' };
+  // Если тело пустое - всё ок, возвращаем null
+  if (!text || text.trim() === '') {
+    return null;
   }
 
-  const responseMessage: { message: string } = JSON.parse(text);
-  return responseMessage;
+  // Если есть контент - это ошибка с сервера
+  try {
+    const responseMessage: { message: string } = JSON.parse(text);
+    return responseMessage;
+  } catch (error) {
+    return { message: 'Unexpected response format' };
+  }
 };
