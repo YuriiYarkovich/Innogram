@@ -45,7 +45,7 @@ const ChatCreationModal = ({
   const [subscriptions, setSubscriptions] = useState<Profile[] | null>(null);
   const [subscriptionsLoading, setSubscriptionsLoading] = useState(false);
 
-  const { send } = useSocket();
+  const { send } = useSocket({});
 
   const onSubmit = async (data: ChatCreationFormValues) => {
     data.chatType =
