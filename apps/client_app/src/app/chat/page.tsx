@@ -575,8 +575,7 @@ export default function ChatPage() {
       <ChatInfoModal
         isOpened={chatInfoModalOpened}
         onClose={onChatInfoModalClose}
-        currentChat={lastContextMenuChat.current}
-        isCurrentUserAdmin={lastContextMenuChat.current?.isCurrentUserAdmin}
+        chat={lastContextMenuChat.current}
         currentProfile={curProfile}
       />
       <ChatCreationModal

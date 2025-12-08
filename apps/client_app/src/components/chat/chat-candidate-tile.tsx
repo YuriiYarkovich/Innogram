@@ -13,11 +13,7 @@ const ChatCandidateTile = ({
 }: ChatCandidateTileCreationProps) => {
   const [isPicked, setIsPicked] = useState(false);
   return (
-    <div
-      className={
-        'flex flex-row items-center w-full min-h-[55px] outline-1 gap-6'
-      }
-    >
+    <div className={'flex flex-row items-center w-full min-h-[55px] gap-6'}>
       <div
         className={'flex rounded-full ml-3 outline-1 max-h-[40px] max-w-[40px]'}
       >
