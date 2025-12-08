@@ -1,7 +1,6 @@
 import { SERVER } from '@/config/apiRoutes';
 import returnErrorMessage from '@/utils/showAuthError';
 import { Chat, ChatParticipantProfile, ChatTypes } from '@/types';
-import { asyncWrapProviders } from 'node:async_hooks';
 
 export const fetchChatsOfProfile = async (): Promise<Chat[] | undefined> => {
   const response: Response = await fetch(
@@ -19,10 +18,6 @@ export const fetchChatsOfProfile = async (): Promise<Chat[] | undefined> => {
   }
 
   const receivedChats: Chat[] = await response.json();
-  /*console.log('Received chats: ');
-  receivedChats.forEach((receivedChat) => {
-    console.log(JSON.stringify(receivedChat) + '\n');
-  });*/
   return receivedChats;
 };
 
@@ -154,6 +149,31 @@ export const deleteChatParticipant = async (
       },
       body: JSON.stringify({
         participantId,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const finalMessage: string | undefined = await returnErrorMessage(response);
+    if (finalMessage) console.error(finalMessage);
+    return null;
+  }
+};
+
+export const giveAdminRights = async (
+  chatId: string,
+  participantId: string,
+) => {
+  const response: Response = await fetch(
+    `${SERVER.API.GIVE_ADMIN_RIGHTS}${participantId}`,
+    {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chatId,
       }),
     },
   );

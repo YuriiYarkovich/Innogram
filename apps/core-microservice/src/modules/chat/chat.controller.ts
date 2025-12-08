@@ -118,9 +118,6 @@ export class ChatController {
     @Body() body: { participantId: string },
   ) {
     const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
-    console.log(
-      `participant id in controller: ${JSON.stringify(body.participantId)}`,
-    );
     await this.chatService.deleteChatParticipant(
       chatId,
       body.participantId,
@@ -144,6 +141,22 @@ export class ChatController {
     const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.chatService.getAllPossibleParticipants(
       chatId,
+      currentProfileId,
+    );
+  }
+
+  @ApiOperation({ summary: 'Gives admin rights to specific users' })
+  @ApiResponse({ status: 200 })
+  @Post(`/giveAdmin/:participantId`)
+  @UseGuards(AuthGuard)
+  async giveAdminRights(
+    @Param(`participantId`) participantId: string,
+    @Body() body: { chatId: string },
+  ) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.chatService.giveAdminToChatParticipant(
+      body.chatId,
+      participantId,
       currentProfileId,
     );
   }

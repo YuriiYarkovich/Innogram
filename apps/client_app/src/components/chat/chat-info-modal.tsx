@@ -7,6 +7,7 @@ import {
   addChatParticipant,
   deleteChatParticipant,
   fetchChatParticipants,
+  giveAdminRights,
 } from '@/services/chat.service';
 import ChatParticipantTile from '@/components/chat/chat-participant-tile';
 import AddFilePlaceholder from '@/components/add-file-placeholder';
@@ -103,6 +104,13 @@ const ChatInfoModal = ({
           if (participant.id !== participantId) return participant;
         });
       });
+    });
+  };
+
+  const onGiveAdminButtonClick = (chatParticipantId: string) => {
+    if (!chat) return;
+    giveAdminRights(chat?.id, chatParticipantId).then(() => {
+      fetchChatParticipants(chat.id).then(setChatParticipants);
     });
   };
 
@@ -309,6 +317,7 @@ const ChatInfoModal = ({
                 chatParticipant={chatParticipant}
                 isCurrentProfileAdmin={isCurrentUserAdmin}
                 onDeleteClick={onDeleteParticipantClick}
+                onGiveAdminClick={onGiveAdminButtonClick}
               />
             ))
           )}

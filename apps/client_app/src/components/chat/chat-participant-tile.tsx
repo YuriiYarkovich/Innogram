@@ -6,14 +6,14 @@ type ChatParticipantTileCreationProps = {
   chatParticipant: ChatParticipantProfile;
   isCurrentProfileAdmin: boolean;
   onDeleteClick: (chatParticipantId: string) => void;
-  //onGiveAdminClick: (chatParticipantId: string) => void;
+  onGiveAdminClick: (chatParticipantId: string) => void;
 };
 
 const ChatParticipantTile = ({
   chatParticipant,
   isCurrentProfileAdmin,
   onDeleteClick,
-  //onGiveAdminClick,
+  onGiveAdminClick,
 }: ChatParticipantTileCreationProps) => {
   return (
     <div className={'flex flex-row items-center w-full min-h-[55px] gap-6'}>
@@ -54,7 +54,7 @@ const ChatParticipantTile = ({
           >
             <button
               type={'button'}
-              //onClick={() => onGiveAdminClick(chatParticipant.id)}
+              onClick={() => onGiveAdminClick(chatParticipant.id)}
               className={
                 'flex min-h-[27px] min-w-[27px] items-center justify-center cursor-pointer'
               }

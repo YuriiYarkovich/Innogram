@@ -272,7 +272,7 @@ export class ChatService {
     }
   }
 
-  async autoUpdateChatTitle(
+  private async autoUpdateChatTitle(
     chatId: string,
     title: string,
     queryRunner: QueryRunner,
@@ -339,21 +339,29 @@ export class ChatService {
       throw new ForbiddenException(
         'You can not delete participants from private chats',
       );
+
+    await this.checkIfCurrentProfileIsAdmin(currentProfileId, chat.id);
+
+    await this.chatParticipantRepository.deleteChatParticipant(
+      chatId,
+      participantId,
+    );
+  }
+
+  private async checkIfCurrentProfileIsAdmin(
+    currentProfileId: string,
+    chatId: string,
+  ) {
     const currentUserParticipant =
       await this.chatParticipantRepository.findChatParticipant(
         currentProfileId,
-        chat.id,
+        chatId,
       );
 
     if (currentUserParticipant?.role !== ChatParticipantRole.ADMIN)
       throw new ForbiddenException(
         'You do not have permission to delete chat participant',
       );
-
-    await this.chatParticipantRepository.deleteChatParticipant(
-      chatId,
-      participantId,
-    );
   }
 
   /*async archiveChat(chatId: string, participantId: string) {
@@ -433,5 +441,18 @@ export class ChatService {
     }
 
     return allPossibleReturningParticipants;
+  }
+
+  async giveAdminToChatParticipant(
+    chatId: string,
+    chatParticipantId: string,
+    currentProfileId: string,
+  ) {
+    await this.checkIfCurrentProfileIsAdmin(currentProfileId, chatId);
+
+    await this.chatParticipantRepository.updateRole(
+      chatParticipantId,
+      ChatParticipantRole.ADMIN,
+    );
   }
 }
