@@ -20,7 +20,10 @@ import { ProfilesService } from '../profiles/profiles.service';
 import { ChatParticipantRole } from '../../common/enums/chat.enum';
 import { MinioService } from '../minio/minio.service';
 import { File as MulterFile } from 'multer';
-import { ChatParticipantProfile } from '../../common/types/profile.type';
+import {
+  ChatParticipantProfile,
+  ReturningProfileInfo,
+} from '../../common/types/profile.type';
 
 @Injectable()
 export class ChatService {
@@ -372,5 +375,36 @@ export class ChatService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async getAllPossibleParticipants(chatId: string, currentProfileId: string) {
+    await this.checkIfParticipantExists(chatId, currentProfileId);
+
+    const allParticipants = await this.getAllChatParticipants(chatId);
+    const allParticipantsProfilesIds = allParticipants.map(
+      (chatParticipant) => {
+        return chatParticipant.profileId;
+      },
+    );
+
+    const allPossibleParticipants =
+      await this.profilesService.getPossibleChatParticipantsFromSubscriptions(
+        allParticipantsProfilesIds,
+        currentProfileId,
+      );
+
+    const allPossibleReturningParticipants: ReturningProfileInfo[] = [];
+    for (const possibleParticipant of allPossibleParticipants) {
+      const avatarUrl = await this.minioService.getPublicUrl(
+        possibleParticipant.avatarFilename,
+      );
+      allPossibleReturningParticipants.push({
+        ...possibleParticipant,
+        avatarUrl,
+        isCurrent: possibleParticipant.id === currentProfileId,
+      });
+    }
+
+    return allPossibleReturningParticipants;
   }
 }

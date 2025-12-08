@@ -29,6 +29,8 @@ export const SERVER = {
     CREATE_CHAT: `${env.NEXT_PUBLIC_API_URL}/chat/create`,
     CHAT_INFO: `${env.NEXT_PUBLIC_API_URL}/chat/info/`,
     GET_MESSAGES_OF_CHAT: `${env.NEXT_PUBLIC_API_URL}/messages/fromChat/`,
-    CHAT_PARTICIPANTS: `${env.NEXT_PUBLIC_API_URL}/chat/addParticipant/`,
+    CHAT_PARTICIPANTS: `${env.NEXT_PUBLIC_API_URL}/chat/allParticipant/`,
+    POSSIBLE_CHAT_PARTICIPANTS: `${env.NEXT_PUBLIC_API_URL}/chat/possibleParticipants/`,
+    ADD_CHAT_PARTICIPANT: `${env.NEXT_PUBLIC_API_URL}/chat/addParticipant/`,
   },
 };

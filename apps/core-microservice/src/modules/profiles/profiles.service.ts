@@ -180,4 +180,21 @@ export class ProfilesService {
 
     return returningProfiles;
   }
+
+  async getPossibleChatParticipantsFromSubscriptions(
+    excludedIds: string[],
+    currentProfileId: string,
+  ) {
+    const allPossibleChatParticipants =
+      await this.profilesRepository.getPossibleChatParticipantsFromSubscriptions(
+        excludedIds,
+        currentProfileId,
+      );
+    console.log(`All found chat participants: `);
+    allPossibleChatParticipants.forEach((chatParticipant) => {
+      console.log(JSON.stringify(chatParticipant) + '\n');
+    });
+
+    return allPossibleChatParticipants;
+  }
 }

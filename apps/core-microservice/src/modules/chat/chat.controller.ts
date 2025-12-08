@@ -110,10 +110,22 @@ export class ChatController {
 
   @ApiOperation({ summary: 'Returns all participants of the chat' })
   @ApiResponse({ status: 200, type: Profile })
-  @Get(`/addParticipant/:chatId`)
+  @Get(`/allParticipant/:chatId`)
   @UseGuards(AuthGuard)
   async allParticipants(@Param(`chatId`) chatId: string) {
     return await this.chatService.getAllChatParticipants(chatId);
+  }
+
+  @ApiOperation({ summary: 'Returns subscriptions, who are not yet in chat' })
+  @ApiResponse({ status: 200, type: Profile })
+  @Get(`/possibleParticipants/:chatId`)
+  @UseGuards(AuthGuard)
+  async possibleParticipants(@Param(`chatId`) chatId: string) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.chatService.getAllPossibleParticipants(
+      chatId,
+      currentProfileId,
+    );
   }
 
   /*@ApiOperation({ summary: 'Archives chat' })

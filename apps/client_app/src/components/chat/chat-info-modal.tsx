@@ -3,7 +3,10 @@ import { useForm } from 'react-hook-form';
 import { Chat, ChatParticipantProfile, Profile } from '@/types';
 import { loadFromS3 } from '@/services/files.service';
 import Image from 'next/image';
-import { fetchChatParticipants } from '@/services/chat.service';
+import {
+  addChatParticipant,
+  fetchChatParticipants,
+} from '@/services/chat.service';
 import ChatParticipantTile from '@/components/chat/chat-participant-tile';
 import AddFilePlaceholder from '@/components/add-file-placeholder';
 import { useSocket } from '@/hooks/useSocket';
@@ -82,6 +85,16 @@ const ChatInfoModal = ({
     onClose();
   };
 
+  const onAddParticipantsSubmit = (newParticipants: string[]) => {
+    console.log(`Chat in adding participants method: ${JSON.stringify(chat)}`);
+    if (!chat?.id) return;
+    console.log(`Adding participants: ${JSON.stringify(newParticipants)}`);
+    addChatParticipant(chat?.id, newParticipants).then(() => {
+      setIsAddParticipantsModalOpen(false);
+      onClose();
+    });
+  };
+
   useEffect(() => {
     if (chat) {
       setValue('title', chat.title || '');
@@ -121,8 +134,10 @@ const ChatInfoModal = ({
         className={`fixed inset-0 z-50 flex justify-center items-center backdrop-blur-xs bg-black/50 min-h-screen`}
       >
         <AddParticipantsModal
+          chatId={chat?.id}
           isOpen={isAddParticipantsModalOpen}
           onClose={() => setIsAddParticipantsModalOpen(false)}
+          onSubmit={onAddParticipantsSubmit}
         />
         <form
           onSubmit={handleSubmit(onSubmit)}

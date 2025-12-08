@@ -1,6 +1,7 @@
 import { SERVER } from '@/config/apiRoutes';
 import returnErrorMessage from '@/utils/showAuthError';
 import { Chat, ChatParticipantProfile, ChatTypes } from '@/types';
+import { asyncWrapProviders } from 'node:async_hooks';
 
 export const fetchChatsOfProfile = async (): Promise<Chat[] | undefined> => {
   const response: Response = await fetch(
@@ -94,4 +95,47 @@ export const fetchChatParticipants = async (
   }
 
   return await response.json();
+};
+
+export const fetchAllPossibleParticipants = async (chatId: string) => {
+  const response: Response = await fetch(
+    `${SERVER.API.POSSIBLE_CHAT_PARTICIPANTS}${chatId}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) {
+    const finalMessage: string | undefined = await returnErrorMessage(response);
+    if (finalMessage) console.error(finalMessage);
+    return null;
+  }
+
+  return await response.json();
+};
+
+export const addChatParticipant = async (
+  chatId: string,
+  participantsIds: string[],
+) => {
+  const response: Response = await fetch(
+    `${SERVER.API.ADD_CHAT_PARTICIPANT}${chatId}`,
+    {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        participantsIds,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const finalMessage: string | undefined = await returnErrorMessage(response);
+    if (finalMessage) console.error(finalMessage);
+    return null;
+  }
 };

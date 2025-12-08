@@ -140,4 +140,32 @@ export class ProfilesRepository {
       [profileId, currentProfileId, PostStatus.ACTIVE],
     );
   }
+
+  async getPossibleChatParticipantsFromSubscriptions(
+    excludedProfilesIds: string[],
+    currentProfileId: string,
+  ) {
+    return await this.profileRepository.query<FindingProfileInfo[]>(
+      `
+        SELECT p.id,
+               p.birthday,
+               p.username,
+               p.bio,
+               p.avatar_filename                                                             AS "avatarFilename",
+               p.is_public                                                                   AS "isPublic",
+               (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id AND status = $3)     AS "postsAmount",
+               (SELECT COUNT(*) FROM main.profiles_follows WHERE follower_profile_id = p.id) AS "subscriptionsAmount",
+               (SELECT COUNT(*) FROM main.profiles_follows WHERE followed_profile_id = p.id) AS "subscribersAmount",
+               (SELECT EXISTS (SELECT 1
+                               FROM main.profiles_follows
+                               WHERE follower_profile_id = $2
+                                 AND followed_profile_id = p.id))                            AS "isSubscribed"
+        FROM main.profiles_follows AS prf
+               INNER JOIN main.profiles p on prf.followed_profile_id = p.id
+        WHERE prf.follower_profile_id = $2
+          AND p.id != ALL($1)
+      `,
+      [excludedProfilesIds, currentProfileId, PostStatus.ACTIVE],
+    );
+  }
 }
