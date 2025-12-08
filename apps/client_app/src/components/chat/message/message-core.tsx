@@ -45,9 +45,14 @@ const MessageCore = ({
       >
         <span className={'text-[17px] w-full'}>{message.content}</span>
 
-        <span className={'flex text-[15px] text-[#79747e] ml-auto pl-3'}>
-          {message.createdAt ? formatTime(message.createdAt) : ''}
-        </span>
+        <div className={'flex flex-col gap-0.5 ml-auto pl-3'}>
+          <span className={'flex text-[15px] text-[#79747e]'}>
+            {message.createdAt ? formatTime(message.createdAt) : ''}
+          </span>
+          {message.isEdited && (
+            <span className={'flex text-[15px] text-[#79747e]'}>Edited</span>
+          )}
+        </div>
       </div>
     </div>
   );

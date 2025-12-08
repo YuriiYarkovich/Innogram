@@ -109,6 +109,7 @@ export type Message = {
   createdAt: string;
   messageAssetsUrls?: string[];
   read: MessageReadStatus;
+  isEdited: boolean;
 };
 
 export type ReplyingMessage = {

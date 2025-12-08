@@ -53,7 +53,12 @@ export class MessagesRepository {
                        WHEN messages_receiver.receiver_id = $2
                          THEN messages_receiver.read_status
                        ELSE 'read'
-                       END                                      AS "read"
+                       END                                      AS "read",
+                     CASE
+                       WHEN message.visible_status = $5
+                         THEN true
+                       ELSE false
+                       END                                      AS "isEdited"
               FROM main.messages AS message
                      LEFT JOIN main.profiles AS profile ON profile.id = message.sender_id
                      LEFT JOIN main.messages_receiver AS messages_receiver
@@ -99,7 +104,12 @@ export class MessagesRepository {
                  WHEN messages_receiver.receiver_id = $2
                    THEN messages_receiver.read_status
                  ELSE 'read'
-                 END              AS "read"
+                 END              AS "read",
+               CASE
+                 WHEN message.visible_status = $4
+                   THEN true
+                 ELSE false
+                 END              AS "isEdited"
         FROM main.messages AS message
                LEFT JOIN main.messages_receiver AS messages_receiver
                          ON messages_receiver.message_id = message.id
@@ -138,7 +148,12 @@ export class MessagesRepository {
                  WHEN messages_receiver.receiver_id = $2
                    THEN messages_receiver.read_status
                  ELSE 'read'
-                 END                                      AS "read"
+                 END                                      AS "read",
+               CASE
+                 WHEN message.visible_status = $3
+                   THEN true
+                 ELSE false
+                 END                                      AS "isEdited"
         FROM main.messages AS message
                LEFT JOIN main.profiles AS profile ON message.sender_id = profile.id
                LEFT JOIN main.messages_receiver AS messages_receiver
@@ -147,7 +162,7 @@ export class MessagesRepository {
         WHERE message.id = $1
         LIMIT 1
       `,
-      [messageId, currentProfileId],
+      [messageId, currentProfileId, MessageVisibilityStatus.EDITED],
     );
 
     return rows[0];

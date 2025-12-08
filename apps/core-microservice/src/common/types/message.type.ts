@@ -24,6 +24,7 @@ export interface FindingMessageData {
   content: string;
   createdAt: string;
   read: MessageReadStatus;
+  isEdited: boolean;
 }
 
 export interface ReplyingMessage {
@@ -45,6 +46,7 @@ export interface ReturningMessageData {
   createdAt: string;
   messageAssetsUrls?: string[];
   read: MessageReadStatus;
+  isEdited: boolean;
 }
 
 export interface MessageReceiver {
