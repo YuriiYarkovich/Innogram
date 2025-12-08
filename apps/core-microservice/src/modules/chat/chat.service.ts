@@ -17,7 +17,7 @@ import {
 } from '../../common/types/chat.types';
 import { MessagesRepository } from '../messages/repositories/messages.repository';
 import { ProfilesService } from '../profiles/profiles.service';
-import { ChatParticipantRole } from '../../common/enums/chat.enum';
+import { ChatParticipantRole, ChatTypes } from '../../common/enums/chat.enum';
 import { MinioService } from '../minio/minio.service';
 import { File as MulterFile } from 'multer';
 import {
@@ -327,6 +327,33 @@ export class ChatService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async deleteChatParticipant(
+    chatId: string,
+    participantId: string,
+    currentProfileId: string,
+  ) {
+    const chat = await this.getChatInfo(chatId, currentProfileId);
+    if (chat.type !== ChatTypes.GROUP)
+      throw new ForbiddenException(
+        'You can not delete participants from private chats',
+      );
+    const currentUserParticipant =
+      await this.chatParticipantRepository.findChatParticipant(
+        currentProfileId,
+        chat.id,
+      );
+
+    if (currentUserParticipant?.role !== ChatParticipantRole.ADMIN)
+      throw new ForbiddenException(
+        'You do not have permission to delete chat participant',
+      );
+
+    await this.chatParticipantRepository.deleteChatParticipant(
+      chatId,
+      participantId,
+    );
   }
 
   /*async archiveChat(chatId: string, participantId: string) {

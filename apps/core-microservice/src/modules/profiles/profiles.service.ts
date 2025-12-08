@@ -190,10 +190,6 @@ export class ProfilesService {
         excludedIds,
         currentProfileId,
       );
-    console.log(`All found chat participants: `);
-    allPossibleChatParticipants.forEach((chatParticipant) => {
-      console.log(JSON.stringify(chatParticipant) + '\n');
-    });
 
     return allPossibleChatParticipants;
   }

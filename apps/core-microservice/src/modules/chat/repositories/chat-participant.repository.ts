@@ -83,7 +83,6 @@ export class ChatParticipantRepository {
     profileId: string,
     chatId: string,
   ): Promise<ChatParticipant | null> {
-    console.log(`profile id in repository: ${profileId}`);
     return await this.chatParticipantRepository.findOne({
       where: { profileId, chatId },
     });
@@ -132,5 +131,9 @@ export class ChatParticipantRepository {
       );
 
     return rows[0];
+  }
+
+  async deleteChatParticipant(chatId: string, participantId: string) {
+    await this.chatParticipantRepository.delete({ chatId, id: participantId });
   }
 }

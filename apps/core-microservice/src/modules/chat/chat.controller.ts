@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -104,6 +105,25 @@ export class ChatController {
     return await this.chatService.addChatParticipants(
       chatId,
       dto,
+      currentProfileId,
+    );
+  }
+
+  @ApiOperation({ summary: 'Deletes participants from chat' })
+  @ApiResponse({ status: 200 })
+  @Delete(`/deleteParticipant/:chatId`)
+  @UseGuards(AuthGuard)
+  async deleteParticipant(
+    @Param(`chatId`) chatId: string,
+    @Body() body: { participantId: string },
+  ) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    console.log(
+      `participant id in controller: ${JSON.stringify(body.participantId)}`,
+    );
+    await this.chatService.deleteChatParticipant(
+      chatId,
+      body.participantId,
       currentProfileId,
     );
   }

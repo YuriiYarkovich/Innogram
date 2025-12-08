@@ -5,6 +5,7 @@ import { loadFromS3 } from '@/services/files.service';
 import Image from 'next/image';
 import {
   addChatParticipant,
+  deleteChatParticipant,
   fetchChatParticipants,
 } from '@/services/chat.service';
 import ChatParticipantTile from '@/components/chat/chat-participant-tile';
@@ -89,6 +90,19 @@ const ChatInfoModal = ({
     addChatParticipant(chat.id, newParticipants).then(() => {
       setIsAddParticipantsModalOpen(false);
       fetchChatParticipants(chat.id).then(setChatParticipants);
+    });
+  };
+
+  const onDeleteParticipantClick = (participantId: string) => {
+    if (!chat) return;
+    deleteChatParticipant(chat?.id, participantId).then(() => {
+      setChatParticipants((prevParticipants) => {
+        if (!prevParticipants) return prevParticipants;
+
+        return prevParticipants.filter((participant) => {
+          if (participant.id !== participantId) return participant;
+        });
+      });
     });
   };
 
@@ -294,6 +308,7 @@ const ChatInfoModal = ({
                 key={chatParticipant.id}
                 chatParticipant={chatParticipant}
                 isCurrentProfileAdmin={isCurrentUserAdmin}
+                onDeleteClick={onDeleteParticipantClick}
               />
             ))
           )}

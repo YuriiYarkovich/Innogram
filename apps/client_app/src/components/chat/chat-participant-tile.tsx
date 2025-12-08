@@ -5,11 +5,15 @@ import { ChatParticipantRole } from '@innogram/core-microservice/dist/common/enu
 type ChatParticipantTileCreationProps = {
   chatParticipant: ChatParticipantProfile;
   isCurrentProfileAdmin: boolean;
+  onDeleteClick: (chatParticipantId: string) => void;
+  //onGiveAdminClick: (chatParticipantId: string) => void;
 };
 
 const ChatParticipantTile = ({
   chatParticipant,
   isCurrentProfileAdmin,
+  onDeleteClick,
+  //onGiveAdminClick,
 }: ChatParticipantTileCreationProps) => {
   return (
     <div className={'flex flex-row items-center w-full min-h-[55px] gap-6'}>
@@ -50,13 +54,14 @@ const ChatParticipantTile = ({
           >
             <button
               type={'button'}
+              //onClick={() => onGiveAdminClick(chatParticipant.id)}
               className={
                 'flex min-h-[27px] min-w-[27px] items-center justify-center cursor-pointer'
               }
             >
               <Image
                 src={'/images/icons/make-admin.svg'}
-                alt={'Delete user'}
+                alt={'make user admin'}
                 height={20}
                 width={20}
                 draggable={false}
@@ -65,6 +70,7 @@ const ChatParticipantTile = ({
             </button>
             <button
               type={'button'}
+              onClick={() => onDeleteClick(chatParticipant.id)}
               className={
                 'flex min-h-[27px] min-w-[27px] items-center justify-center cursor-pointer'
               }

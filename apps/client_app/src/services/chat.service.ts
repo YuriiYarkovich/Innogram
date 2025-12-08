@@ -139,3 +139,28 @@ export const addChatParticipant = async (
     return null;
   }
 };
+
+export const deleteChatParticipant = async (
+  chatId: string,
+  participantId: string,
+) => {
+  const response: Response = await fetch(
+    `${SERVER.API.DELETE_CHAT_PARTICIPANT}${chatId}`,
+    {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        participantId,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const finalMessage: string | undefined = await returnErrorMessage(response);
+    if (finalMessage) console.error(finalMessage);
+    return null;
+  }
+};
