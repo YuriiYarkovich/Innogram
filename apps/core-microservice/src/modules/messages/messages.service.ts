@@ -44,7 +44,7 @@ export class MessagesService {
     dto: CreateMessageDto,
     currentProfileId: string,
     receiverProfiles: MessageReceiver[],
-    files: MulterFile | undefined = null,
+    files: MulterFile[],
   ) {
     const queryRunner: QueryRunner = await this.createTransaction();
 
@@ -63,24 +63,22 @@ export class MessagesService {
         );
       }
 
-      if (files) {
-        if (files.length > 0) {
-          const order = 0;
-          await this.uploadFilesArray(
-            files,
-            queryRunner,
-            createdMessage,
-            order,
-          );
-        }
+      if (files && files.length > 0) {
+        const order = 0;
+        await this.uploadFilesArray(files, queryRunner, createdMessage, order);
       }
 
-      await queryRunner.commitTransaction();
-
-      return await this.messagesRepository.getMessageById(
+      const createdMessageObj = await this.messagesRepository.getMessageById(
         createdMessage.id,
         currentProfileId,
       );
+
+      const returningMessageData =
+        await this.createReturningMessageFromFindingMessage(createdMessageObj);
+
+      await queryRunner.commitTransaction();
+
+      return returningMessageData;
     } catch (e) {
       await queryRunner.rollbackTransaction();
       throw e;
@@ -89,16 +87,50 @@ export class MessagesService {
     }
   }
 
+  async createReturningMessageFromFindingMessage(
+    createdMessageObj: FindingMessageData,
+  ) {
+    const authorAvatarUrl = await this.minioService.getPublicUrl(
+      createdMessageObj.authorAvatarFilename,
+    );
+
+    const messageAssets: { url: string | undefined; order: number }[] = [];
+    if (createdMessageObj.assets && createdMessageObj.assets.length > 0) {
+      for (const asset of createdMessageObj.assets) {
+        const url = await this.minioService.getPublicUrl(asset.filename);
+        const messageAsset: { url: string | undefined; order: number } = {
+          url,
+          order: asset.order,
+        };
+        messageAssets.push(messageAsset);
+      }
+    }
+
+    const returningMessageData: ReturningMessageData = {
+      ...createdMessageObj,
+      messageAssets,
+      authorAvatarUrl,
+    };
+
+    return returningMessageData;
+  }
+
   async uploadFilesArray(
     files: MulterFile[],
     queryRunner: QueryRunner,
     message: Message,
     order: number,
   ) {
+    const filesNotes: {
+      hashedFilename: string;
+      type: string;
+      order: number;
+    }[] = [];
+
     for (const file of files) {
       const fileData: { hashedFileName: string; type: string } =
         await this.minioService.uploadFile(file);
-      queryRunner.manager.create(PostAsset, {
+      queryRunner.manager.create(MessageAsset, {
         hashedFileName: fileData.hashedFileName,
       });
 
@@ -114,7 +146,15 @@ export class MessagesService {
         fileType,
         ++order,
       );
+
+      filesNotes.push({
+        hashedFilename: fileData.hashedFileName,
+        type: fileData.type,
+        order,
+      });
     }
+
+    return filesNotes;
   }
 
   async checkIfUserIsChatParticipant(profileId: string, chatId: string) {
@@ -153,16 +193,8 @@ export class MessagesService {
 
     const returningMessagesData: ReturningMessageData[] = [];
     for (const message of foundMessages) {
-      const messageAssetsUrls = await this.getAllMessageAssetsUrls(message.id);
-
-      const authorAvatarUrl = await this.minioService.getPublicUrl(
-        message?.authorAvatarFilename,
-      );
-      const returningMessage: ReturningMessageData = {
-        ...message,
-        authorAvatarUrl,
-        messageAssetsUrls,
-      };
+      const returningMessage =
+        await this.createReturningMessageFromFindingMessage(message);
       returningMessagesData.push(returningMessage);
     }
 
@@ -267,16 +299,8 @@ export class MessagesService {
         currentProfileId,
       );
 
-      const authorAvatarUrl = await this.minioService.getPublicUrl(
-        message?.authorAvatarFilename,
-      );
-
-      const messageAssetsUrls = await this.getAllMessageAssetsUrls(message.id);
-      const returningMessage: ReturningMessageData = {
-        ...message,
-        authorAvatarUrl,
-        messageAssetsUrls,
-      };
+      const returningMessage =
+        await this.createReturningMessageFromFindingMessage(message);
 
       return returningMessage;
     } catch (e) {

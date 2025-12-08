@@ -58,7 +58,13 @@ export class MessagesRepository {
                        WHEN message.visible_status = $5
                          THEN true
                        ELSE false
-                       END                                      AS "isEdited"
+                       END                                      AS "isEdited",
+                     COALESCE(
+                       (SELECT json_agg(json_build_object('filename', ma.hashed_file_name, 'order', ma.order))
+                        FROM main.message_assets ma
+                        WHERE ma.message_id = message.id),
+                       '[]'::json
+                     )                                          AS "assetsFilenames"
               FROM main.messages AS message
                      LEFT JOIN main.profiles AS profile ON profile.id = message.sender_id
                      LEFT JOIN main.messages_receiver AS messages_receiver
@@ -153,7 +159,13 @@ export class MessagesRepository {
                  WHEN message.visible_status = $3
                    THEN true
                  ELSE false
-                 END                                      AS "isEdited"
+                 END                                      AS "isEdited",
+               COALESCE(
+                 (SELECT json_agg(json_build_object('filename', ma.hashed_file_name, 'order', ma.order))
+                  FROM main.message_assets ma
+                  WHERE ma.message_id = message.id),
+                 '[]'::json
+               )                                          AS "assetsFilenames"
         FROM main.messages AS message
                LEFT JOIN main.profiles AS profile ON message.sender_id = profile.id
                LEFT JOIN main.messages_receiver AS messages_receiver

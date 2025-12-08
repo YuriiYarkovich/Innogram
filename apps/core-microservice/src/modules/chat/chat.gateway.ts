@@ -124,6 +124,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const notConnectedToChatSockets: string[] = [];
     const messageReceivers: MessageReceiver[] = [];
 
+    //const file = this.createFileFromPayload(payload.file);
+    const files: MulterFile[] = [];
+    if (receivedMessage.files) {
+      for (const file of receivedMessage.files) {
+        const mFile = this.createFileFromPayload(file);
+        files.push(mFile);
+      }
+    }
+
     let allReceiversProfileIds: string[] = [];
     //in next block -- finding chat id
     if (!receivedMessage.receiverId && receivedMessage.chatId) {
@@ -194,20 +203,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       content: receivedMessage.content,
       replyToMessageId: receivedMessage.replyToMessageId,
     };
-    const createdMessage = await this.messagesService.createMessage(
+
+    const returningMessage = await this.messagesService.createMessage(
       dto,
       receivedMessage.senderId,
       messageReceivers,
-      receivedMessage.files,
+      files,
     );
-
-    const authorAvatarUrl = await this.minioService.getPublicUrl(
-      createdMessage.authorAvatarFilename,
-    );
-    const returningMessage: ReturningMessageData = {
-      ...createdMessage,
-      authorAvatarUrl,
-    };
 
     connectedToChatSockets.forEach((socketId) => {
       this.server.to(socketId).emit('messageToUserInChat', returningMessage);

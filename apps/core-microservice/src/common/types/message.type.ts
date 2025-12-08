@@ -1,4 +1,3 @@
-import { File as MulterFile } from 'multer';
 import {
   MessageReadStatus,
   MessageVisibilityStatus,
@@ -11,7 +10,12 @@ export interface ReceivingMessage {
   receiverId?: string;
   replyToMessageId?: string;
   content: string;
-  files: MulterFile[] | undefined;
+  files?: {
+    buffer: ArrayBuffer;
+    originalname: string;
+    mimetype: string;
+    size: number;
+  }[];
 }
 
 export interface FindingMessageData {
@@ -25,6 +29,7 @@ export interface FindingMessageData {
   createdAt: string;
   read: MessageReadStatus;
   isEdited: boolean;
+  assets: { filename: string; order: number }[];
 }
 
 export interface ReplyingMessage {
@@ -44,7 +49,7 @@ export interface ReturningMessageData {
   authorAvatarUrl?: string;
   content: string;
   createdAt: string;
-  messageAssetsUrls?: string[];
+  messageAssets?: { url: string | undefined; order: number }[];
   read: MessageReadStatus;
   isEdited: boolean;
 }

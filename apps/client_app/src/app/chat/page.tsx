@@ -28,10 +28,12 @@ import ChatCreationModal from '@/components/chat/chat-creation-modal';
 import AddChatButton from '@/components/chat/addChat.button';
 import ChatInfoModal from '@/components/chat/chat-info-modal';
 import ErrorModal from '@/components/error-modal';
+import Image from 'next/image';
+import { resolveAppleWebApp } from 'next/dist/lib/metadata/resolvers/resolve-basics';
 
 export type MessageSendFormValues = {
   content: string;
-  file: File | null;
+  files: File[];
 };
 
 export type MessageContextMenuState = {
@@ -53,17 +55,38 @@ export default function ChatPage() {
   const {
     register,
     handleSubmit,
-    control,
     watch,
     reset,
+    setValue,
     formState: { isSubmitting },
   } = useForm<MessageSendFormValues>({
     defaultValues: {
       content: '',
-      file: null,
+      files: [],
     },
   });
-  const file = watch('file');
+  const files = watch('files');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    const currentFiles = files || [];
+    const newFiles = [...currentFiles, ...selectedFiles].slice(0, 10);
+    setValue('files', newFiles);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeFile = (index: number) => {
+    const newFiles = files.filter((_, i) => i !== index);
+    setValue('files', newFiles);
+  };
+
+  const openFileDialog = () => {
+    fileInputRef.current?.click();
+  };
 
   const chatIdParam = useParams<{ chatId: string }>();
 
@@ -320,6 +343,25 @@ export default function ChatPage() {
   };
 
   const onSubmit = async (messageData: MessageSendFormValues) => {
+    const filesData: {
+      buffer: ArrayBuffer;
+      originalname: string;
+      mimetype: string;
+      size: number;
+    }[] = [];
+
+    if (files) {
+      for (const file of files) {
+        const arrayBuffer = await file.arrayBuffer();
+        filesData.push({
+          buffer: arrayBuffer,
+          originalname: file.name,
+          mimetype: file.type,
+          size: file.size,
+        });
+      }
+    }
+
     if (!editingMessage) {
       send({
         event: 'message',
@@ -328,6 +370,7 @@ export default function ChatPage() {
           chatId: currentChat?.id,
           replyToMessageId: replyingMessage?.id,
           content: messageData.content,
+          files: filesData,
         },
       });
       setReplyingMessage(null);
@@ -337,12 +380,13 @@ export default function ChatPage() {
         data: {
           ...editingMessage,
           content: messageData.content,
+          files: filesData,
         },
       });
       setEditingMessage(null);
     }
 
-    reset({ content: '' });
+    reset({ content: '', files: [] });
   };
 
   const onEditingModeClose = () => {
@@ -744,12 +788,85 @@ export default function ChatPage() {
                   />
                 ) : null}
 
+                {/*files preview part*/}
+                {files && files.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2 p-2">
+                    {files.map((file, index) => (
+                      <div
+                        key={index}
+                        className="relative flex items-center gap-2 bg-gray-100 rounded-lg p-2 pr-8"
+                      >
+                        {/* Images preview */}
+                        {file.type.startsWith('image/') ? (
+                          <Image
+                            src={URL.createObjectURL(file)}
+                            alt={file.name}
+                            width={48}
+                            height={48}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-300 rounded flex items-center justify-center text-xs">
+                            📄
+                          </div>
+                        )}
+
+                        <span className="text-sm max-w-[100px] truncate">
+                          {file.name}
+                        </span>
+
+                        {/* Deletion button */}
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+
+                    {files.length >= 10 && (
+                      <span className="text-xs text-gray-500 self-center">
+                        10 files max
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 <form
                   onSubmit={handleSubmit(onSubmit)}
                   className={
                     'flex flex-row w-min-1/20 border-[#79747e] border-2 rounded-4xl p-2 gap-3 items-center pl-5'
                   }
                 >
+                  {/* hidden input for files */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    disabled={files && files.length >= 10}
+                  />
+
+                  <button
+                    type={'button'}
+                    onClick={openFileDialog}
+                    disabled={files && files.length >= 10}
+                    className={
+                      'flex h-full min-w-[37px] items-center justify-center cursor-pointer'
+                    }
+                  >
+                    <Image
+                      src={'/images/icons/clip.svg'}
+                      alt={'pin file to message'}
+                      height={30}
+                      width={30}
+                      draggable={false}
+                      className={'hover:min-h-[37px] hover:min-w-[37px]'}
+                    />
+                  </button>
                   <textarea
                     {...register('content')}
                     placeholder={'Write message'}

@@ -2,6 +2,7 @@ import React from 'react';
 import { MessageVisibilityStatus } from '@innogram/core-microservice/dist/common/enums/message.enum';
 import { formatTime } from '@/utils/time';
 import { Message } from '@/types';
+import Image from 'next/image';
 
 const MessageCore = ({
   message,
@@ -38,6 +39,7 @@ const MessageCore = ({
           )}
         </div>
       ) : null}
+
       <div
         className={
           'flex flex-row min-w-[150px] pl-3 items-center pr-2.5 pt-2 pb-2'
@@ -54,6 +56,45 @@ const MessageCore = ({
           )}
         </div>
       </div>
+
+      {message.messageAssets && message.messageAssets.length > 0 && (
+        <div className={'flex flex-col gap-2 px-3 pb-2'}>
+          {message.messageAssets
+            .sort((a, b) => a.order - b.order)
+            .map((asset, index) => {
+              if (!asset.url) return null;
+
+              const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(asset.url);
+              const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(asset.url);
+
+              if (isVideo) {
+                return (
+                  <video
+                    key={index}
+                    src={asset.url}
+                    controls
+                    className={'w-full rounded-[12px] max-h-[300px]'}
+                  />
+                );
+              } else if (isImage) {
+                return (
+                  <Image
+                    key={index}
+                    width={100}
+                    height={100}
+                    src={asset.url}
+                    alt={`attachment-${index}`}
+                    className={
+                      'w-full rounded-[12px] object-cover max-h-[300px]'
+                    }
+                  />
+                );
+              }
+
+              return null;
+            })}
+        </div>
+      )}
     </div>
   );
 };

@@ -107,7 +107,7 @@ export type Message = {
   authorAvatarUrl?: string;
   content: string;
   createdAt: string;
-  messageAssetsUrls?: string[];
+  messageAssets?: { url: string | undefined; order: number }[];
   read: MessageReadStatus;
   isEdited: boolean;
 };
