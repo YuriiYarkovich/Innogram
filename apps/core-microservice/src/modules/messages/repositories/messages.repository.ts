@@ -64,7 +64,7 @@ export class MessagesRepository {
                         FROM main.message_assets ma
                         WHERE ma.message_id = message.id),
                        '[]'::json
-                     )                                          AS "assetsFilenames"
+                     )                                          AS "assets"
               FROM main.messages AS message
                      LEFT JOIN main.profiles AS profile ON profile.id = message.sender_id
                      LEFT JOIN main.messages_receiver AS messages_receiver
@@ -135,8 +135,12 @@ export class MessagesRepository {
     return rows[0] ?? null;
   }
 
-  async getMessageById(messageId: string, currentProfileId: string) {
-    const rows: FindingMessageData[] = await this.messageRepository.query(
+  async getMessageById(
+    messageId: string,
+    currentProfileId: string,
+    queryRunner: QueryRunner,
+  ) {
+    const rows: FindingMessageData[] = await queryRunner.manager.query(
       `
         SELECT message.id,
                (SELECT json_build_object('id', m.id, 'chatId', m.chat_id, 'authorUsername', p.username, 'content',
@@ -165,7 +169,7 @@ export class MessagesRepository {
                   FROM main.message_assets ma
                   WHERE ma.message_id = message.id),
                  '[]'::json
-               )                                          AS "assetsFilenames"
+               )                                          AS "assets"
         FROM main.messages AS message
                LEFT JOIN main.profiles AS profile ON message.sender_id = profile.id
                LEFT JOIN main.messages_receiver AS messages_receiver
@@ -195,7 +199,7 @@ export class MessagesRepository {
         updated_at: new Date(),
       },
     );
-    return await this.getMessageById(messageId, currentProfileId);
+    return await this.getMessageById(messageId, currentProfileId, queryRunner);
   }
 
   async setDeleteStatusToMessage(messageId: string) {

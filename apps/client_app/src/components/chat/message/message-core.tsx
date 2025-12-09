@@ -64,8 +64,12 @@ const MessageCore = ({
             .map((asset, index) => {
               if (!asset.url) return null;
 
-              const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(asset.url);
-              const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(asset.url);
+              // Убираем query параметры для проверки расширения
+              const urlWithoutQuery = asset.url.split('?')[0];
+              const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(urlWithoutQuery);
+              const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(
+                urlWithoutQuery,
+              );
 
               if (isVideo) {
                 return (
@@ -80,13 +84,15 @@ const MessageCore = ({
                 return (
                   <Image
                     key={index}
-                    width={100}
-                    height={100}
+                    width={400}
+                    height={300}
                     src={asset.url}
                     alt={`attachment-${index}`}
                     className={
-                      'w-full rounded-[12px] object-cover max-h-[300px]'
+                      'w-full h-auto rounded-[12px] object-cover max-h-[300px]'
                     }
+                    draggable={false}
+                    unoptimized
                   />
                 );
               }

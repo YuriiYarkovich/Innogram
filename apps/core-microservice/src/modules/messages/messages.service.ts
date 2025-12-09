@@ -48,6 +48,8 @@ export class MessagesService {
   ) {
     const queryRunner: QueryRunner = await this.createTransaction();
 
+    let fileNotes: { hashedFilename: string; type: string; order: number }[] =
+      [];
     try {
       await this.checkIfUserIsChatParticipant(dto.senderId, dto.chatId);
 
@@ -65,12 +67,18 @@ export class MessagesService {
 
       if (files && files.length > 0) {
         const order = 0;
-        await this.uploadFilesArray(files, queryRunner, createdMessage, order);
+        fileNotes = await this.uploadFilesArray(
+          files,
+          queryRunner,
+          createdMessage,
+          order,
+        );
       }
 
       const createdMessageObj = await this.messagesRepository.getMessageById(
         createdMessage.id,
         currentProfileId,
+        queryRunner,
       );
 
       const returningMessageData =
@@ -80,6 +88,8 @@ export class MessagesService {
 
       return returningMessageData;
     } catch (e) {
+      if (fileNotes.length > 0)
+        await this.deleteFilesOnRollbackTransaction(fileNotes);
       await queryRunner.rollbackTransaction();
       throw e;
     } finally {
@@ -155,6 +165,14 @@ export class MessagesService {
     }
 
     return filesNotes;
+  }
+
+  async deleteFilesOnRollbackTransaction(
+    fileNotes: { hashedFilename: string; type: string; order: number }[],
+  ) {
+    for (const fileNote of fileNotes) {
+      await this.minioService.deleteFile(fileNote.hashedFilename);
+    }
   }
 
   async checkIfUserIsChatParticipant(profileId: string, chatId: string) {
@@ -292,13 +310,12 @@ export class MessagesService {
         }
       }
 
-      await queryRunner.commitTransaction();
-
       const message = await this.messagesRepository.getMessageById(
         messageId,
         currentProfileId,
+        queryRunner,
       );
-
+      await queryRunner.commitTransaction();
       const returningMessage =
         await this.createReturningMessageFromFindingMessage(message);
 
