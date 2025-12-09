@@ -37,5 +37,6 @@ export const SERVER = {
     LEAVE_CHAT: `${env.NEXT_PUBLIC_API_URL}/chat/leave/`,
     GET_ALL_SUBSCRIBERS: `${env.NEXT_PUBLIC_API_URL}/profiles/allSubscribersOf/`,
     DELETE_SUBSCRIBER: `${env.NEXT_PUBLIC_API_URL}/profiles/deleteSubscriber/`,
+    CHANGE_VISIBILITY_OF_PROFILE_STATUS: `${env.NEXT_PUBLIC_API_URL}/profiles/changeVisibilityStatus`,
   },
 };

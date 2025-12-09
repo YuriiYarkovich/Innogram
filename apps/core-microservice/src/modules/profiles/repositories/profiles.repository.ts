@@ -2,11 +2,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Profile } from '../../../common/entities/account/profile.entity';
 import { In, QueryRunner, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
-import {
-  FindingProfileInfo,
-  FindingProfileInfoById,
-  FindingProfileInfoByUsername,
-} from '../../../common/types/profile.type';
+import { FindingProfileInfo } from '../../../common/types/profile.type';
 import { EditProfileDto } from '../dto/edit-profile.dto';
 import { PostStatus } from '../../../common/enums/post.enum';
 import { ProfileFollow } from '../../../common/entities/account/profile-follow.entity';
@@ -30,10 +26,11 @@ export class ProfilesRepository {
   async getProfileInfo(
     currentProfileId: string,
     profileId: string,
-  ): Promise<FindingProfileInfoById | null> {
-    const result: FindingProfileInfoById[] = await this.profileRepository.query(
+  ): Promise<FindingProfileInfo | null> {
+    const result: FindingProfileInfo[] = await this.profileRepository.query(
       `
-        SELECT p.username,
+        SELECT p.id,
+               p.username,
                p.birthday,
                p.bio,
                p.avatar_filename                                                         AS "avatarFilename",
@@ -61,11 +58,11 @@ export class ProfilesRepository {
   async getProfileInfoByUsername(
     currentProfileId: string,
     username: string,
-  ): Promise<FindingProfileInfoByUsername | null> {
-    const result: FindingProfileInfoByUsername[] =
-      await this.profileRepository.query(
-        `
+  ): Promise<FindingProfileInfo | null> {
+    const result: FindingProfileInfo[] = await this.profileRepository.query(
+      `
           SELECT p.id,
+                 p.username,
                  p.birthday,
                  p.bio,
                  p.avatar_filename                                                             AS "avatarFilename",
@@ -80,8 +77,8 @@ export class ProfilesRepository {
           FROM main.profiles AS p
           WHERE p.username = $1
         `,
-        [username, currentProfileId, PostStatus.ACTIVE],
-      );
+      [username, currentProfileId, PostStatus.ACTIVE],
+    );
 
     return result[0];
   }
@@ -215,5 +212,22 @@ export class ProfilesRepository {
       followed_profile_id: currentProfileId,
       follower_profile_id: subscriberId,
     });
+  }
+
+  async changeVisibilityStatus(profile: FindingProfileInfo) {
+    if (profile.isPublic) {
+      await this.profileRepository.update(
+        { id: profile.id },
+        { isPublic: false },
+      );
+      profile.isPublic = false;
+    } else {
+      await this.profileRepository.update(
+        { id: profile.id },
+        { isPublic: false },
+      );
+      profile.isPublic = true;
+    }
+    return profile;
   }
 }

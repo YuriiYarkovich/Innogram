@@ -128,4 +128,13 @@ export class ProfilesController {
     await this.profilesService.deleteSubscriber(profileId, currentProfileId);
     return { message: 'OK!' };
   }
+
+  @ApiOperation({ summary: 'Changes visibility status of the profile' })
+  @ApiResponse({ status: 200 })
+  @Put('/changeVisibilityStatus')
+  @UseGuards(AuthGuard)
+  async changeVisibilityStatus() {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.profilesService.changeVisibilityStatus(currentProfileId);
+  }
 }

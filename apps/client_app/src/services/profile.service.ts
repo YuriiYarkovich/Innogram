@@ -1,7 +1,6 @@
 import { SERVER } from '@/config/apiRoutes';
 import returnErrorMessage from '@/utils/showAuthError';
 import { Profile } from '@/types';
-import js from '@eslint/js';
 
 export const handleOnProfileFollowing = async (profile: Profile) => {
   const response: Response = await fetch(`${SERVER.API.FOLLOW}${profile.id}`, {
@@ -28,7 +27,7 @@ export const editProfile = async (
   username: string,
   bio: string,
   birthday: string,
-  avatar: File | null,
+  avatar: File | string | null | undefined,
   setError: (message: string) => void,
   onClose: () => void,
 ) => {
@@ -133,4 +132,18 @@ export const deleteSubscriber = async (deletingSubscriberProfileId: string) => {
   );
 
   if (!response.ok) console.error(response.json());
+};
+
+export const changeProfileVisibilityStatus = async () => {
+  const response: Response = await fetch(
+    `${SERVER.API.CHANGE_VISIBILITY_OF_PROFILE_STATUS}`,
+    {
+      method: 'PUT',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) console.error(response.json());
+
+  return await response.json();
 };

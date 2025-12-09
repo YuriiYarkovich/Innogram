@@ -3,8 +3,6 @@ import { ProfilesRepository } from './repositories/profiles.repository';
 import { MinioService } from '../minio/minio.service';
 import {
   FindingProfileInfo,
-  FindingProfileInfoById,
-  FindingProfileInfoByUsername,
   ReturningProfileInfo,
 } from '../../common/types/profile.type';
 import { EditProfileDto } from './dto/edit-profile.dto';
@@ -25,7 +23,7 @@ export class ProfilesService {
   async getProfileInfo(
     profileId: string,
   ): Promise<ReturningProfileInfo | undefined> {
-    const profile: FindingProfileInfoById | null =
+    const profile: FindingProfileInfo | null =
       await this.profilesRepository.getProfileInfo(profileId, profileId);
 
     if (!profile)
@@ -49,7 +47,7 @@ export class ProfilesService {
   }
 
   async getProfileInfoByUsername(username: string, currentProfileId: string) {
-    const profile: FindingProfileInfoByUsername | null =
+    const profile: FindingProfileInfo | null =
       await this.profilesRepository.getProfileInfoByUsername(
         currentProfileId,
         username,
@@ -241,5 +239,24 @@ export class ProfilesService {
       );
     } else
       throw new BadRequestException('This user is not subscribed on profile');
+  }
+
+  async changeVisibilityStatus(currentProfileId: string) {
+    const profile = await this.profilesRepository.getProfileInfo(
+      currentProfileId,
+      currentProfileId,
+    );
+
+    if (!profile) throw new BadRequestException('This profile does not exist');
+
+    const newProfile =
+      await this.profilesRepository.changeVisibilityStatus(profile);
+
+    const returningProfiledata = await this.createReturningProfileFromFound(
+      newProfile,
+      currentProfileId,
+    );
+
+    return returningProfiledata;
   }
 }

@@ -4,14 +4,18 @@ import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import AddFilePlaceholder from '@/components/add-file-placeholder';
-import { editProfile } from '@/services/profile.service';
-import { EditProfileModalProps } from '@/types';
+import {
+  changeProfileVisibilityStatus,
+  editProfile,
+} from '@/services/profile.service';
+import { EditProfileModalProps, Profile } from '@/types';
+import { loadFromS3 } from '@/services/files.service';
 
 type ProfileEditFormValues = {
   username: string;
   bio: string;
   birthday: string;
-  file: File | null;
+  file?: File | string | null;
 };
 
 export default function EditProfileModal({
@@ -19,28 +23,32 @@ export default function EditProfileModal({
   isOpen,
   onClose,
 }: EditProfileModalProps) {
-  const { register, handleSubmit, control, watch, reset } =
+  const [currentProfile, setCurrentProfile] = useState<Profile | null>(null);
+  const { register, handleSubmit, control, setValue, watch, reset } =
     useForm<ProfileEditFormValues>({
       defaultValues: {
         username: profile.username,
         bio: profile.bio,
         birthday: profile.birthday,
-        file: null,
+        file: profile?.avatarUrl || null,
       },
     });
 
-  useEffect(() => {
-    if (profile) {
-      reset({
-        username: profile.username ?? '',
-        bio: profile.bio ?? '',
-        birthday: profile.birthday ?? '',
-        file: null,
-      });
-    }
-  }, [profile, reset]);
-
   const file = watch('file');
+
+  useEffect(() => {
+    if (profile && isOpen) {
+      setCurrentProfile(profile);
+      setValue('username', profile.username || '');
+      setValue('bio', profile.bio || '');
+      setValue('birthday', profile.birthday || '');
+      if (profile.avatarUrl) {
+        loadFromS3(profile.avatarUrl).then((file) => {
+          setValue('file', file);
+        });
+      } else setValue('file', null);
+    }
+  }, [profile, reset, setValue, isOpen]);
 
   const [error, setError] = useState<string | null>(null);
 
@@ -84,7 +92,9 @@ export default function EditProfileModal({
             >
               <AddFilePlaceholder
                 control={control}
-                name={`file`}
+                name={'file'}
+                isIcon={true}
+                iconSize={100}
                 label={'Upload file'}
               />
             </div>
@@ -105,14 +115,25 @@ export default function EditProfileModal({
           <textarea
             placeholder="Bio"
             {...register('bio')}
-            className="border-2 border-[#bcb8b8] rounded-[6px] md:h-[100px] px-3 py-2 w-full bg-white"
+            className="border-2 border-[#bcb8b8] rounded-[6px] md:h-[100px] px-3 w-full bg-white"
           />
-          <button
-            type="submit"
-            className="bg-[#4f378a] text-white hover:text-black rounded-[20px] my-[25px] md:h-[45px] hover:bg-[#d0bcff] w-full"
-          >
-            Submit
-          </button>
+          <div className={'flex flex-col w-full gap-2.5 mt-6'}>
+            <button
+              type="button"
+              onClick={() => {
+                changeProfileVisibilityStatus().then(setCurrentProfile);
+              }}
+              className="bg-[#4f378a] text-white text-[18px] hover:text-black rounded-[20px] md:h-[45px] hover:bg-[#d0bcff] w-full cursor-pointer"
+            >
+              {currentProfile?.isPublic ? 'Make private' : 'Make public'}
+            </button>
+            <button
+              type="submit"
+              className="bg-[#4f378a] text-white text-[18px] hover:text-black rounded-[20px] md:h-[45px] hover:bg-[#d0bcff] w-full cursor-pointer"
+            >
+              Submit
+            </button>
+          </div>
           {error && (
             <div className={`text-red-600 text-sm mt-2 mb-7`}>{error}</div>
           )}
