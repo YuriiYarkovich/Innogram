@@ -11,6 +11,7 @@ import { File as MulterFile } from 'multer';
 import { Profile } from '../../common/entities/account/profile.entity';
 import { DataSource, QueryRunner } from 'typeorm';
 import { ProfileFollowRepository } from '../follows/profile-follow.repository';
+import { FollowAcceptedStatus } from '../../common/enums/profile-follow.enum';
 
 @Injectable()
 export class ProfilesService {
@@ -287,5 +288,31 @@ export class ProfilesService {
     }
 
     return returningRequests;
+  }
+
+  async acceptRequest(subscriptionId: string, currentProfileId: string) {
+    const request =
+      await this.profileFollowRepository.getSubscriptionById(subscriptionId);
+    if (
+      !request ||
+      request.status === FollowAcceptedStatus.ACCEPTED ||
+      request.followed_profile_id !== currentProfileId
+    )
+      throw new BadRequestException('Subscription request does not exist');
+
+    await this.profileFollowRepository.acceptRequest(subscriptionId);
+  }
+
+  async rejectRequest(subscriptionId: string, currentProfileId: string) {
+    const request =
+      await this.profileFollowRepository.getSubscriptionById(subscriptionId);
+    if (
+      !request ||
+      request.status === FollowAcceptedStatus.ACCEPTED ||
+      request.followed_profile_id !== currentProfileId
+    )
+      throw new BadRequestException('Subscription request does not exist');
+
+    await this.profileFollowRepository.rejectRequest(subscriptionId);
   }
 }

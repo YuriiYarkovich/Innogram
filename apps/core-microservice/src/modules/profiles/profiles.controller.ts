@@ -24,6 +24,7 @@ import { ReturningProfileInfo } from '../../common/types/profile.type';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { EditProfileDto } from './dto/edit-profile.dto';
 import { File as MulterFile } from 'multer';
+import { ProfileFollow } from '../../common/entities/account/profile-follow.entity';
 
 @ApiTags('Operations with profiles')
 @ApiBearerAuth('access-token')
@@ -137,7 +138,7 @@ export class ProfilesController {
   }
 
   @ApiOperation({ summary: 'Returns all requests for subscriptions' })
-  @ApiResponse({ status: 200, type: Profile })
+  @ApiResponse({ status: 200, type: ProfileFollow })
   @Get('/allSubscriptionsRequests')
   @UseGuards(AuthGuard)
   async getAllSubscriptionsRequests() {
@@ -145,5 +146,25 @@ export class ProfilesController {
     return await this.profilesService.getAllSubscriptionsRequests(
       currentProfileId,
     );
+  }
+
+  @ApiOperation({ summary: 'Accepts request for subscriptions' })
+  @ApiResponse({ status: 200 })
+  @Put('/acceptRequest/:subscriptionId')
+  @UseGuards(AuthGuard)
+  async acceptRequest(@Param('subscriptionId') subscriptionId: string) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    await this.profilesService.acceptRequest(subscriptionId, currentProfileId);
+    return { message: 'OK!' };
+  }
+
+  @ApiOperation({ summary: 'Rejects request for subscriptions' })
+  @ApiResponse({ status: 200 })
+  @Put('/rejectRequest/:subscriptionId')
+  @UseGuards(AuthGuard)
+  async rejectRequest(@Param('subscriptionId') subscriptionId: string) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    await this.profilesService.rejectRequest(subscriptionId, currentProfileId);
+    return { message: 'OK!' };
   }
 }

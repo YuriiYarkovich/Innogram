@@ -21,6 +21,16 @@ const SubscriptionsRequestsModal = ({
   const [subscriptionsRequestsLoading, setSubscriptionsRequestsLoading] =
     useState(false);
 
+  const onAcceptRequest = (acceptedRequestId: string) => {
+    setSubscriptionsRequests((prevSubscriptionsRequests) => {
+      if (!prevSubscriptionsRequests) return prevSubscriptionsRequests;
+
+      return prevSubscriptionsRequests.filter((request) => {
+        if (request.id !== acceptedRequestId) return request;
+      });
+    });
+  };
+
   useEffect(() => {
     if (isOpen && currentProfile) {
       setSubscriptionsRequestsLoading(true);
@@ -66,7 +76,11 @@ const SubscriptionsRequestsModal = ({
             <p>Loading...</p>
           ) : (
             subscriptionsRequests?.map((request) => (
-              <RequestTile request={request} key={request.id} />
+              <RequestTile
+                request={request}
+                key={request.id}
+                onDelete={onAcceptRequest}
+              />
             ))
           )}
         </div>

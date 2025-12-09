@@ -3,17 +3,22 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { SubscriptionRequest } from '@/types';
 import { FollowAcceptedStatus } from '@/enums';
+import { acceptRequest, rejectRequest } from '@/services/profile.service';
 
-type RequetTileProps = {
+type RequestTileProps = {
   request: SubscriptionRequest;
   onDelete: (requestId: string) => void;
 };
 
-const RequestTile = ({ request }: RequetTileProps) => {
+const RequestTile = ({ request, onDelete }: RequestTileProps) => {
   const [isRejected, setIsRejected] = useState(false);
 
   const onRejectButtonClick = () => {
-    setIsRejected((prev) => !prev);
+    rejectRequest(request.id).then(() => setIsRejected((prev) => !prev));
+  };
+
+  const onAcceptButtonClick = () => {
+    acceptRequest(request.id).then(() => onDelete(request.id));
   };
 
   useEffect(() => {
@@ -48,7 +53,7 @@ const RequestTile = ({ request }: RequetTileProps) => {
       >
         <button
           type={'button'}
-          //onClick={onUnsubscribe}
+          onClick={onAcceptButtonClick}
           className={
             'flex items-center justify-center ml-auto min-h-[20px] min-w-[70px] rounded-2xl outline-1 mr-4 bg-[#4f378a] hover:bg-[#d0bcff] text-white p-1.5 hover:text-black cursor-pointer'
           }

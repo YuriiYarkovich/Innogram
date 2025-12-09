@@ -165,3 +165,27 @@ export const fetchAllSubscriptionsRequests = async (): Promise<
 
   return await response.json();
 };
+
+export const acceptRequest = async (subscriptionId: string) => {
+  const response: Response = await fetch(
+    `${SERVER.API.ACCEPT_REQUEST}${subscriptionId}`,
+    {
+      method: 'PUT',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) console.error(response.json());
+};
+
+export const rejectRequest = async (subscriptionId: string) => {
+  const response: Response = await fetch(
+    `${SERVER.API.REJECT_REQUEST}${subscriptionId}`,
+    {
+      method: 'PUT',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) console.error(response.json());
+};

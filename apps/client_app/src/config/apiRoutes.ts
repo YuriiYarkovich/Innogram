@@ -39,5 +39,7 @@ export const SERVER = {
     DELETE_SUBSCRIBER: `${env.NEXT_PUBLIC_API_URL}/profiles/deleteSubscriber/`,
     CHANGE_VISIBILITY_OF_PROFILE_STATUS: `${env.NEXT_PUBLIC_API_URL}/profiles/changeVisibilityStatus`,
     GET_ALL_SUBSCRIPTIONS_REQUESTS: `${env.NEXT_PUBLIC_API_URL}/profiles/allSubscriptionsRequests`,
+    ACCEPT_REQUEST: `${env.NEXT_PUBLIC_API_URL}/profiles/acceptRequest/`,
+    REJECT_REQUEST: `${env.NEXT_PUBLIC_API_URL}/profiles/rejectRequest/`,
   },
 };

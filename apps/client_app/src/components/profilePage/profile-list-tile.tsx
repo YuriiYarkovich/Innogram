@@ -38,7 +38,10 @@ const ProfileListTile = ({
   };
 
   const onUnsubscribe = () => {
-    handleProfileUnfollow(subscriber).then(() => setIsSubscribed(false));
+    handleProfileUnfollow(subscriber).then(() => {
+      setIsRequested(false);
+      setIsSubscribed(false);
+    });
   };
 
   return (

@@ -76,4 +76,24 @@ export class ProfileFollowRepository {
       [currentProfileId, FollowAcceptedStatus.REQUESTED],
     );
   }
+
+  async getSubscriptionById(requestId: string) {
+    return await this.profileFollowRepository.findOne({
+      where: { id: requestId },
+    });
+  }
+
+  async acceptRequest(subscriptionId: string) {
+    await this.profileFollowRepository.update(
+      { id: subscriptionId },
+      { status: FollowAcceptedStatus.ACCEPTED },
+    );
+  }
+
+  async rejectRequest(subscriptionId: string) {
+    await this.profileFollowRepository.update(
+      { id: subscriptionId },
+      { status: FollowAcceptedStatus.REJECTED },
+    );
+  }
 }
