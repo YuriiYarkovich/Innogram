@@ -27,12 +27,12 @@ const SidePanel = ({ curProfile }: { curProfile: Profile | null }) => {
       >
         <ul className="space-y-2">
           <li>
-            <a
+            <Link
               href="/feed"
               className="block hover:bg-[#d0bcff] p-2 rounded text-[#21005d]"
             >
               Feed
-            </a>
+            </Link>
           </li>
           <li>
             <Link
@@ -44,19 +44,28 @@ const SidePanel = ({ curProfile }: { curProfile: Profile | null }) => {
           </li>
           <li>
             <button
-              className={`flex hover:bg-[#d0bcff] p-2 rounded w-full text-[#21005d]`}
+              className={`flex hover:bg-[#d0bcff] p-2 rounded w-full text-[#21005d] cursor-pointer`}
               onClick={() => setIsCreatePostModalOpen(true)}
             >
               Create Post
             </button>
           </li>
           <li>
-            <a
+            <Link
               href={`/profile/${curProfile?.username}`}
               className="block hover:bg-[#d0bcff] p-2 rounded text-[#21005d]"
             >
               Profile
-            </a>
+            </Link>
+          </li>
+          <li>
+            <button
+              className={
+                'flex hover:bg-[#d0bcff] p-2 rounded w-full text-[#21005d] cursor-pointer'
+              }
+            >
+              Notifications
+            </button>
           </li>
         </ul>
       </aside>

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Profile } from '@/types';
 import Image from 'next/image';
 import {
   handleOnProfileFollowing,
   handleProfileUnfollow,
 } from '@/services/profile.service';
+import { FollowAcceptedStatus } from '@innogram/core-microservice/dist/common/enums/profile-follow.enum';
 
 type SubscriberTile = {
   subscriber: Profile;
@@ -20,6 +21,16 @@ const ProfileListTile = ({
   currentProfileId,
 }: SubscriberTile) => {
   const [isSubscribed, setIsSubscribed] = useState(subscriber.isSubscribed);
+  const [isRequested, setIsRequested] = useState(false);
+
+  useEffect(() => {
+    if (
+      subscriber.subscribedStatus &&
+      subscriber.subscribedStatus === FollowAcceptedStatus.REQUESTED
+    ) {
+      setIsRequested(true);
+    }
+  }, []);
 
   const onSubscribe = () => {
     handleOnProfileFollowing(subscriber).then(() => setIsSubscribed(true));
@@ -68,7 +79,10 @@ const ProfileListTile = ({
           </button>
         )}
         {subscriber.id !== currentProfileId &&
-          (!isSubscribed ? (
+        (subscriber.isPublic ||
+          (!subscriber.isPublic &&
+            subscriber.subscribedStatus === FollowAcceptedStatus.ACCEPTED)) ? (
+          !isSubscribed ? (
             <button
               type={'button'}
               onClick={onSubscribe}
@@ -88,7 +102,22 @@ const ProfileListTile = ({
             >
               Unsubscribe
             </button>
-          ))}
+          )
+        ) : (
+          !subscriber.isPublic &&
+          (subscriber.subscribedStatus === FollowAcceptedStatus.REQUESTED ||
+            subscriber.subscribedStatus === FollowAcceptedStatus.REJECTED) && (
+            <button
+              type={'button'}
+              onClick={onUnsubscribe}
+              className={
+                'flex items-center justify-center ml-auto min-h-[20px] min-w-[70px] rounded-2xl outline-1 mr-4 bg-[#4f378a] hover:bg-[#d0bcff] text-white p-1.5 hover:text-black'
+              }
+            >
+              Cancel req
+            </button>
+          )
+        )}
       </div>
     </div>
   );

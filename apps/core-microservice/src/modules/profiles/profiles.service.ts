@@ -129,16 +129,16 @@ export class ProfilesService {
     }
   }
 
-  async followProfile(
-    currentProfileId: string,
-    followingProfileId: string,
-  ): Promise<{ message: string }> {
-    await this.profileFollowRepository.createSubscription(
+  async followProfile(currentProfileId: string, followingProfileId: string) {
+    const profile = await this.getProfileInfo(followingProfileId);
+    if (!profile) throw new BadRequestException('This profile does not exist');
+    const follow = await this.profileFollowRepository.createSubscription(
       currentProfileId,
       followingProfileId,
+      profile?.isPublic,
     );
 
-    return { message: 'Success' };
+    return follow;
   }
 
   async unfollowProfile(

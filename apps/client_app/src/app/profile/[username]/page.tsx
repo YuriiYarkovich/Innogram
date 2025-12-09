@@ -6,8 +6,7 @@ import React, { useEffect, useState } from 'react';
 import PostPreviewImage from '@/components/post/post-preview-image';
 import EditProfileModal from '@/components/profilePage/edit-profile.modal';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { useRouter } from 'next/navigation';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import PostViewModal from '@/components/post/post-view.modal';
 import { handleLogout } from '@/services/auth.service';
 import {
@@ -22,6 +21,7 @@ import MessageWritingModal from '@/components/profilePage/message-writing.modal'
 import SubscribersListModal from '@/components/profilePage/subscribers-list-modal';
 import SubscriptionsListModal from '@/components/profilePage/subscriptions-list-modal';
 import Line from '@/components/line';
+import { FollowAcceptedStatus } from '@innogram/core-microservice/dist/common/enums/profile-follow.enum';
 
 const Page = () => {
   const router: AppRouterInstance = useRouter();
@@ -65,7 +65,7 @@ const Page = () => {
   };
 
   useEffect(() => {
-    fetchProfile().then((data: Profile) => setCurProfile(data));
+    fetchProfile().then(setCurProfile);
   }, []);
 
   const openPostPreviewModal = (postId: string) => {
@@ -109,6 +109,13 @@ const Page = () => {
         setIsFollowed(profileData.isSubscribed);
         setProfile(profileData);
         updatePostsArray(profileData?.id);
+        if (
+          profileData.subscribedStatus &&
+          (profileData.subscribedStatus === FollowAcceptedStatus.REQUESTED ||
+            profileData.subscribedStatus === FollowAcceptedStatus.REJECTED)
+        ) {
+          setIsRequested(true);
+        }
       })
       .finally(() => {
         setProfileLoading(false);
@@ -288,9 +295,11 @@ const Page = () => {
                       <>
                         <button
                           className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                          /* onClick={isRequested
+                          onClick={
+                            isRequested
                               ? () => handleUnfollow()
-                              : () => handleFollowing()}*/
+                              : () => handleFollowing()
+                          }
                         >
                           {isRequested
                             ? 'Cancel request'

@@ -71,9 +71,7 @@ export class ProfilesController {
   @ApiResponse({ status: 200, type: String })
   @Post('/follow/:followingProfileId')
   @UseGuards(AuthGuard)
-  async followProfile(
-    @Param('followingProfileId') followingProfileId: string,
-  ): Promise<{ message: string }> {
+  async followProfile(@Param('followingProfileId') followingProfileId: string) {
     const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.profilesService.followProfile(
       currentProfileId,
@@ -136,15 +134,5 @@ export class ProfilesController {
   async changeVisibilityStatus() {
     const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.profilesService.changeVisibilityStatus(currentProfileId);
-  }
-
-  @ApiOperation({
-    summary: 'Creates request of subscription on private profile',
-  })
-  @ApiResponse({ status: 200 })
-  @Put('/createSubscriptionRequest/:profileId')
-  @UseGuards(AuthGuard)
-  async createSubscriptionRequest(@Param('profileId') profileId: string) {
-    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
   }
 }

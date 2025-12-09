@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProfileFollow } from '../../common/entities/account/profile-follow.entity';
 import { Repository } from 'typeorm';
+import { FollowAcceptedStatus } from '../../common/enums/profile-follow.enum';
 
 @Injectable()
 export class ProfileFollowRepository {
@@ -25,11 +26,24 @@ export class ProfileFollowRepository {
   async createSubscription(
     currentProfileId: string,
     followingProfileId: string,
+    isProfilePublic: boolean,
   ) {
-    return await this.profileFollowRepository.save({
-      follower_profile_id: currentProfileId,
-      followed_profile_id: followingProfileId,
-    });
+    let profileFollower: ProfileFollow;
+    if (isProfilePublic) {
+      profileFollower = await this.profileFollowRepository.save({
+        follower_profile_id: currentProfileId,
+        followed_profile_id: followingProfileId,
+        status: FollowAcceptedStatus.ACCEPTED,
+      });
+    } else {
+      profileFollower = await this.profileFollowRepository.save({
+        follower_profile_id: currentProfileId,
+        followed_profile_id: followingProfileId,
+        status: FollowAcceptedStatus.REQUESTED,
+      });
+    }
+
+    return profileFollower;
   }
 
   async deleteSubscription(

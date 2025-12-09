@@ -6,6 +6,7 @@ import { FindingProfileInfo } from '../../../common/types/profile.type';
 import { EditProfileDto } from '../dto/edit-profile.dto';
 import { PostStatus } from '../../../common/enums/post.enum';
 import { ProfileFollow } from '../../../common/entities/account/profile-follow.entity';
+import { FollowAcceptedStatus } from '../../../common/enums/profile-follow.enum';
 
 @Injectable()
 export class ProfilesRepository {
@@ -44,12 +45,18 @@ export class ProfilesRepository {
                 WHERE followed_profile_id = p.id)                                        AS "subscribersAmount",
                (SELECT EXISTS (SELECT 1
                                FROM main.profiles_follows
-                               WHERE follower_profile_id = $1
-                                 AND followed_profile_id = $2))                          AS "isSubscribed"
+                               WHERE follower_profile_id = $2
+                                 AND followed_profile_id = p.id
+                                 AND status = $4))                                       AS "isSubscribed"
         FROM main.profiles AS p
         WHERE p.id = $1
       `,
-      [profileId, currentProfileId, PostStatus.ACTIVE],
+      [
+        profileId,
+        currentProfileId,
+        PostStatus.ACTIVE,
+        FollowAcceptedStatus.ACCEPTED,
+      ],
     );
 
     return result[0];
@@ -61,23 +68,34 @@ export class ProfilesRepository {
   ): Promise<FindingProfileInfo | null> {
     const result: FindingProfileInfo[] = await this.profileRepository.query(
       `
-          SELECT p.id,
-                 p.username,
-                 p.birthday,
-                 p.bio,
-                 p.avatar_filename                                                             AS "avatarFilename",
-                 p.is_public                                                                   AS "isPublic",
-                 (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id AND status = $3)     AS "postsAmount",
-                 (SELECT COUNT(*) FROM main.profiles_follows WHERE follower_profile_id = p.id) AS "subscriptionsAmount",
-                 (SELECT COUNT(*) FROM main.profiles_follows WHERE followed_profile_id = p.id) AS "subscribersAmount",
-                 (SELECT EXISTS (SELECT 1
-                                 FROM main.profiles_follows
-                                 WHERE follower_profile_id = $2
-                                   AND followed_profile_id = p.id))                            AS "isSubscribed"
-          FROM main.profiles AS p
-          WHERE p.username = $1
-        `,
-      [username, currentProfileId, PostStatus.ACTIVE],
+        SELECT p.id,
+               p.username,
+               p.birthday,
+               p.bio,
+               p.avatar_filename                                                             AS "avatarFilename",
+               p.is_public                                                                   AS "isPublic",
+               (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id AND status = $3)     AS "postsAmount",
+               (SELECT COUNT(*) FROM main.profiles_follows WHERE follower_profile_id = p.id) AS "subscriptionsAmount",
+               (SELECT COUNT(*) FROM main.profiles_follows WHERE followed_profile_id = p.id) AS "subscribersAmount",
+               (SELECT EXISTS (SELECT 1
+                               FROM main.profiles_follows
+                               WHERE follower_profile_id = $2
+                                 AND followed_profile_id = p.id
+                                 AND status = $4))                                           AS "isSubscribed",
+               (SELECT status
+                FROM main.profiles_follows
+                WHERE follower_profile_id = $2
+                  AND followed_profile_id = p.id
+                LIMIT 1)                                                                     AS "subscribedStatus"
+        FROM main.profiles AS p
+        WHERE p.username = $1
+      `,
+      [
+        username,
+        currentProfileId,
+        PostStatus.ACTIVE,
+        FollowAcceptedStatus.ACCEPTED,
+      ],
     );
 
     return result[0];
@@ -132,12 +150,23 @@ export class ProfilesRepository {
                (SELECT EXISTS (SELECT 1
                                FROM main.profiles_follows
                                WHERE follower_profile_id = $2
-                                 AND followed_profile_id = p.id))                            AS "isSubscribed"
+                                 AND followed_profile_id = p.id
+                                 AND status = $4))                                           AS "isSubscribed",
+               (SELECT status
+                FROM main.profiles_follows
+                WHERE follower_profile_id = $2
+                  AND followed_profile_id = p.id
+                LIMIT 1)                                                                     AS "subscribedStatus"
         FROM main.profiles_follows AS prf
                INNER JOIN main.profiles p on prf.followed_profile_id = p.id
         WHERE prf.follower_profile_id = $1
       `,
-      [profileId, currentProfileId, PostStatus.ACTIVE],
+      [
+        profileId,
+        currentProfileId,
+        PostStatus.ACTIVE,
+        FollowAcceptedStatus.ACCEPTED,
+      ],
     );
   }
 
@@ -159,13 +188,24 @@ export class ProfilesRepository {
                (SELECT EXISTS (SELECT 1
                                FROM main.profiles_follows
                                WHERE follower_profile_id = $2
-                                 AND followed_profile_id = p.id))                            AS "isSubscribed"
+                                 AND followed_profile_id = p.id
+                                 AND status = $4))                                           AS "isSubscribed",
+               (SELECT status
+                FROM main.profiles_follows
+                WHERE follower_profile_id = $2
+                  AND followed_profile_id = p.id
+                LIMIT 1)                                                                     AS "subscribedStatus"
         FROM main.profiles_follows AS prf
                INNER JOIN main.profiles p on prf.followed_profile_id = p.id
         WHERE prf.follower_profile_id = $2
           AND p.id != ALL ($1)
       `,
-      [excludedProfilesIds, currentProfileId, PostStatus.ACTIVE],
+      [
+        excludedProfilesIds,
+        currentProfileId,
+        PostStatus.ACTIVE,
+        FollowAcceptedStatus.ACCEPTED,
+      ],
     );
   }
 
@@ -184,12 +224,23 @@ export class ProfilesRepository {
                (SELECT EXISTS (SELECT 1
                                FROM main.profiles_follows
                                WHERE follower_profile_id = $2
-                                 AND followed_profile_id = p.id))                            AS "isSubscribed"
+                                 AND followed_profile_id = p.id
+                                 AND status = $4))                                           AS "subscribeStatus",
+               (SELECT status
+                FROM main.profiles_follows
+                WHERE follower_profile_id = $2
+                  AND followed_profile_id = p.id
+                LIMIT 1)                                                                     AS "subscribedStatus"
         FROM main.profiles_follows AS prf
                INNER JOIN main.profiles p on prf.follower_profile_id = p.id
         WHERE prf.followed_profile_id = $1
       `,
-      [profileId, currentProfileId, PostStatus.ACTIVE],
+      [
+        profileId,
+        currentProfileId,
+        PostStatus.ACTIVE,
+        FollowAcceptedStatus.ACCEPTED,
+      ],
     );
   }
 

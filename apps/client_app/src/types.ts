@@ -6,6 +6,7 @@ import {
   ChatParticipantRole,
   ChatStatus,
 } from '@innogram/core-microservice/dist/common/enums/chat.enum';
+import { FollowAcceptedStatus } from '@innogram/core-microservice/dist/common/enums/profile-follow.enum';
 
 export type Post = {
   postId: string;
@@ -56,6 +57,7 @@ export type Profile = {
   subscriptionsAmount: number;
   isCurrent: boolean;
   isSubscribed: boolean;
+  subscribedStatus?: FollowAcceptedStatus | null;
 };
 
 export type PostComment = {

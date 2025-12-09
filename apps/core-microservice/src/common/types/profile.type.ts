@@ -1,4 +1,5 @@
 import { ChatParticipantRole } from '../enums/chat.enum';
+import { FollowAcceptedStatus } from '../enums/profile-follow.enum';
 
 export interface ReturningProfileInfo {
   id: string;
@@ -12,6 +13,7 @@ export interface ReturningProfileInfo {
   subscriptionsAmount: number;
   isCurrent: boolean;
   isSubscribed: boolean;
+  subscribedStatus?: FollowAcceptedStatus | null;
 }
 
 export interface FindingProfileInfo {
@@ -25,6 +27,7 @@ export interface FindingProfileInfo {
   subscribersAmount: number;
   subscriptionsAmount: number;
   isSubscribed: boolean;
+  subscribedStatus?: FollowAcceptedStatus | null;
 }
 
 export interface ChatParticipantProfile {

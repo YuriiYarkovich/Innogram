@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Profile } from './profile.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { FollowAcceptedStatus } from '../../enums/profile-follow.enum';
 
 @Entity('profiles_follows', { schema: 'main' })
 @Unique(['follower_profile_id', 'followed_profile_id'])
@@ -39,8 +40,15 @@ export class ProfileFollow {
     example: 'true',
     description: 'Is following accepted',
   })
-  @Column({ type: 'boolean', nullable: true })
-  accepted: boolean;
+  @Column({
+    type: 'enum',
+    enum: FollowAcceptedStatus,
+    default: FollowAcceptedStatus.ACCEPTED,
+  })
+  status:
+    | FollowAcceptedStatus.ACCEPTED
+    | FollowAcceptedStatus.REQUESTED
+    | FollowAcceptedStatus.REJECTED;
 
   @CreateDateColumn()
   created_at: Date;
