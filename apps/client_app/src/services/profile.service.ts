@@ -163,7 +163,10 @@ export const fetchAllSubscriptionsRequests = async (): Promise<
 
   if (!response.ok) console.error(response.json());
 
-  return await response.json();
+  const receivedRequests: SubscriptionRequest[] = await response.json();
+  console.log(`Received requests: ${JSON.stringify(receivedRequests)}`);
+
+  return receivedRequests;
 };
 
 export const acceptRequest = async (subscriptionId: string) => {

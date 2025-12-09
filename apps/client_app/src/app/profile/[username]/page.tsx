@@ -127,14 +127,26 @@ const Page = () => {
   const handleFollowing = async () => {
     await handleOnProfileFollowing(profile);
     setFollowersAmount((prev: number): number => prev + 1);
-    setIsFollowed(true);
+    if (!profile.isPublic && !isRequested) {
+      setIsRequested(true);
+    } else {
+      setIsFollowed(true);
+    }
   };
 
   const handleUnfollow = async () => {
     await handleProfileUnfollow(profile);
 
     setFollowersAmount((prev: number): number => prev - 1);
-    setIsFollowed(false);
+    if (!profile.isPublic && isRequested) {
+      setIsRequested(false);
+    } else if (
+      (!profile.isPublic && isFollowed) ||
+      (profile.isPublic && isFollowed)
+    ) {
+      setIsFollowed(false);
+    }
+    location.reload();
   };
 
   return (
@@ -253,6 +265,7 @@ const Page = () => {
                 className={`flex flex-row w-full justify-center gap-20 mt-10 mb-10`}
               >
                 {profile.isCurrent ? (
+                  // Текущий пользователь - кнопки редактирования
                   <>
                     <button
                       className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
@@ -266,49 +279,46 @@ const Page = () => {
                       View archive
                     </button>
                   </>
+                ) : profile.isPublic ? (
+                  // Публичный профиль - follow/unfollow и отправка сообщения
+                  <>
+                    <button
+                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                      onClick={isFollowed ? handleUnfollow : handleFollowing}
+                    >
+                      {isFollowed ? 'Unfollow' : 'Follow'}
+                    </button>
+                    <button
+                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                      onClick={() => setIsWritingMessageModalOpen(true)}
+                    >
+                      Send message
+                    </button>
+                  </>
+                ) : profile.isSubscribed ? (
+                  // Приватный профиль, но мы подписаны - unfollow и отправка сообщения
+                  <>
+                    <button
+                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                      onClick={handleUnfollow}
+                    >
+                      Unfollow
+                    </button>
+                    <button
+                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                      onClick={() => setIsWritingMessageModalOpen(true)}
+                    >
+                      Send message
+                    </button>
+                  </>
                 ) : (
-                  profile.isPublic ||
-                  (!profile.isPublic && profile.isSubscribed ? (
-                    <>
-                      <button
-                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                        onClick={
-                          isFollowed
-                            ? () => handleUnfollow()
-                            : () => handleFollowing()
-                        }
-                      >
-                        {isFollowed ? 'Unfollow' : 'Follow'}
-                      </button>
-                      <button
-                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                        onClick={() => setIsWritingMessageModalOpen(true)}
-                      >
-                        Send message
-                      </button>
-                      <div className="flex items-center mt-3 w-full">
-                        <div className={'flex-grow h-[2px] bg-[#624b98]'}></div>
-                      </div>
-                    </>
-                  ) : (
-                    !profile.isPublic &&
-                    !profile.isSubscribed && (
-                      <>
-                        <button
-                          className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                          onClick={
-                            isRequested
-                              ? () => handleUnfollow()
-                              : () => handleFollowing()
-                          }
-                        >
-                          {isRequested
-                            ? 'Cancel request'
-                            : 'Request subscription'}
-                        </button>
-                      </>
-                    )
-                  ))
+                  // Приватный профиль, не подписаны - запрос подписки или отмена запроса
+                  <button
+                    className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                    onClick={isRequested ? handleUnfollow : handleFollowing}
+                  >
+                    {isRequested ? 'Cancel request' : 'Request subscription'}
+                  </button>
                 )}
               </div>
               <Line color={'#79747e'} />

@@ -69,7 +69,7 @@ export class ProfileFollowRepository {
                p.avatar_filename AS "followerProfileAvatarFilename",
                pf.status         AS "subscriptionStatus"
         FROM main.profiles_follows AS pf
-               LEFT JOIN main.profiles AS p ON pf.followed_profile_id = p.id
+               LEFT JOIN main.profiles AS p ON pf.follower_profile_id = p.id
         WHERE pf.followed_profile_id = $1
           AND pf.status = $2
       `,
