@@ -135,4 +135,15 @@ export class ProfilesController {
     const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.profilesService.changeVisibilityStatus(currentProfileId);
   }
+
+  @ApiOperation({ summary: 'Returns all requests for subscriptions' })
+  @ApiResponse({ status: 200, type: Profile })
+  @Get('/allSubscriptionsRequests')
+  @UseGuards(AuthGuard)
+  async getAllSubscriptionsRequests() {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.profilesService.getAllSubscriptionsRequests(
+      currentProfileId,
+    );
+  }
 }

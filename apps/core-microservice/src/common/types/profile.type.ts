@@ -30,6 +30,22 @@ export interface FindingProfileInfo {
   subscribedStatus?: FollowAcceptedStatus | null;
 }
 
+export interface ReturningSubscriptionRequest {
+  id: string;
+  status: FollowAcceptedStatus;
+  followerProfileId: string;
+  followerProfileUsername: string;
+  followerProfileAvatarUrl?: string;
+}
+
+export interface FindingSubscriptionRequest {
+  id: string;
+  status: FollowAcceptedStatus;
+  followerProfileId: string;
+  followerProfileUsername: string;
+  followerProfileAvatarFilename?: string;
+}
+
 export interface ChatParticipantProfile {
   id: string;
   username: string;

@@ -4,6 +4,7 @@ import { MinioService } from '../minio/minio.service';
 import {
   FindingProfileInfo,
   ReturningProfileInfo,
+  ReturningSubscriptionRequest,
 } from '../../common/types/profile.type';
 import { EditProfileDto } from './dto/edit-profile.dto';
 import { File as MulterFile } from 'multer';
@@ -177,7 +178,7 @@ export class ProfilesService {
   private async createReturningProfileFromFound(
     foundProfile: FindingProfileInfo,
     currentProfileId: string,
-  ) {
+  ): Promise<ReturningProfileInfo> {
     let avatarUrl: string | undefined = undefined;
     if (foundProfile.avatarFilename) {
       avatarUrl = await this.minioService.getPublicUrl(
@@ -258,5 +259,33 @@ export class ProfilesService {
     );
 
     return returningProfiledata;
+  }
+
+  async getAllSubscriptionsRequests(currentProfileId: string) {
+    const profile = await this.getProfileInfo(currentProfileId);
+    if (profile && profile?.isPublic)
+      throw new BadRequestException(
+        'Public profile cannot have follwing requests',
+      );
+
+    const foundRequests =
+      await this.profileFollowRepository.getAllRequests(currentProfileId);
+
+    const returningRequests: ReturningSubscriptionRequest[] = [];
+
+    for (const request of foundRequests) {
+      const avatarUrl = await this.minioService.getPublicUrl(
+        request.followerProfileAvatarFilename,
+      );
+
+      const returningRequest: ReturningSubscriptionRequest = {
+        ...request,
+        followerProfileAvatarUrl: avatarUrl,
+      };
+
+      returningRequests.push(returningRequest);
+    }
+
+    return returningRequests;
   }
 }

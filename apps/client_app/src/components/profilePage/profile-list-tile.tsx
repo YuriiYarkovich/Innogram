@@ -25,8 +25,9 @@ const ProfileListTile = ({
 
   useEffect(() => {
     if (
-      subscriber.subscribedStatus &&
-      subscriber.subscribedStatus === FollowAcceptedStatus.REQUESTED
+      (subscriber.subscribedStatus &&
+        subscriber.subscribedStatus === FollowAcceptedStatus.REQUESTED) ||
+      subscriber.subscribedStatus === FollowAcceptedStatus.REJECTED
     ) {
       setIsRequested(true);
     }
@@ -105,8 +106,7 @@ const ProfileListTile = ({
           )
         ) : (
           !subscriber.isPublic &&
-          (subscriber.subscribedStatus === FollowAcceptedStatus.REQUESTED ||
-            subscriber.subscribedStatus === FollowAcceptedStatus.REJECTED) && (
+          isRequested && (
             <button
               type={'button'}
               onClick={onUnsubscribe}

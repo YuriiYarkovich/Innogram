@@ -2,9 +2,14 @@ import React, { useEffect, useState } from 'react';
 import PostCreationModal from '@/components/feedPage/postCreationModal';
 import { Profile } from '@/types';
 import Link from 'next/link';
+import SubscriptionsRequestsModal from '@/components/profilePage/subscriptions-requests-modal';
 
 const SidePanel = ({ curProfile }: { curProfile: Profile | null }) => {
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
+  const [
+    isSubscriptionsRequestsModalOpen,
+    setIsSubscriptionsRequestsModalOpen,
+  ] = useState(false);
 
   useEffect(() => {
     if (isCreatePostModalOpen) {
@@ -16,6 +21,11 @@ const SidePanel = ({ curProfile }: { curProfile: Profile | null }) => {
 
   return (
     <div>
+      <SubscriptionsRequestsModal
+        isOpen={isSubscriptionsRequestsModalOpen}
+        onClose={() => setIsSubscriptionsRequestsModalOpen(false)}
+        currentProfile={curProfile}
+      />
       <PostCreationModal
         isOpen={isCreatePostModalOpen}
         username={curProfile?.username}
@@ -60,6 +70,7 @@ const SidePanel = ({ curProfile }: { curProfile: Profile | null }) => {
           </li>
           <li>
             <button
+              onClick={() => setIsSubscriptionsRequestsModalOpen(true)}
               className={
                 'flex hover:bg-[#d0bcff] p-2 rounded w-full text-[#21005d] cursor-pointer'
               }

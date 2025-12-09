@@ -22,6 +22,7 @@ import SubscribersListModal from '@/components/profilePage/subscribers-list-moda
 import SubscriptionsListModal from '@/components/profilePage/subscriptions-list-modal';
 import Line from '@/components/line';
 import { FollowAcceptedStatus } from '@innogram/core-microservice/dist/common/enums/profile-follow.enum';
+import SubscriptionsRequestsModal from '@/components/profilePage/subscriptions-requests-modal';
 
 const Page = () => {
   const router: AppRouterInstance = useRouter();

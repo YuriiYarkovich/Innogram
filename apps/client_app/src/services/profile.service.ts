@@ -1,6 +1,6 @@
 import { SERVER } from '@/config/apiRoutes';
 import returnErrorMessage from '@/utils/showAuthError';
-import { Profile } from '@/types';
+import { Profile, SubscriptionRequest } from '@/types';
 
 export const handleOnProfileFollowing = async (profile: Profile) => {
   const response: Response = await fetch(`${SERVER.API.FOLLOW}${profile.id}`, {
@@ -108,7 +108,9 @@ export const fetchAllSubscriptions = async (
   return receivedSubscriptions;
 };
 
-export const fetchAllSubscribers = async (profileId: string) => {
+export const fetchAllSubscribers = async (
+  profileId: string,
+): Promise<Profile[]> => {
   const response: Response = await fetch(
     `${SERVER.API.GET_ALL_SUBSCRIBERS}${profileId}`,
     {
@@ -134,11 +136,27 @@ export const deleteSubscriber = async (deletingSubscriberProfileId: string) => {
   if (!response.ok) console.error(response.json());
 };
 
-export const changeProfileVisibilityStatus = async () => {
+export const changeProfileVisibilityStatus = async (): Promise<Profile> => {
   const response: Response = await fetch(
     `${SERVER.API.CHANGE_VISIBILITY_OF_PROFILE_STATUS}`,
     {
       method: 'PUT',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) console.error(response.json());
+
+  return await response.json();
+};
+
+export const fetchAllSubscriptionsRequests = async (): Promise<
+  SubscriptionRequest[]
+> => {
+  const response: Response = await fetch(
+    `${SERVER.API.GET_ALL_SUBSCRIPTIONS_REQUESTS}`,
+    {
+      method: 'GET',
       credentials: 'include',
     },
   );

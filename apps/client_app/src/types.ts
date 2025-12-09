@@ -60,6 +60,14 @@ export type Profile = {
   subscribedStatus?: FollowAcceptedStatus | null;
 };
 
+export type SubscriptionRequest = {
+  id: string;
+  status: FollowAcceptedStatus;
+  followerProfileId: string;
+  followerProfileUsername: string;
+  followerProfileAvatarUrl?: string;
+};
+
 export type PostComment = {
   commentId: string;
   authorUsername: string;
