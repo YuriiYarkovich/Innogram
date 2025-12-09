@@ -21,6 +21,7 @@ import { Post, Profile } from '@/types';
 import MessageWritingModal from '@/components/profilePage/message-writing.modal';
 import SubscribersListModal from '@/components/profilePage/subscribers-list-modal';
 import SubscriptionsListModal from '@/components/profilePage/subscriptions-list-modal';
+import Line from '@/components/line';
 
 const Page = () => {
   const router: AppRouterInstance = useRouter();
@@ -50,6 +51,7 @@ const Page = () => {
   const [postOfPostModal, setPostOfPostModal] = useState(posts[0]);
   const [isPostPreviewModalOpen, setIsPostPreviewModalOpen] = useState(false);
   const [isFollowed, setIsFollowed] = useState(profile.isSubscribed);
+  const [isRequested, setIsRequested] = useState(false);
   const [followersAmount, setFollowersAmount] = useState<number>(
     Number(profile.subscribersAmount),
   );
@@ -257,47 +259,97 @@ const Page = () => {
                     </button>
                   </>
                 ) : (
-                  <>
-                    <button
-                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                      onClick={
-                        isFollowed
-                          ? () => handleUnfollow()
-                          : () => handleFollowing()
-                      }
-                    >
-                      {isFollowed ? 'Unfollow' : 'Follow'}
-                    </button>
-                    <button
-                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                      onClick={() => setIsWritingMessageModalOpen(true)}
-                    >
-                      Send message
-                    </button>
-                  </>
+                  profile.isPublic ||
+                  (!profile.isPublic && profile.isSubscribed ? (
+                    <>
+                      <button
+                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                        onClick={
+                          isFollowed
+                            ? () => handleUnfollow()
+                            : () => handleFollowing()
+                        }
+                      >
+                        {isFollowed ? 'Unfollow' : 'Follow'}
+                      </button>
+                      <button
+                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                        onClick={() => setIsWritingMessageModalOpen(true)}
+                      >
+                        Send message
+                      </button>
+                      <div className="flex items-center mt-3 w-full">
+                        <div className={'flex-grow h-[2px] bg-[#624b98]'}></div>
+                      </div>
+                    </>
+                  ) : (
+                    !profile.isPublic &&
+                    !profile.isSubscribed && (
+                      <>
+                        <button
+                          className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                          /* onClick={isRequested
+                              ? () => handleUnfollow()
+                              : () => handleFollowing()}*/
+                        >
+                          {isRequested
+                            ? 'Cancel request'
+                            : 'Request subscription'}
+                        </button>
+                      </>
+                    )
+                  ))
                 )}
               </div>
+              <Line color={'#79747e'} />
+              {profile.isPublic ||
+              profile.isCurrent ||
+              (!profile.isPublic && profile.isSubscribed) ? (
+                <div className={'grid grid-cols-5 md:w-[900px] mt-7 gap-1'}>
+                  {postsLoading ? (
+                    <p>loading</p>
+                  ) : posts.length === 0 ? (
+                    <p>There are no posts</p>
+                  ) : (
+                    posts.map((post) => (
+                      <PostPreviewImage
+                        imageUrl={post.assets[0].url}
+                        onClick={() => openPostPreviewModal(post.postId)}
+                        key={post.postId}
+                      />
+                    ))
+                  )}
+                </div>
+              ) : (
+                !profile.isPublic &&
+                !profile.isSubscribed && (
+                  <div
+                    className={
+                      'flex flex-row items-center justify-center my-20'
+                    }
+                  >
+                    <Image
+                      src={'/images/icons/locked.svg'}
+                      alt={'Lock icon'}
+                      height={130}
+                      width={130}
+                      draggable={false}
+                    />
+                    <div
+                      className={'flex flex-col items-center justify-center'}
+                    >
+                      <span className={'text-[30px] font-bold'}>
+                        This account is private
+                      </span>
+                      <span className={'text-[20px] text-[#79747e]'}>
+                        Follow this account to see posts
+                      </span>
+                    </div>
+                  </div>
+                )
+              )}
             </div>
           )}
-
-          <div className="flex items-center mt-3 w-full">
-            <div className={'flex-grow h-[2px] bg-[#624b98]'}></div>
-          </div>
-          <div className={'grid grid-cols-5 md:w-[900px] mt-7 gap-1'}>
-            {postsLoading ? (
-              <p>loading</p>
-            ) : posts.length === 0 ? (
-              <p>There are no posts</p>
-            ) : (
-              posts.map((post) => (
-                <PostPreviewImage
-                  imageUrl={post.assets[0].url}
-                  onClick={() => openPostPreviewModal(post.postId)}
-                  key={post.postId}
-                />
-              ))
-            )}
-          </div>
         </main>
       </div>
     </div>

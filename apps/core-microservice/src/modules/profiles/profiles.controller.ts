@@ -130,11 +130,21 @@ export class ProfilesController {
   }
 
   @ApiOperation({ summary: 'Changes visibility status of the profile' })
-  @ApiResponse({ status: 200 })
+  @ApiResponse({ status: 200, type: Profile })
   @Put('/changeVisibilityStatus')
   @UseGuards(AuthGuard)
   async changeVisibilityStatus() {
     const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.profilesService.changeVisibilityStatus(currentProfileId);
+  }
+
+  @ApiOperation({
+    summary: 'Creates request of subscription on private profile',
+  })
+  @ApiResponse({ status: 200 })
+  @Put('/createSubscriptionRequest/:profileId')
+  @UseGuards(AuthGuard)
+  async createSubscriptionRequest(@Param('profileId') profileId: string) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
   }
 }
