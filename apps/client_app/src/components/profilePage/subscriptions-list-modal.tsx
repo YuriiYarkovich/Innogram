@@ -6,42 +6,31 @@ import ProfileListTile from '@/components/profilePage/profile-list-tile';
 import {
   deleteSubscriber,
   fetchAllSubscribers,
+  fetchAllSubscriptions,
 } from '@/services/profile.service';
 
-type SubscribersListModalProps = {
+type SubscriptionsListModalProps = {
   isOpen: boolean;
   onClose: () => void;
   currentProfile?: Profile | null;
   profile?: Profile | null;
 };
 
-const SubscribersListModal = ({
+const SubscriptionsListModal = ({
   isOpen,
   onClose,
   currentProfile,
   profile,
-}: SubscribersListModalProps) => {
-  const [subscribers, setSubscribers] = useState<Profile[] | null>(null);
-  const [subscribersLoading, setSubscribersLoading] = useState(false);
-
-  const onDeleteSubscriber = (deletingProfileId: string) => {
-    deleteSubscriber(deletingProfileId).then(() =>
-      setSubscribers((prevSubscribers) => {
-        if (!prevSubscribers) return prevSubscribers;
-
-        return prevSubscribers.filter((subscriber) => {
-          if (subscriber.id !== deletingProfileId) return subscriber;
-        });
-      }),
-    );
-  };
+}: SubscriptionsListModalProps) => {
+  const [subscriptions, setSubscriptions] = useState<Profile[] | null>(null);
+  const [subscriptionsLoading, setSubscriptionsLoading] = useState(false);
 
   useEffect(() => {
-    setSubscribersLoading(true);
+    setSubscriptionsLoading(true);
     if (profile && currentProfile && isOpen) {
-      fetchAllSubscribers(profile?.id)
-        .then(setSubscribers)
-        .finally(() => setSubscribersLoading(false));
+      fetchAllSubscriptions(profile.id)
+        .then(setSubscriptions)
+        .finally(() => setSubscriptionsLoading(false));
     }
   }, [currentProfile, isOpen, profile]);
 
@@ -71,7 +60,7 @@ const SubscribersListModal = ({
           <div
             className={'flex flex-row w-full items-center justify-center gap-2'}
           >
-            <span className={'text-[20px]'}>Subscribers of</span>
+            <span className={'text-[20px]'}>Subscriptions of</span>
             <span className={'text-[20px] font-bold'}>{profile?.username}</span>
           </div>
         </div>
@@ -81,14 +70,13 @@ const SubscribersListModal = ({
             'flex flex-col outline-1 w-full min-h-[200px] max-h-[500px] overflow-y-auto pl-1 pr-1 pt-0.5'
           }
         >
-          {subscribersLoading ? (
+          {subscriptionsLoading ? (
             <p>Loading...</p>
           ) : (
-            subscribers?.map((subscriber) => (
+            subscriptions?.map((subscriber) => (
               <ProfileListTile
                 key={subscriber.id}
                 subscriber={subscriber}
-                onDeleteSubscriber={() => onDeleteSubscriber(subscriber.id)}
                 isCurrentProfile={profile?.id === currentProfile?.id}
                 currentProfileId={currentProfile?.id}
               />
@@ -100,4 +88,4 @@ const SubscribersListModal = ({
   );
 };
 
-export default SubscribersListModal;
+export default SubscriptionsListModal;

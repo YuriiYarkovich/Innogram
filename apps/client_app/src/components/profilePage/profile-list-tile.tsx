@@ -8,12 +8,12 @@ import {
 
 type SubscriberTile = {
   subscriber: Profile;
-  onDeleteSubscriber: (subscriberId: string) => void;
+  onDeleteSubscriber?: (subscriberId: string) => void;
   isCurrentProfile: boolean;
   currentProfileId?: string;
 };
 
-const SubscriberTile = ({
+const ProfileListTile = ({
   subscriber,
   onDeleteSubscriber,
   isCurrentProfile,
@@ -54,7 +54,7 @@ const SubscriberTile = ({
         className={'flex flex-row gap-0.5 items-center justify-center ml-auto'}
       >
         {' '}
-        {isCurrentProfile && (
+        {isCurrentProfile && onDeleteSubscriber && (
           <button
             type={'button'}
             onClick={() => {
@@ -94,4 +94,4 @@ const SubscriberTile = ({
   );
 };
 
-export default SubscriberTile;
+export default ProfileListTile;

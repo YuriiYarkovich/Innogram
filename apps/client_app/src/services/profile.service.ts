@@ -92,10 +92,10 @@ export const fetchFullProfileData = async (username: string | undefined) => {
 };
 
 export const fetchAllSubscriptions = async (
-  currentProfileId: string,
+  profileId: string,
 ): Promise<Profile[]> => {
   const response: Response = await fetch(
-    `${SERVER.API.GET_ALL_SUBSCRIPTIONS}${currentProfileId}`,
+    `${SERVER.API.GET_ALL_SUBSCRIPTIONS}${profileId}`,
     {
       credentials: 'include',
       method: 'GET',

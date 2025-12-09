@@ -20,6 +20,7 @@ import { fetchPostsOfProfile } from '@/services/posts.service';
 import { Post, Profile } from '@/types';
 import MessageWritingModal from '@/components/profilePage/message-writing.modal';
 import SubscribersListModal from '@/components/profilePage/subscribers-list-modal';
+import SubscriptionsListModal from '@/components/profilePage/subscriptions-list-modal';
 
 const Page = () => {
   const router: AppRouterInstance = useRouter();
@@ -128,6 +129,12 @@ const Page = () => {
 
   return (
     <div>
+      <SubscriptionsListModal
+        isOpen={isSubscriptionsListModalOpen}
+        onClose={() => setIsSubscriptionsListModalOpen(false)}
+        currentProfile={curProfile}
+        profile={profile}
+      />
       <SubscribersListModal
         isOpen={isSubscribersListModalOpen}
         onClose={() => setIsSubscribersListModalOpen(false)}
@@ -201,10 +208,15 @@ const Page = () => {
                     <div
                       className={`flex flex-row gap-1`} /*subscriptions count text*/
                     >
-                      <span className={`font-bold text-[20px]`}>
+                      <span className={`font-bold text-[20px] cursor-pointer`}>
                         {profile.subscriptionsAmount}
                       </span>
-                      <span className={`text-[20px]`}>subscriptions</span>
+                      <span
+                        onClick={() => setIsSubscriptionsListModalOpen(true)}
+                        className={`text-[20px] cursor-pointer`}
+                      >
+                        subscriptions
+                      </span>
                     </div>
                   </div>
                   <span className={`text-[#79747e]`}>{profile.bio}</span>
