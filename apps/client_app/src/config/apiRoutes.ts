@@ -35,5 +35,7 @@ export const SERVER = {
     DELETE_CHAT_PARTICIPANT: `${env.NEXT_PUBLIC_API_URL}/chat/deleteParticipant/`,
     GIVE_ADMIN_RIGHTS: `${env.NEXT_PUBLIC_API_URL}/chat/giveAdmin/`,
     LEAVE_CHAT: `${env.NEXT_PUBLIC_API_URL}/chat/leave/`,
+    GET_ALL_SUBSCRIBERS: `${env.NEXT_PUBLIC_API_URL}/profiles/allSubscribersOf/`,
+    DELETE_SUBSCRIBER: `${env.NEXT_PUBLIC_API_URL}/profiles/deleteSubscriber/`,
   },
 };

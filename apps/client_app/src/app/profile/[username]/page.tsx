@@ -17,8 +17,9 @@ import {
   handleProfileUnfollow,
 } from '@/services/profile.service';
 import { fetchPostsOfProfile } from '@/services/posts.service';
-import { Chat, Post, Profile } from '@/types';
+import { Post, Profile } from '@/types';
 import MessageWritingModal from '@/components/profilePage/message-writing.modal';
+import SubscribersListModal from '@/components/profilePage/subscribers-list-modal';
 
 const Page = () => {
   const router: AppRouterInstance = useRouter();
@@ -41,6 +42,10 @@ const Page = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [isSubscribersListModalOpen, setIsSubscribersListModalOpen] =
+    useState(false);
+  const [isSubscriptionsListModalOpen, setIsSubscriptionsListModalOpen] =
+    useState(false);
   const [postOfPostModal, setPostOfPostModal] = useState(posts[0]);
   const [isPostPreviewModalOpen, setIsPostPreviewModalOpen] = useState(false);
   const [isFollowed, setIsFollowed] = useState(profile.isSubscribed);
@@ -123,6 +128,12 @@ const Page = () => {
 
   return (
     <div>
+      <SubscribersListModal
+        isOpen={isSubscribersListModalOpen}
+        onClose={() => setIsSubscribersListModalOpen(false)}
+        currentProfile={curProfile}
+        profile={profile}
+      />
       <EditProfileModal
         profile={profile}
         isOpen={isEditProfileModalOpen}
@@ -180,7 +191,12 @@ const Page = () => {
                       <span className={`font-bold text-[20px]`}>
                         {followersAmount}
                       </span>
-                      <span className={`text-[20px]`}>subscribers</span>
+                      <span
+                        onClick={() => setIsSubscribersListModalOpen(true)}
+                        className={`text-[20px] cursor-pointer`}
+                      >
+                        subscribers
+                      </span>
                     </div>
                     <div
                       className={`flex flex-row gap-1`} /*subscriptions count text*/

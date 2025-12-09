@@ -8,10 +8,11 @@ import { MinioModule } from '../minio/minio.module';
 import { Profile } from '../../common/entities/account/profile.entity';
 import { AuthModule } from '../auth/auth.module';
 import { FollowsModule } from '../follows/follows.module';
+import { ProfileFollow } from '../../common/entities/account/profile-follow.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Profile, Account]),
+    TypeOrmModule.forFeature([Profile, Account, ProfileFollow]),
     MinioModule,
     AuthModule,
     FollowsModule,

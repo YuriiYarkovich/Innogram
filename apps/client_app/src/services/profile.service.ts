@@ -108,3 +108,29 @@ export const fetchAllSubscriptions = async (
 
   return receivedSubscriptions;
 };
+
+export const fetchAllSubscribers = async (profileId: string) => {
+  const response: Response = await fetch(
+    `${SERVER.API.GET_ALL_SUBSCRIBERS}${profileId}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) console.error(response.json());
+
+  return await response.json();
+};
+
+export const deleteSubscriber = async (deletingSubscriberProfileId: string) => {
+  const response: Response = await fetch(
+    `${SERVER.API.DELETE_SUBSCRIBER}${deletingSubscriberProfileId}`,
+    {
+      method: 'DELETE',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) console.error(response.json());
+};

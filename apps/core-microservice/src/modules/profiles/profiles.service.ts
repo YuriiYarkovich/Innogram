@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ProfilesRepository } from './repositories/profiles.repository';
 import { MinioService } from '../minio/minio.service';
 import {
+  FindingProfileInfo,
   FindingProfileInfoById,
   FindingProfileInfoByUsername,
   ReturningProfileInfo,
@@ -165,20 +166,32 @@ export class ProfilesService {
     const returningProfiles: ReturningProfileInfo[] = [];
 
     for (const profile of foundProfiles) {
-      let avatarUrl: string | undefined = undefined;
-      if (profile.avatarFilename) {
-        avatarUrl = await this.minioService.getPublicUrl(
-          profile.avatarFilename,
-        );
-      }
-      returningProfiles.push({
-        ...profile,
-        avatarUrl,
-        isCurrent: currentProfileId === profileId,
-      });
+      const returningProfile = await this.createReturningProfileFromFound(
+        profile,
+        currentProfileId,
+      );
+      returningProfiles.push(returningProfile);
     }
 
     return returningProfiles;
+  }
+
+  private async createReturningProfileFromFound(
+    foundProfile: FindingProfileInfo,
+    currentProfileId: string,
+  ) {
+    let avatarUrl: string | undefined = undefined;
+    if (foundProfile.avatarFilename) {
+      avatarUrl = await this.minioService.getPublicUrl(
+        foundProfile.avatarFilename,
+      );
+    }
+
+    return {
+      ...foundProfile,
+      avatarUrl,
+      isCurrent: currentProfileId === foundProfile.id,
+    };
   }
 
   async getPossibleChatParticipantsFromSubscriptions(
@@ -192,5 +205,41 @@ export class ProfilesService {
       );
 
     return allPossibleChatParticipants;
+  }
+
+  async getAllSubscribers(profileId: string, currentProfileId: string) {
+    const allFoundSubscribers = await this.profilesRepository.getAllSubscribers(
+      profileId,
+      currentProfileId,
+    );
+
+    const returningSubscribers: ReturningProfileInfo[] = [];
+    for (const profile of allFoundSubscribers) {
+      const returningProfileData = await this.createReturningProfileFromFound(
+        profile,
+        currentProfileId,
+      );
+      returningSubscribers.push(returningProfileData);
+    }
+
+    return returningSubscribers;
+  }
+
+  async deleteSubscriber(
+    deletingSubscriberProfileId: string,
+    currentProfileId: string,
+  ) {
+    if (
+      await this.profilesRepository.checkIsSubscriberExists(
+        currentProfileId,
+        deletingSubscriberProfileId,
+      )
+    ) {
+      await this.profilesRepository.deleteSubscriber(
+        currentProfileId,
+        deletingSubscriberProfileId,
+      );
+    } else
+      throw new BadRequestException('This user is not subscribed on profile');
   }
 }

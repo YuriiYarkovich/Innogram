@@ -9,11 +9,14 @@ import {
 } from '../../../common/types/profile.type';
 import { EditProfileDto } from '../dto/edit-profile.dto';
 import { PostStatus } from '../../../common/enums/post.enum';
+import { ProfileFollow } from '../../../common/entities/account/profile-follow.entity';
 
 @Injectable()
 export class ProfilesRepository {
   constructor(
     @InjectRepository(Profile) private profileRepository: Repository<Profile>,
+    @InjectRepository(ProfileFollow)
+    private profileFollowRepository: Repository<ProfileFollow>,
   ) {}
 
   async foundProfiles(profilesIds: string[]) {
@@ -163,9 +166,54 @@ export class ProfilesRepository {
         FROM main.profiles_follows AS prf
                INNER JOIN main.profiles p on prf.followed_profile_id = p.id
         WHERE prf.follower_profile_id = $2
-          AND p.id != ALL($1)
+          AND p.id != ALL ($1)
       `,
       [excludedProfilesIds, currentProfileId, PostStatus.ACTIVE],
     );
+  }
+
+  async getAllSubscribers(profileId: string, currentProfileId: string) {
+    return await this.profileRepository.query<FindingProfileInfo[]>(
+      `
+        SELECT p.id,
+               p.birthday,
+               p.username,
+               p.bio,
+               p.avatar_filename                                                             AS "avatarFilename",
+               p.is_public                                                                   AS "isPublic",
+               (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id AND status = $3)     AS "postsAmount",
+               (SELECT COUNT(*) FROM main.profiles_follows WHERE follower_profile_id = p.id) AS "subscriptionsAmount",
+               (SELECT COUNT(*) FROM main.profiles_follows WHERE followed_profile_id = p.id) AS "subscribersAmount",
+               (SELECT EXISTS (SELECT 1
+                               FROM main.profiles_follows
+                               WHERE follower_profile_id = $2
+                                 AND followed_profile_id = p.id))                            AS "isSubscribed"
+        FROM main.profiles_follows AS prf
+               INNER JOIN main.profiles p on prf.follower_profile_id = p.id
+        WHERE prf.followed_profile_id = $1
+      `,
+      [profileId, currentProfileId, PostStatus.ACTIVE],
+    );
+  }
+
+  async checkIsSubscriberExists(
+    currentProfileId: string,
+    subscriberProfileId: string,
+  ) {
+    const subscriber = await this.profileFollowRepository.findOne({
+      where: {
+        followed_profile_id: currentProfileId,
+        follower_profile_id: subscriberProfileId,
+      },
+    });
+
+    return !!subscriber;
+  }
+
+  async deleteSubscriber(currentProfileId: string, subscriberId: string) {
+    await this.profileFollowRepository.delete({
+      followed_profile_id: currentProfileId,
+      follower_profile_id: subscriberId,
+    });
   }
 }

@@ -106,4 +106,26 @@ export class ProfilesController {
       currentProfileId,
     );
   }
+
+  @ApiOperation({ summary: 'Returns all subscribers of the profile' })
+  @ApiResponse({ status: 200 })
+  @Get('/allSubscribersOf/:profileId')
+  @UseGuards(AuthGuard)
+  async getAllSubscribers(@Param('profileId') profileId: string) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.profilesService.getAllSubscribers(
+      profileId,
+      currentProfileId,
+    );
+  }
+
+  @ApiOperation({ summary: 'Deletes subscriber of the profile' })
+  @ApiResponse({ status: 200 })
+  @Delete('/deleteSubscriber/:profileId')
+  @UseGuards(AuthGuard)
+  async deleteSubscriber(@Param('profileId') profileId: string) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    await this.profilesService.deleteSubscriber(profileId, currentProfileId);
+    return { message: 'OK!' };
+  }
 }
