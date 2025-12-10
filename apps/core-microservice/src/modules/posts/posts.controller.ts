@@ -119,10 +119,10 @@ export class PostsController {
 
   @ApiOperation({ summary: 'Archives post' })
   @ApiResponse({ status: 200, type: Post })
-  @Put(`/archive/:postIs`)
+  @Put(`/archive/:postId`)
   @UseGuards(AuthGuard)
   async archivePost(@Param(`postId`) postId: string) {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
-    return await this.postsService.archivePost(postId, profileId);
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.postsService.archivePost(postId, currentProfileId);
   }
 }

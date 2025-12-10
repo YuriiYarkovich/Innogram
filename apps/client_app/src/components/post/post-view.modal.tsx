@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import PostCommentComponent from '@/components/post/post-comment-component';
 import Line from '@/components/line';
 import {
+  archivePost,
   createPost,
   deletePost,
   likeOrUnlikePost,
@@ -282,6 +283,24 @@ export default function PostViewModal({
                       <Image
                         src={`/images/icons/edit.svg`}
                         alt={'Edit post icon'}
+                        width={25}
+                        height={25}
+                        draggable={false}
+                        className={`hover:md:w-[34px] hover:md:h-[34px]`}
+                      />
+                    </button>
+                    <button
+                      type={'button'}
+                      className={`cursor-pointer flex md:w-[34px] md:h-[34px] justify-center items-center`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        archivePost(post.postId).then(() => location.reload());
+                      }}
+                    >
+                      <Image
+                        src={`/images/icons/archive.svg`}
+                        alt={'archive post icon'}
                         width={25}
                         height={25}
                         draggable={false}

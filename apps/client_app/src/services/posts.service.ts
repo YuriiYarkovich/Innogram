@@ -19,9 +19,7 @@ export const createPost = async (
     body: formData,
   });
 
-  if (!response.ok) {
-    throw new Error(`Error: ${response.status}`);
-  }
+  if (!response.ok) console.error(response.json());
 
   if (response.status === 201) {
     onClose();
@@ -46,9 +44,7 @@ export const likeOrUnlikePost = async (liked: boolean, post: Post) => {
       credentials: 'include',
     });
 
-    if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
-    }
+    if (!response.ok) console.error(response.json());
   }
   return response;
 };
@@ -62,9 +58,7 @@ export const deletePost = async (post: Post, onClose: () => void) => {
     },
   );
 
-  if (!response.ok) {
-    throw new Error(`Error: ${response.status}`);
-  }
+  if (!response.ok) console.error(response.json());
 
   if (response.ok) {
     onClose();
@@ -82,9 +76,7 @@ export const fetchPostsOfProfile = async (
     },
   );
 
-  if (!response.ok) {
-    throw new Error(`Error: ${response.status}`);
-  }
+  if (!response.ok) console.error(response.json());
   return await response.json();
 };
 
@@ -96,9 +88,7 @@ export const fetchPostsOfSubscribedOnProfiles = async (): Promise<Post[]> => {
     },
   );
 
-  if (!response.ok) {
-    throw new Error(`Error: ${response.status}`);
-  }
+  if (!response.ok) console.error(response.json());
   const receivedPosts: Post[] = await response.json();
 
   receivedPosts.forEach((post) => console.log(JSON.stringify(post)) + '\n');
@@ -124,9 +114,22 @@ export const updatePost = async (
     body: formData,
   });
 
-  if (!response.ok) {
-    throw new Error(`Error: ${response.status}`);
-  }
+  if (!response.ok) console.error(response.json());
+
+  return await response.json();
+};
+
+export const archivePost = async (postId: string) => {
+  console.log(`postId: ${postId}`);
+  const response: Response = await fetch(
+    `${SERVER.API.ARCHIVE_POST}${postId}`,
+    {
+      method: 'PUT',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) console.error(response.json());
 
   return await response.json();
 };

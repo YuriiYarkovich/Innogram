@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Post } from '../../../common/entities/posts/post.entity';
-import { QueryRunner, Repository } from 'typeorm';
+import { In, QueryRunner, Repository } from 'typeorm';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { PostStatus } from '../../../common/enums/post.enum';
 import { FoundPostData } from '../../../common/types/posts.type';
@@ -30,18 +30,11 @@ export class PostsRepository {
     postId: string,
   ): Promise<Post | null> {
     return await this.postRepository.findOne({
-      where: [
-        {
-          profileId: profileId,
-          id: postId,
-          status: PostStatus.ACTIVE,
-        },
-        {
-          profileId: profileId,
-          id: postId,
-          status: PostStatus.ARCHIVED,
-        },
-      ],
+      where: {
+        profileId: profileId,
+        id: postId,
+        status: In([PostStatus.ACTIVE, PostStatus.ARCHIVED]),
+      },
     });
   }
 

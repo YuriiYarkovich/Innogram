@@ -43,5 +43,6 @@ export const SERVER = {
     ACCEPT_REQUEST: `${env.NEXT_PUBLIC_API_URL}/profiles/acceptRequest/`,
     REJECT_REQUEST: `${env.NEXT_PUBLIC_API_URL}/profiles/rejectRequest/`,
     GET_ALL_SENT_REQUESTS: `${env.NEXT_PUBLIC_API_URL}/profiles/allSentRequests`,
+    ARCHIVE_POST: `${env.NEXT_PUBLIC_API_URL}/posts/archive/`,
   },
 };

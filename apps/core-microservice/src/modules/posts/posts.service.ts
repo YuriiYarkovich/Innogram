@@ -367,11 +367,11 @@ export class PostsService {
     return await this.postLikeRepository.findAllLikesOfPost(postId);
   }
 
-  async archivePost(postId: string, profileId: string) {
-    const post = await this.postsRepository.getPostByIdAndProfile(
-      postId,
-      profileId,
-    );
+  async archivePost(postId: string, currentProfileId: string) {
+    console.log(`postId: ${postId}, currentProfileId: ${currentProfileId}`);
+    const post = await this.postsRepository.findPostById(postId);
+    console.log(`Found post: ${JSON.stringify(post)}`);
+
     if (!post)
       throw new WrongUserException('This user has not got post with this id!');
 
