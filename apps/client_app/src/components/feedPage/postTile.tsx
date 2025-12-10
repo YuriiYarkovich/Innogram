@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import PostViewModal from '@/components/post/post-view.modal';
 import { likeOrUnlikePost } from '@/services/posts.service';
 import { Post } from '@/types';
+import Link from 'next/link';
 
 export default function PostTile({ post }: { post: Post }) {
   const [liked, setLiked] = useState(post.liked);
@@ -33,9 +34,9 @@ export default function PostTile({ post }: { post: Post }) {
         onClose={() => setIsPostPreviewModalOpen(false)}
       />
       <div className={`flex flex-col md:w-[470px] bg-[#e7e0ec]`}>
-        <a
+        <Link
           className={`flex flex-row items-center md:w-full md:h-[40px] mt-[15px] ml-[15px] cursor-pointer`}
-          href={`profile/${post.username}`}
+          href={`/profile/${post.username}`}
         >
           <Image
             className={`rounded-[210px] md:w-[40px] md:h-[40px]`}
@@ -54,7 +55,7 @@ export default function PostTile({ post }: { post: Post }) {
               ? `${Math.floor(Number(post.timePast) / 24)} d`
               : `${post.timePast} h`}
           </span>
-        </a>
+        </Link>
         <div className={`flex flex-row justify-center w-full mt-5`}>
           <Image
             src={post.assets[0].url} //TODO add possibility to view multiple files

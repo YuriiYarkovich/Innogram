@@ -1,15 +1,18 @@
 import { SERVER } from '@/config/apiRoutes';
+import { Post } from '@/types';
 
 export const createPost = async (
   content: string,
-  file: File | null,
+  files: File[],
   onClose: () => void,
 ) => {
   const formData = new FormData();
   formData.append('content', content);
-  if (file) {
+
+  // Добавляем все файлы в FormData
+  files.forEach((file) => {
     formData.append('files', file);
-  }
+  });
 
   const response: Response = await fetch(SERVER.API.CREATE_POST, {
     method: 'POST',

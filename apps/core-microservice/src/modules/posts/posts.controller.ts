@@ -38,8 +38,8 @@ export class PostsController {
   @UseGuards(AuthGuard)
   @UseInterceptors(FilesInterceptor('files'))
   async createPost(@Body() dto: CreatePostDto, @UploadedFiles() files) {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
-    return await this.postsService.createPost(profileId, dto, files);
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.postsService.createPost(currentProfileId, dto, files);
   }
 
   @ApiOperation({ summary: 'Returns all posts of profile' })

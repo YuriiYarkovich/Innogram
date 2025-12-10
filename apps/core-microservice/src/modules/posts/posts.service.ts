@@ -29,16 +29,17 @@ export class PostsService {
   ) {}
 
   async createPost(
-    profile_id: string,
+    currentProfileId: string,
     dto: CreatePostDto,
     files: MulterFile[],
   ): Promise<Post> {
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
+
     try {
       const post: Post = await this.postsRepository.createPost(
-        profile_id,
+        currentProfileId,
         dto,
         queryRunner,
       );
