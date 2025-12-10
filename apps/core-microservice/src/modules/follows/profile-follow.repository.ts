@@ -96,4 +96,24 @@ export class ProfileFollowRepository {
       { status: FollowAcceptedStatus.REJECTED },
     );
   }
+
+  async getAllSentRequests(currentProfileId: string) {
+    return await this.profileFollowRepository.query<
+      FindingSubscriptionRequest[]
+    >(
+      `
+      SELECT pf.id,
+             pf.status,
+             p.id              AS "followerProfileId",
+             p.username        AS "followerProfileUsername",
+             p.avatar_filename AS "followerProfileAvatarFilename",
+             pf.status         AS "subscriptionStatus"
+      FROM main.profiles_follows AS pf
+             LEFT JOIN main.profiles AS p ON pf.followed_profile_id = p.id
+      WHERE pf.follower_profile_id = $1
+        AND pf.status = $2
+    `,
+      [currentProfileId, FollowAcceptedStatus.REQUESTED],
+    );
+  }
 }

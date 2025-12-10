@@ -11,14 +11,11 @@ export const handleOnProfileFollowing = async (profile: Profile) => {
   if (!response.ok) console.error(response.json());
 };
 
-export const handleProfileUnfollow = async (profile: Profile) => {
-  const response: Response = await fetch(
-    `${SERVER.API.UNFOLLOW}${profile.id}`,
-    {
-      method: 'DELETE',
-      credentials: 'include',
-    },
-  );
+export const handleProfileUnfollow = async (profileId: string) => {
+  const response: Response = await fetch(`${SERVER.API.UNFOLLOW}${profileId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
 
   if (!response.ok) console.error(response.json());
 };
@@ -164,7 +161,6 @@ export const fetchAllSubscriptionsRequests = async (): Promise<
   if (!response.ok) console.error(response.json());
 
   const receivedRequests: SubscriptionRequest[] = await response.json();
-  console.log(`Received requests: ${JSON.stringify(receivedRequests)}`);
 
   return receivedRequests;
 };
@@ -191,4 +187,15 @@ export const rejectRequest = async (subscriptionId: string) => {
   );
 
   if (!response.ok) console.error(response.json());
+};
+
+export const getAllSentRequests = async (): Promise<SubscriptionRequest[]> => {
+  const response: Response = await fetch(SERVER.API.GET_ALL_SENT_REQUESTS, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) console.error(response.json());
+
+  return await response.json();
 };

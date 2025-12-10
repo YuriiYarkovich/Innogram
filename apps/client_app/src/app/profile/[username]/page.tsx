@@ -22,7 +22,7 @@ import SubscribersListModal from '@/components/profilePage/subscribers-list-moda
 import SubscriptionsListModal from '@/components/profilePage/subscriptions-list-modal';
 import Line from '@/components/line';
 import { FollowAcceptedStatus } from '@innogram/core-microservice/dist/common/enums/profile-follow.enum';
-import SubscriptionsRequestsModal from '@/components/profilePage/subscriptions-requests-modal';
+import SentRequestsModal from '@/components/profilePage/sent-requests-modal';
 
 const Page = () => {
   const router: AppRouterInstance = useRouter();
@@ -49,6 +49,7 @@ const Page = () => {
     useState(false);
   const [isSubscriptionsListModalOpen, setIsSubscriptionsListModalOpen] =
     useState(false);
+  const [isSentRequestsModalOpen, setIsSentRequestsModalOpen] = useState(false);
   const [postOfPostModal, setPostOfPostModal] = useState(posts[0]);
   const [isPostPreviewModalOpen, setIsPostPreviewModalOpen] = useState(false);
   const [isFollowed, setIsFollowed] = useState(profile.isSubscribed);
@@ -135,7 +136,7 @@ const Page = () => {
   };
 
   const handleUnfollow = async () => {
-    await handleProfileUnfollow(profile);
+    await handleProfileUnfollow(profile.id);
 
     setFollowersAmount((prev: number): number => prev - 1);
     if (!profile.isPublic && isRequested) {
@@ -151,6 +152,10 @@ const Page = () => {
 
   return (
     <div>
+      <SentRequestsModal
+        isOpen={isSentRequestsModalOpen}
+        onClose={() => setIsSentRequestsModalOpen(false)}
+      />
       <SubscriptionsListModal
         isOpen={isSubscriptionsListModalOpen}
         onClose={() => setIsSubscriptionsListModalOpen(false)}
@@ -243,22 +248,40 @@ const Page = () => {
                   </div>
                   <span className={`text-[#79747e]`}>{profile.bio}</span>
                 </div>
-                {profile.isCurrent ? (
-                  <button
-                    className={`flex ml-auto md:w-[47px] md:h-[47px] items-center justify-center`}
-                    onClick={() => handleLogout(router)}
+                {profile.isCurrent && (
+                  <div
+                    className={
+                      'flex flex-col items-center justify-center gap-2 ml-auto'
+                    }
                   >
-                    <Image
-                      src={`/images/icons/logout.svg`}
-                      alt={`logout button`}
-                      height={40}
-                      width={40}
-                      draggable={false}
-                      className={`md:w-[40px] md:h-[40px] hover:md:w-[47px] hover:md:h-[47px] cursor-pointer`}
-                    />
-                  </button>
-                ) : (
-                  <div />
+                    <button
+                      className={`flex md:w-[47px] md:h-[47px] items-center justify-center`}
+                      onClick={() => handleLogout(router)}
+                    >
+                      <Image
+                        src={`/images/icons/logout.svg`}
+                        alt={`logout button`}
+                        height={40}
+                        width={40}
+                        draggable={false}
+                        className={`md:w-[40px] md:h-[40px] hover:md:w-[47px] hover:md:h-[47px] cursor-pointer`}
+                      />
+                    </button>
+
+                    <button
+                      className={`flex ml-auto md:w-[47px] md:h-[47px] items-center justify-center`}
+                      onClick={() => setIsSentRequestsModalOpen(true)}
+                    >
+                      <Image
+                        src={`/images/icons/sentRequests.svg`}
+                        alt={`Sent requests button`}
+                        height={40}
+                        width={40}
+                        draggable={false}
+                        className={`md:w-[40px] md:h-[40px] hover:md:w-[47px] hover:md:h-[47px] cursor-pointer`}
+                      />
+                    </button>
+                  </div>
                 )}
               </div>
               <div

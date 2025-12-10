@@ -41,5 +41,6 @@ export const SERVER = {
     GET_ALL_SUBSCRIPTIONS_REQUESTS: `${env.NEXT_PUBLIC_API_URL}/profiles/allSubscriptionsRequests`,
     ACCEPT_REQUEST: `${env.NEXT_PUBLIC_API_URL}/profiles/acceptRequest/`,
     REJECT_REQUEST: `${env.NEXT_PUBLIC_API_URL}/profiles/rejectRequest/`,
+    GET_ALL_SENT_REQUESTS: `${env.NEXT_PUBLIC_API_URL}/profiles/allSentRequests`,
   },
 };

@@ -167,4 +167,13 @@ export class ProfilesController {
     await this.profilesService.rejectRequest(subscriptionId, currentProfileId);
     return { message: 'OK!' };
   }
+
+  @ApiOperation({ summary: 'Rejects all sent request for subscriptions' })
+  @ApiResponse({ status: 200 })
+  @Get('/allSentRequests/')
+  @UseGuards(AuthGuard)
+  async getAllRequestsRequest() {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.profilesService.getAllSentRequests(currentProfileId);
+  }
 }

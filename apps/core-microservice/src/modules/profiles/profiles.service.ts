@@ -315,4 +315,28 @@ export class ProfilesService {
 
     await this.profileFollowRepository.rejectRequest(subscriptionId);
   }
+
+  async getAllSentRequests(currentProfileId: string) {
+    const findSentRequests =
+      await this.profileFollowRepository.getAllSentRequests(currentProfileId);
+
+    if (!findSentRequests || findSentRequests.length === 0) return [];
+
+    const returningSentRequests: ReturningSubscriptionRequest[] = [];
+
+    for (const findRequest of findSentRequests) {
+      const avatarUrl = await this.minioService.getPublicUrl(
+        findRequest?.followerProfileAvatarFilename,
+      );
+
+      const returningRequest: ReturningSubscriptionRequest = {
+        ...findRequest,
+        followerProfileAvatarUrl: avatarUrl,
+      };
+
+      returningSentRequests.push(returningRequest);
+    }
+
+    return returningSentRequests;
+  }
 }
