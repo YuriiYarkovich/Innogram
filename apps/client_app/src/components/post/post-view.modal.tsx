@@ -8,6 +8,7 @@ import { deletePost, likeOrUnlikePost } from '@/services/posts.service';
 import { addComment, fetchComments } from '@/services/comment.service';
 import { PostPreviewModalProps, PostComment } from '@/types';
 import CrossAngleButton from '@/components/crossAngle.button';
+import Carousel from '@/components/carousel';
 
 export default function PostViewModal({
   post,
@@ -26,6 +27,7 @@ export default function PostViewModal({
   const [respondingComment, setRespondingComment] = useState<
     PostComment | undefined
   >(undefined);
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
 
   const handleLikeOrUnlikePost = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,17 +63,39 @@ export default function PostViewModal({
           className={`flex flex-row items-center md:w-[1054px] max-h-full bg-[#eaddff] rounded-4xl`}
         >
           <div
-            className={`flex flex-col w-1/2 justify-center h-full bg-black rounded-l-4xl`}
+            className={`flex flex-col w-1/2 justify-center h-full bg-black rounded-l-4xl py-4`}
           >
-            <Image
-              src={post.assets[0].url}
-              alt={`Post image`}
-              width={512}
-              height={512}
-              unoptimized
-              className={`w-full h-1/2`}
-              draggable={false}
-            />
+            <Carousel
+              currentIndex={currentFileIndex}
+              totalItems={post.assets.length}
+              onPrev={() =>
+                setCurrentFileIndex((prev) => Math.max(0, prev - 1))
+              }
+              onNext={() =>
+                setCurrentFileIndex((prev) =>
+                  Math.min(post.assets.length - 1, prev + 1),
+                )
+              }
+              onSelectIndex={setCurrentFileIndex}
+              className={'min-w-[450px] h-full'}
+            >
+              {post.assets.map((asset) => (
+                <div
+                  key={asset.order}
+                  className="w-full h-full flex items-center justify-center"
+                >
+                  <Image
+                    src={asset.url}
+                    alt="post picture"
+                    width={512}
+                    height={512}
+                    draggable={false}
+                    unoptimized
+                    className="object-contain max-h-full max-w-full rounded-lg"
+                  />
+                </div>
+              ))}
+            </Carousel>
           </div>
           <div className={`flex flex-col w-1/2 h-full`}>
             <div

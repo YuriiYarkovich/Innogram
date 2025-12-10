@@ -130,76 +130,76 @@ export default function PostCreationModal({
           onSelectIndex={setCurrentFileIndex}
           className="md:h-[400px] md:w-[400px] mt-5"
         >
-          {currentFileIndex === 0 && (
+          {
             <AddFilePlaceholder
               control={control}
               name="file0"
               label={`Upload file 1/${MAX_FILES}`}
             />
-          )}
-          {currentFileIndex === 1 && (
+          }
+          {
             <AddFilePlaceholder
               control={control}
               name="file1"
               label={`Upload file 2/${MAX_FILES}`}
             />
-          )}
-          {currentFileIndex === 2 && (
+          }
+          {
             <AddFilePlaceholder
               control={control}
               name="file2"
               label={`Upload file 3/${MAX_FILES}`}
             />
-          )}
-          {currentFileIndex === 3 && (
+          }
+          {
             <AddFilePlaceholder
               control={control}
               name="file3"
               label={`Upload file 4/${MAX_FILES}`}
             />
-          )}
-          {currentFileIndex === 4 && (
+          }
+          {
             <AddFilePlaceholder
               control={control}
               name="file4"
               label={`Upload file 5/${MAX_FILES}`}
             />
-          )}
-          {currentFileIndex === 5 && (
+          }
+          {
             <AddFilePlaceholder
               control={control}
               name="file5"
               label={`Upload file 6/${MAX_FILES}`}
             />
-          )}
-          {currentFileIndex === 6 && (
+          }
+          {
             <AddFilePlaceholder
               control={control}
               name="file6"
               label={`Upload file 7/${MAX_FILES}`}
             />
-          )}
-          {currentFileIndex === 7 && (
+          }
+          {
             <AddFilePlaceholder
               control={control}
               name="file7"
               label={`Upload file 8/${MAX_FILES}`}
             />
-          )}
-          {currentFileIndex === 8 && (
+          }
+          {
             <AddFilePlaceholder
               control={control}
               name="file8"
               label={`Upload file 9/${MAX_FILES}`}
             />
-          )}
-          {currentFileIndex === 9 && (
+          }
+          {
             <AddFilePlaceholder
               control={control}
               name="file9"
               label={`Upload file 10/${MAX_FILES}`}
             />
-          )}
+          }
         </Carousel>
 
         <div className={`flex flex-row w-full ml-17 mt-4 items-center gap-3`}>

@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import React from 'react';
 
 type CarouselProps = {
   currentIndex: number;
@@ -6,9 +7,10 @@ type CarouselProps = {
   onPrev: () => void;
   onNext: () => void;
   onSelectIndex: (index: number) => void;
-  children: React.ReactNode;
+  children: React.ReactNode | React.ReactNode[];
   indicators?: React.ReactNode[];
   className?: string;
+  showArrows?: boolean;
 };
 
 export default function Carousel({
@@ -20,16 +22,19 @@ export default function Carousel({
   children,
   indicators,
   className = '',
+  showArrows = true,
 }: CarouselProps) {
+  const childrenArray = React.Children.toArray(children);
+
   return (
     <>
       <div className={`relative flex justify-center items-center ${className}`}>
         {/* Left arrow */}
-        {currentIndex > 0 && (
+        {showArrows && currentIndex > 0 && (
           <button
             type="button"
             onClick={onPrev}
-            className="absolute left-2 z-10 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg"
+            className="absolute left-2 z-10 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg transition-all hover:scale-110"
           >
             <Image
               src="/images/icons/back.png"
@@ -40,15 +45,19 @@ export default function Carousel({
           </button>
         )}
 
-        {/* Content */}
-        <div className="w-full h-full">{children}</div>
+        {/* Showing only current element */}
+        <div
+          className={`w-full h-full flex items-center justify-center overflow-hidden`}
+        >
+          {childrenArray[currentIndex]}
+        </div>
 
         {/* Right arrow */}
-        {currentIndex < totalItems - 1 && (
+        {showArrows && currentIndex < totalItems - 1 && (
           <button
             type="button"
             onClick={onNext}
-            className="absolute right-2 z-10 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg"
+            className="absolute right-2 z-10 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg transition-all scale-70 hover:scale-90"
           >
             <Image
               src="/images/icons/back.png"
@@ -62,19 +71,23 @@ export default function Carousel({
       </div>
 
       {/* Indicators */}
-      <div className="flex gap-2 mt-3">
-        {indicators ||
-          Array.from({ length: totalItems }).map((_, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => onSelectIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentIndex ? 'bg-[#4f378a] w-4' : 'bg-gray-300'
-              }`}
-            />
-          ))}
-      </div>
+      {totalItems > 1 && (
+        <div className="flex gap-2 mt-3 justify-center">
+          {indicators ||
+            Array.from({ length: totalItems }).map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => onSelectIndex(index)}
+                className={`h-2 rounded-full transition-all ${
+                  index === currentIndex
+                    ? 'bg-[#4f378a] w-8'
+                    : 'bg-gray-300 w-2 hover:bg-gray-400'
+                }`}
+              />
+            ))}
+        </div>
+      )}
     </>
   );
 }
