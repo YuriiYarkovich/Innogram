@@ -4,11 +4,19 @@ import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import PostCommentComponent from '@/components/post/post-comment-component';
 import Line from '@/components/line';
-import { deletePost, likeOrUnlikePost } from '@/services/posts.service';
+import {
+  createPost,
+  deletePost,
+  likeOrUnlikePost,
+} from '@/services/posts.service';
 import { addComment, fetchComments } from '@/services/comment.service';
 import { PostPreviewModalProps, PostComment } from '@/types';
 import CrossAngleButton from '@/components/crossAngle.button';
 import Carousel from '@/components/carousel';
+import { useForm } from 'react-hook-form';
+import { PostCreationFormValues } from '@/components/feedPage/postCreationModal';
+import { loadFromS3 } from '@/services/files.service';
+import AddFilePlaceholder from '@/components/add-file-placeholder';
 
 export default function PostViewModal({
   post,
@@ -28,6 +36,55 @@ export default function PostViewModal({
     PostComment | undefined
   >(undefined);
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
+  const [isInEditingMode, setIsInEditingMode] = useState(false);
+
+  const MAX_FILES = 10;
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { isSubmitting },
+  } = useForm<PostCreationFormValues>({
+    defaultValues: {
+      content: '',
+      file0: null,
+      file1: null,
+      file2: null,
+      file3: null,
+      file4: null,
+      file5: null,
+      file6: null,
+      file7: null,
+      file8: null,
+      file9: null,
+    },
+  });
+  const allFiles = [
+    watch('file0'),
+    watch('file1'),
+    watch('file2'),
+    watch('file3'),
+    watch('file4'),
+    watch('file5'),
+    watch('file6'),
+    watch('file7'),
+    watch('file8'),
+    watch('file9'),
+  ];
+  const onSubmit = async (data: PostCreationFormValues) => {
+    const files: File[] = [];
+    for (let i = 0; i < MAX_FILES; i++) {
+      const file = data[
+        `file${i}` as keyof PostCreationFormValues
+      ] as File | null;
+      if (file) {
+        files.push(file);
+      }
+    }
+    //await createPost(data.content, files, onClose);
+  };
 
   const handleLikeOrUnlikePost = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,10 +98,35 @@ export default function PostViewModal({
       setLiked((prev) => !prev);
     }
   };
+
+  useEffect(() => {
+    if (isOpen && post) {
+      setValue('content', post.content);
+
+      //resetting all the files
+      for (let i = 0; i < MAX_FILES; i++) {
+        setValue(`file${i}` as keyof PostCreationFormValues, null);
+      }
+      // setting current files
+      post.assets.forEach((asset, index) => {
+        if (index < MAX_FILES) {
+          // downloading files from storage
+          loadFromS3(asset.url)
+            .then((file) => {
+              if (file) {
+                setValue(`file${index}` as keyof PostCreationFormValues, file);
+              }
+            })
+            .catch((err) => console.error('Error loading file:', err));
+        }
+      });
+    }
+  }, [isOpen, post, setValue]);
+
   useEffect(() => {
     if (!isOpen) return;
     fetchComments(post, setCommentsLoading, setComments);
-  }, [isOpen]);
+  }, [isOpen, post]);
 
   const setCommentToRespond = (comment: PostComment) => {
     setRespondingComment(comment);
@@ -65,37 +147,63 @@ export default function PostViewModal({
           <div
             className={`flex flex-col w-1/2 justify-center h-full bg-black rounded-l-4xl py-4`}
           >
-            <Carousel
-              currentIndex={currentFileIndex}
-              totalItems={post.assets.length}
-              onPrev={() =>
-                setCurrentFileIndex((prev) => Math.max(0, prev - 1))
-              }
-              onNext={() =>
-                setCurrentFileIndex((prev) =>
-                  Math.min(post.assets.length - 1, prev + 1),
-                )
-              }
-              onSelectIndex={setCurrentFileIndex}
-              className={'min-w-[450px] h-full'}
-            >
-              {post.assets.map((asset) => (
-                <div
-                  key={asset.order}
-                  className="w-full h-full flex items-center justify-center"
-                >
-                  <Image
-                    src={asset.url}
-                    alt="post picture"
-                    width={512}
-                    height={512}
-                    draggable={false}
-                    unoptimized
-                    className="object-contain max-h-full max-w-full rounded-lg"
+            {isInEditingMode ? (
+              <Carousel
+                currentIndex={currentFileIndex}
+                totalItems={MAX_FILES}
+                onPrev={() =>
+                  setCurrentFileIndex((prev) => Math.max(0, prev - 1))
+                }
+                onNext={() =>
+                  setCurrentFileIndex((prev) =>
+                    Math.min(MAX_FILES - 1, prev + 1),
+                  )
+                }
+                onSelectIndex={setCurrentFileIndex}
+                className={'min-w-[450px] h-full'}
+              >
+                {Array.from({ length: MAX_FILES }).map((_, index) => (
+                  <AddFilePlaceholder
+                    key={index}
+                    control={control}
+                    name={`file${index}` as keyof PostCreationFormValues}
+                    label={`Upload file ${index + 1}/${MAX_FILES}`}
                   />
-                </div>
-              ))}
-            </Carousel>
+                ))}
+              </Carousel>
+            ) : (
+              <Carousel
+                currentIndex={currentFileIndex}
+                totalItems={post.assets.length}
+                onPrev={() =>
+                  setCurrentFileIndex((prev) => Math.max(0, prev - 1))
+                }
+                onNext={() =>
+                  setCurrentFileIndex((prev) =>
+                    Math.min(post.assets.length - 1, prev + 1),
+                  )
+                }
+                onSelectIndex={setCurrentFileIndex}
+                className={'min-w-[450px] h-full'}
+              >
+                {post.assets.map((asset) => (
+                  <div
+                    key={asset.order}
+                    className="w-full h-full flex items-center justify-center"
+                  >
+                    <Image
+                      src={asset.url}
+                      alt="post picture"
+                      width={512}
+                      height={512}
+                      draggable={false}
+                      unoptimized
+                      className="object-contain max-h-full max-w-full rounded-lg"
+                    />
+                  </div>
+                ))}
+              </Carousel>
+            )}
           </div>
           <div className={`flex flex-col w-1/2 h-full`}>
             <div
@@ -121,25 +229,76 @@ export default function PostViewModal({
                   ? `${Math.floor(Number(post.timePast) / 24)} d`
                   : `${post.timePast} h`}
               </span>
-              {post.isCreator ? (
-                <button
-                  className={`ml-auto mr-9 cursor-pointer flex md:w-[37px] md:h-[37px] justify-center items-center`}
-                  onClick={async () => deletePost(post, onClose)}
-                >
-                  <Image
-                    src={`/images/icons/delete.svg`}
-                    alt={'Delete post'}
-                    width={30}
-                    height={30}
-                    draggable={false}
-                    className={`hover:md:w-[37px] hover:md:h-[37px]`}
-                  />
-                </button>
-              ) : (
-                <></>
-              )}
+              {post.isCreator &&
+                (isInEditingMode ? (
+                  <div className={'flex flex-row ml-auto mr-6 gap-4'}>
+                    <button
+                      className={`cursor-pointer flex md:w-[34px] md:h-[34px] justify-center items-center`}
+                      //onClick={() => setIsInEditingMode(true)}
+                    >
+                      <Image
+                        src={`/images/icons/apply.svg`}
+                        alt={'Edit post icon'}
+                        width={25}
+                        height={25}
+                        draggable={false}
+                        className={`hover:md:w-[34px] hover:md:h-[34px]`}
+                      />
+                    </button>
+                    <button
+                      className={`cursor-pointer flex md:w-[37px] md:h-[37px] justify-center items-center`}
+                      onClick={() => setIsInEditingMode(false)}
+                    >
+                      <Image
+                        src={`/images/icons/cross.svg`}
+                        alt={'Delete post icon'}
+                        width={30}
+                        height={30}
+                        draggable={false}
+                        className={`hover:md:w-[37px] hover:md:h-[37px]`}
+                      />
+                    </button>
+                  </div>
+                ) : (
+                  <div className={'flex flex-row ml-auto mr-6 gap-4'}>
+                    <button
+                      className={`cursor-pointer flex md:w-[34px] md:h-[34px] justify-center items-center`}
+                      onClick={() => setIsInEditingMode(true)}
+                    >
+                      <Image
+                        src={`/images/icons/edit.svg`}
+                        alt={'Edit post icon'}
+                        width={25}
+                        height={25}
+                        draggable={false}
+                        className={`hover:md:w-[34px] hover:md:h-[34px]`}
+                      />
+                    </button>
+                    <button
+                      className={`cursor-pointer flex md:w-[37px] md:h-[37px] justify-center items-center`}
+                      onClick={async () => deletePost(post, onClose)}
+                    >
+                      <Image
+                        src={`/images/icons/delete.svg`}
+                        alt={'Delete post icon'}
+                        width={30}
+                        height={30}
+                        draggable={false}
+                        className={`hover:md:w-[37px] hover:md:h-[37px]`}
+                      />
+                    </button>
+                  </div>
+                ))}
             </div>
-            <span className={`pl-5 pr-5 text-[18px]`}>{post.content}</span>
+            {isInEditingMode ? (
+              <textarea
+                {...register('content')}
+                className={`pl-5 pr-5 text-[18px] border-b-1 border-[#79747e] mx-5 mr-38`}
+              />
+            ) : (
+              <span className={`pl-5 pr-5 text-[18px]`}>{post.content}</span>
+            )}
+
             <div className={`flex flex-row ml-[15px] mt-[10px]`}>
               <div
                 className={
@@ -166,16 +325,16 @@ export default function PostViewModal({
                   'flex items-center justify-center md:w-[45px] md:h-[45px]'
                 }
               >
-                <button>
+                {/*<button> //TODO implement sharing posts
                   <Image
                     src={`/images/icons/share.png`}
-                    alt={`Like icon`}
+                    alt={`Share icon`}
                     width={33}
                     height={33}
                     draggable={false}
                     className={`ml-[16px] mt-[-2px] hover:md:h-[40px] hover:md:w-[40px]`}
                   />
-                </button>
+                </button>*/}
               </div>
             </div>
             <span className={`font-bold text-[16px] ml-6`}>
@@ -204,7 +363,7 @@ export default function PostViewModal({
                 )}
               </div>
 
-              {isRespondingOnComment ? (
+              {isRespondingOnComment && (
                 <>
                   <Line thickness={1} marginBottom={3} marginTop={0} />
                   <div
@@ -254,8 +413,6 @@ export default function PostViewModal({
                     </div>
                   </div>
                 </>
-              ) : (
-                <></>
               )}
               <div className={`flex flex-col h-1/4`}>
                 <div className={`flex flex-row w-full h-full pl-3 gap-2`}>

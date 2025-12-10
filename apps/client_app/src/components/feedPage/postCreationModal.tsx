@@ -8,7 +8,7 @@ import { createPost } from '@/services/posts.service';
 import { CreatePostModalProps } from '@/types';
 import Carousel from '@/components/carousel';
 
-type PostCreationFormValues = {
+export type PostCreationFormValues = {
   content: string;
   file0: File | null;
   file1: File | null;
@@ -53,22 +53,7 @@ export default function PostCreationModal({
     },
   });
 
-  // Собираем все файлы для отображения индикаторов
-  const allFiles = [
-    watch('file0'),
-    watch('file1'),
-    watch('file2'),
-    watch('file3'),
-    watch('file4'),
-    watch('file5'),
-    watch('file6'),
-    watch('file7'),
-    watch('file8'),
-    watch('file9'),
-  ];
-
   const onSubmit = async (data: PostCreationFormValues) => {
-    // Собираем все файлы из формы
     const files: File[] = [];
     for (let i = 0; i < MAX_FILES; i++) {
       const file = data[
