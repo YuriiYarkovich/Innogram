@@ -8,6 +8,7 @@ import {
   createPost,
   deletePost,
   likeOrUnlikePost,
+  updatePost,
 } from '@/services/posts.service';
 import { addComment, fetchComments } from '@/services/comment.service';
 import { PostPreviewModalProps, PostComment } from '@/types';
@@ -73,6 +74,7 @@ export default function PostViewModal({
     watch('file8'),
     watch('file9'),
   ];
+
   const onSubmit = async (data: PostCreationFormValues) => {
     const files: File[] = [];
     for (let i = 0; i < MAX_FILES; i++) {
@@ -83,7 +85,8 @@ export default function PostViewModal({
         files.push(file);
       }
     }
-    //await createPost(data.content, files, onClose);
+    await updatePost(post.postId, data.content, files);
+    location.reload();
   };
 
   const handleLikeOrUnlikePost = async (e: React.FormEvent) => {
@@ -141,7 +144,8 @@ export default function PostViewModal({
     >
       <CrossAngleButton onClose={onClose} />
       <div className={`flex w-full h-3/4 justify-center`}>
-        <div
+        <form
+          onSubmit={handleSubmit(onSubmit)}
           className={`flex flex-row items-center md:w-[1054px] max-h-full bg-[#eaddff] rounded-4xl`}
         >
           <div
@@ -233,12 +237,12 @@ export default function PostViewModal({
                 (isInEditingMode ? (
                   <div className={'flex flex-row ml-auto mr-6 gap-4'}>
                     <button
+                      type={'submit'}
                       className={`cursor-pointer flex md:w-[34px] md:h-[34px] justify-center items-center`}
-                      //onClick={() => setIsInEditingMode(true)}
                     >
                       <Image
                         src={`/images/icons/apply.svg`}
-                        alt={'Edit post icon'}
+                        alt={'Apply icon'}
                         width={25}
                         height={25}
                         draggable={false}
@@ -246,12 +250,17 @@ export default function PostViewModal({
                       />
                     </button>
                     <button
+                      type={'button'}
                       className={`cursor-pointer flex md:w-[37px] md:h-[37px] justify-center items-center`}
-                      onClick={() => setIsInEditingMode(false)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsInEditingMode(false);
+                      }}
                     >
                       <Image
                         src={`/images/icons/cross.svg`}
-                        alt={'Delete post icon'}
+                        alt={'Exit editing icon'}
                         width={30}
                         height={30}
                         draggable={false}
@@ -262,8 +271,13 @@ export default function PostViewModal({
                 ) : (
                   <div className={'flex flex-row ml-auto mr-6 gap-4'}>
                     <button
+                      type={'button'}
                       className={`cursor-pointer flex md:w-[34px] md:h-[34px] justify-center items-center`}
-                      onClick={() => setIsInEditingMode(true)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setIsInEditingMode(true);
+                      }}
                     >
                       <Image
                         src={`/images/icons/edit.svg`}
@@ -275,8 +289,13 @@ export default function PostViewModal({
                       />
                     </button>
                     <button
+                      type={'button'}
                       className={`cursor-pointer flex md:w-[37px] md:h-[37px] justify-center items-center`}
-                      onClick={async () => deletePost(post, onClose)}
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        deletePost(post, onClose);
+                      }}
                     >
                       <Image
                         src={`/images/icons/delete.svg`}
@@ -305,7 +324,14 @@ export default function PostViewModal({
                   'flex items-center justify-center md:w-[45px] md:h-[45px]'
                 }
               >
-                <button onClick={handleLikeOrUnlikePost}>
+                <button
+                  type={'button'}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleLikeOrUnlikePost(e);
+                  }}
+                >
                   <Image
                     src={
                       liked
@@ -423,8 +449,11 @@ export default function PostViewModal({
                   />
                   <div className={`flex w-1/4 items-center`}>
                     <button
+                      type={'button'}
                       className={`rounded-3xl bg-[#4f378a] w-full h-1/3 text-white hover:bg-[#d0bcff] hover:text-black cursor-pointer`}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         addComment(
                           commentContent,
                           post,
@@ -443,7 +472,7 @@ export default function PostViewModal({
               </div>
             </div>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

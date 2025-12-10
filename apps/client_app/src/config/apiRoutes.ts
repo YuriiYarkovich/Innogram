@@ -15,6 +15,7 @@ export const SERVER = {
     FOLLOW: `${env.NEXT_PUBLIC_API_URL}/profiles/follow/`,
     UNFOLLOW: `${env.NEXT_PUBLIC_API_URL}/profiles/unfollow/`,
     CREATE_POST: `${env.NEXT_PUBLIC_API_URL}/posts/create`,
+    UPDATE_POST: `${env.NEXT_PUBLIC_API_URL}/posts/edit/`,
     LIKE_POST: `${env.NEXT_PUBLIC_API_URL}/posts/like/`,
     UNLIKE_POST: `${env.NEXT_PUBLIC_API_URL}/posts/unlike/`,
     EDIT_PROFILE: `${env.NEXT_PUBLIC_API_URL}/profiles/update/`,

@@ -35,6 +35,7 @@ export class PostAssetRepository {
   async findAssetsByPost(postId: string): Promise<PostAsset[]> {
     return await this.postAssetRepository.find({
       where: { postId: postId },
+      order: { order: 'ASC' },
     });
   }
 

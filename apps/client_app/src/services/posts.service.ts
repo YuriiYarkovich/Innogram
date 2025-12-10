@@ -9,7 +9,6 @@ export const createPost = async (
   const formData = new FormData();
   formData.append('content', content);
 
-  // Добавляем все файлы в FormData
   files.forEach((file) => {
     formData.append('files', file);
   });
@@ -73,19 +72,61 @@ export const deletePost = async (post: Post, onClose: () => void) => {
   }
 };
 
-export const fetchPostsOfProfile = async (profileId: string) => {
-  const resPosts: Response = await fetch(
+export const fetchPostsOfProfile = async (
+  profileId: string,
+): Promise<Post[]> => {
+  const response: Response = await fetch(
     `${SERVER.API.GEL_ALL_POSTS_OF_PROFILE}${profileId}`,
     {
       credentials: 'include',
     },
   );
-  return await resPosts.json();
+
+  if (!response.ok) {
+    throw new Error(`Error: ${response.status}`);
+  }
+  return await response.json();
 };
 
-export const fetchPostsOfSubscribedOnProfiles = async () => {
-  const res: Response = await fetch(SERVER.API.GET_POSTS_OF_SUBSCRIBED_ON, {
-    credentials: 'include',
+export const fetchPostsOfSubscribedOnProfiles = async (): Promise<Post[]> => {
+  const response: Response = await fetch(
+    SERVER.API.GET_POSTS_OF_SUBSCRIBED_ON,
+    {
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Error: ${response.status}`);
+  }
+  const receivedPosts: Post[] = await response.json();
+
+  receivedPosts.forEach((post) => console.log(JSON.stringify(post)) + '\n');
+
+  return receivedPosts;
+};
+
+export const updatePost = async (
+  postId: string,
+  content: string,
+  files: File[],
+): Promise<Post> => {
+  const formData = new FormData();
+  formData.append('content', content);
+
+  files.forEach((file) => {
+    formData.append('files', file);
   });
-  return await res.json();
+
+  const response: Response = await fetch(`${SERVER.API.UPDATE_POST}${postId}`, {
+    method: 'PUT',
+    credentials: 'include',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Error: ${response.status}`);
+  }
+
+  return await response.json();
 };

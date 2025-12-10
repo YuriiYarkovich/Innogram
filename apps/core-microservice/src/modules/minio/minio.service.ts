@@ -53,7 +53,7 @@ export class MinioService {
     this.s3BaseUrl = this.config.get<string>('S3_ENDPOINT');
   }
 
-  private getVideoDuration(buffer: Buffer): Promise<number> {
+  getVideoDuration(buffer: Buffer): Promise<number> {
     return new Promise((resolve, reject) => {
       const worker = new Worker(
         path.resolve(__dirname, 'video_duration.worker.ts'),
@@ -76,8 +76,14 @@ export class MinioService {
     });
   }
 
+  generateHashedFileName(originalName: string): string {
+    const fileExtension: string = extname(originalName).toLowerCase();
+    return uuid.v4() + fileExtension;
+  }
+
   async uploadFile(
     file: MulterFile,
+    newHashedFilename?: string,
   ): Promise<{ hashedFileName: string; type: string }> {
     let type: string;
     const fileExtension: string = extname(file.originalname).toLowerCase();
@@ -97,7 +103,9 @@ export class MinioService {
       }
     } else type = 'image';
 
-    const hashedFileName: string = uuid.v4() + fileExtension;
+    const hashedFileName: string = newHashedFilename
+      ? newHashedFilename
+      : this.generateHashedFileName(fileExtension);
 
     const command = new PutObjectCommand({
       Bucket: this.bucketName,

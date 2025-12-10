@@ -32,7 +32,7 @@ export class PostsService {
     currentProfileId: string,
     dto: CreatePostDto,
     files: MulterFile[],
-  ): Promise<Post> {
+  ) {
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -64,42 +64,56 @@ export class PostsService {
   ): Promise<ReturningPostData[]> {
     const returningPostsData: ReturningPostData[] = [];
     for (const postData of foundData) {
-      const assetsOfPost: PostAsset[] =
-        await this.postAssetRepository.findAssetsByPost(postData.postId);
-      const returningAssetsData: ReturningAssetData[] = [];
-      for (const asset of assetsOfPost) {
-        const assetData: ReturningAssetData = {
-          url: '',
-          order: 0,
-        };
-        const url: string | undefined = await this.minioService.getPublicUrl(
-          asset.hashedFileName,
-        );
-        assetData.url = url;
-        assetData.order = asset.order;
-        returningAssetsData.push(assetData);
-      }
-      const like: PostLike | null = await this.postLikeRepository.findLike(
-        postData.postId,
+      const returningPostData = await this.createReturningPostData(
+        postData,
         profileId,
+        currentProfileId,
       );
 
-      const profileAvatarUrl: string | undefined =
-        await this.minioService.getPublicUrl(postData.profileAvatarFilename);
-
-      const isCreator: boolean = currentProfileId === postData.profileId;
-
-      const returningPostData: ReturningPostData = {
-        ...postData,
-        profileAvatarUrl,
-        liked: !!like,
-        assets: returningAssetsData,
-        isCreator,
-      };
       returningPostsData.push(returningPostData);
     }
 
     return returningPostsData;
+  }
+
+  private async createReturningPostData(
+    postData: FoundPostData,
+    profileId: string,
+    currentProfileId: string,
+  ) {
+    const assetsOfPost: PostAsset[] =
+      await this.postAssetRepository.findAssetsByPost(postData.postId);
+    const returningAssetsData: ReturningAssetData[] = [];
+    for (const asset of assetsOfPost) {
+      const assetData: ReturningAssetData = {
+        url: '',
+        order: 0,
+      };
+      const url: string | undefined = await this.minioService.getPublicUrl(
+        asset.hashedFileName,
+      );
+      assetData.url = url;
+      assetData.order = asset.order;
+      returningAssetsData.push(assetData);
+    }
+    const like: PostLike | null = await this.postLikeRepository.findLike(
+      postData.postId,
+      profileId,
+    );
+
+    const profileAvatarUrl: string | undefined =
+      await this.minioService.getPublicUrl(postData.profileAvatarFilename);
+
+    const isCreator: boolean = currentProfileId === postData.profileId;
+
+    const returningPostData: ReturningPostData = {
+      ...postData,
+      profileAvatarUrl,
+      liked: !!like,
+      assets: returningAssetsData,
+      isCreator,
+    };
+    return returningPostData;
   }
 
   async getAllPostsOfSubscribedOn(
@@ -156,19 +170,27 @@ export class PostsService {
 
   async updatePost(
     postId: string,
-    profileId: string,
+    currentProfileId: string,
     dto: CreatePostDto,
     files: MulterFile[],
   ) {
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
+
+    //array to keep information to load them after commit
+    const filesToUploadAfterCommit: Array<{
+      file: MulterFile;
+      hashedFileName: string;
+      type: string;
+      order: number;
+    }> = [];
+
     try {
       const foundPost = await this.postsRepository.getPostByIdAndProfile(
-        profileId,
+        currentProfileId,
         postId,
       );
-
       if (!foundPost) throw new BadRequestException(`Post couldn't be found`);
 
       const updatedPost = await this.postsRepository.updatePost(
@@ -177,8 +199,17 @@ export class PostsService {
         queryRunner,
       );
 
-      const existingFileNames: string[] =
-        updatedPost?.postAssets?.map((a) => a.hashedFileName) ?? [];
+      //Getting existing assets with their order
+      const existingAssets = updatedPost?.postAssets ?? [];
+
+      //Creating map to search order by filename
+      const existingFileNameToOrder = new Map<string, number>(
+        existingAssets.map((asset) => [asset.hashedFileName, asset.order]),
+      );
+
+      const existingFileNames: string[] = existingAssets.map(
+        (a) => a.hashedFileName,
+      );
       const newFileNames: string[] = files.map((f) => f.originalname);
 
       const namesToAdd = newFileNames.filter(
@@ -188,41 +219,114 @@ export class PostsService {
         (name: string) => !newFileNames.includes(name),
       );
 
+      //Collecting order from deleting files to reuse
+      const availableOrders: number[] = [];
+
       if (namesToRemove.length > 0) {
         for (const fileName of namesToRemove) {
           const asset =
             await this.postAssetRepository.findAssetByName(fileName);
           if (!asset) continue;
 
+          availableOrders.push(asset.order);
+
           await this.postAssetRepository.deletePostAsset(asset.id, queryRunner);
-          await this.minioService.deleteFile(fileName);
+          await this.minioService.deleteFile(fileName); //TODO move files deletion after transaction commit
         }
       }
 
-      if (namesToAdd.length > 0) {
-        const existingAssets =
-          await this.postAssetRepository.findAssetsByPost(postId);
-        let order = existingAssets.length;
+      //sorting freed order ascending
+      availableOrders.sort((a, b) => a - b);
 
-        const filesToAdd = files.filter((f) =>
-          namesToAdd.includes(f.originalname),
-        );
+      const remainingAssets =
+        await this.postAssetRepository.findAssetsByPost(postId);
+      let maxOrder =
+        remainingAssets.length > 0
+          ? Math.max(...remainingAssets.map((a) => a.order))
+          : 0;
+
+      const filesToAdd = files.filter((f) =>
+        namesToAdd.includes(f.originalname),
+      );
+
+      if (filesToAdd.length > 0) {
+        let availableOrderIndex = 0;
 
         for (const file of filesToAdd) {
-          const newAsset = await this.minioService.uploadFile(file);
+          //Generating hash name and getting type before uploading
+          const hashedFileName = this.minioService.generateHashedFileName(
+            file.originalname,
+          );
+
+          //Type validation
+          const mimeType: string = file.mimetype;
+          const isImage: boolean = mimeType.startsWith('image/');
+          const isVideo: boolean = mimeType.startsWith('video/');
+
+          if (!isImage && !isVideo)
+            throw new BadRequestException('Unknown file type');
+
+          let type: string;
+          if (isVideo) {
+            const duration: number = await this.minioService.getVideoDuration(
+              file.buffer,
+            );
+            type = 'video';
+            if (duration > 60) {
+              throw new BadRequestException('Video is longer then one minute');
+            }
+          } else type = 'image';
+
+          // Getting order for new file
+          let order: number;
+          if (availableOrderIndex < availableOrders.length) {
+            //using freed order
+            order = availableOrders[availableOrderIndex];
+            availableOrderIndex++;
+          } else {
+            // using next
+            order = ++maxOrder;
+          }
+
+          // Creating DB note with hashed name
           await this.postAssetRepository.createPostAsset(
-            newAsset.hashedFileName,
+            hashedFileName,
             postId,
             queryRunner,
-            newAsset.type,
-            ++order,
+            type,
+            order,
+          );
+
+          // Saving uploading information after commit
+          filesToUploadAfterCommit.push({
+            file,
+            hashedFileName,
+            type,
+            order,
+          });
+        }
+      }
+
+      const updatedPostData = await this.postsRepository.findPostById(postId);
+      const returningPostData = await this.createReturningPostData(
+        updatedPostData,
+        currentProfileId,
+        currentProfileId,
+      );
+
+      await queryRunner.commitTransaction();
+
+      // after successfull commit loading files to minio
+      if (filesToUploadAfterCommit.length > 0) {
+        for (const fileInfo of filesToUploadAfterCommit) {
+          await this.minioService.uploadFile(
+            fileInfo.file,
+            fileInfo.hashedFileName,
           );
         }
       }
 
-      await queryRunner.commitTransaction();
-
-      return updatedPost;
+      return returningPostData;
     } catch (e) {
       await queryRunner.rollbackTransaction();
       throw e;

@@ -25,25 +25,6 @@ export class PostsRepository {
     return post;
   }
 
-  async getByProfile(profileId: string): Promise<Post[]> {
-    return await this.postRepository.find({
-      relations: {
-        postAssets: true,
-        postLikes: true,
-      },
-      where: [
-        {
-          profileId: profileId,
-          status: PostStatus.ACTIVE,
-        },
-        {
-          profileId: profileId,
-          status: PostStatus.ARCHIVED,
-        },
-      ],
-    });
-  }
-
   async getPostByIdAndProfile(
     profileId: string,
     postId: string,
@@ -68,7 +49,7 @@ export class PostsRepository {
     postId: string,
     dto: CreatePostDto,
     queryRunner: QueryRunner,
-  ): Promise<Post> {
+  ) {
     await queryRunner.manager.update(
       Post,
       { id: postId },
@@ -85,17 +66,38 @@ export class PostsRepository {
     return updatedPost;
   }
 
-  async deletePost(postId: string): Promise<Post | null> {
+  async deletePost(postId: string) {
     await this.postRepository.update(postId, { status: PostStatus.DELETED });
 
     return await this.findPostById(postId);
   }
 
-  async findPostById(postId: string): Promise<Post | null> {
-    return await this.postRepository.findOne({ where: { id: postId } });
+  async findPostById(postId: string) {
+    const rows: FoundPostData[] = await this.postRepository.query(
+      `
+        SELECT p.id                                                            AS "postId",
+               p.profile_id                                                    AS "profileId",
+               pr.username,
+               pr.avatar_filename                                              AS "profileAvatarFilename",
+               p.content,
+               CASE
+                 WHEN EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 < 10
+                   THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
+                 ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
+                 END                                                           AS "timePast",
+               (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount"
+        FROM main.posts AS p
+               LEFT JOIN main.profiles AS pr ON p.profile_id = pr.id
+        WHERE p.id = $1
+        ORDER BY p.created_at DESC
+      `,
+      [postId],
+    );
+
+    return rows[0];
   }
 
-  async archivePost(postId: string): Promise<Post | null> {
+  async archivePost(postId: string) {
     await this.postRepository.update(
       { id: postId },
       { status: PostStatus.ARCHIVED },

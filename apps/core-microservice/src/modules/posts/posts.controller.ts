@@ -58,7 +58,7 @@ export class PostsController {
   @ApiConsumes('multipart/form-data')
   @Get(`/allOfSubscribedOn/`)
   @UseGuards(AuthGuard)
-  async getAllPostsOfSubscribedOnUsers(): Promise<ReturningPostData[]> {
+  async getAllPostsOfSubscribedOnUsers() {
     const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.postsService.getAllPostsOfSubscribedOn(profileId);
   }
@@ -74,8 +74,13 @@ export class PostsController {
     @Body() dto: CreatePostDto,
     @UploadedFiles() files,
   ) {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
-    return await this.postsService.updatePost(postId, profileId, dto, files);
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.postsService.updatePost(
+      postId,
+      currentProfileId,
+      dto,
+      files,
+    );
   }
 
   @ApiOperation({ summary: 'Deletes posts' })

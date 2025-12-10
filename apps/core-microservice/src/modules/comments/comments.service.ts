@@ -33,7 +33,7 @@ export class CommentsService {
   }
 
   private async checkIfPostExists(postId: string) {
-    const post: Post | null = await this.postsRepository.findPostById(postId);
+    const post = await this.postsRepository.findPostById(postId);
     if (!post) throw new BadRequestException('There is no such post!');
   }
 
