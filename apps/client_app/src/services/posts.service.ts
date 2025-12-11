@@ -1,6 +1,5 @@
 import { SERVER } from '@/config/apiRoutes';
 import { Post } from '@/types';
-import { responseCookiesToRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 
 export const createPost = async (
   content: string,
@@ -99,7 +98,8 @@ export const fetchPostsOfSubscribedOnProfiles = async (
     console.error(await response.json());
     return [];
   }
-  return response.json();
+
+  return await response.json();
 };
 
 export const fetchFirstPostOfSubscribedOnProfiles =

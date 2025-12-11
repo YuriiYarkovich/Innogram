@@ -6,10 +6,10 @@ import {
   Param,
   Post,
   Put,
-  UploadedFiles,
-  UseInterceptors,
-  UseGuards,
   Query,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -24,7 +24,6 @@ import { PostLike } from '../../common/entities/posts/post-like.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { context, CONTEXT_KEYS } from '../../common/cls/request-context';
-import { ReturningPostData } from '../../common/types/posts.type';
 
 @ApiTags('Operations with posts')
 @ApiBearerAuth('access-token')

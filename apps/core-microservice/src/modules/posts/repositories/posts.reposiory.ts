@@ -138,7 +138,7 @@ export class PostsRepository {
     subscriptionsProfilesIds: string[],
     lastLoadedPostCreatedAt: string,
   ): Promise<FoundPostData[]> {
-    return await this.postRepository.query(
+    return await this.postRepository.query<FoundPostData[]>(
       `
         SELECT p.id                                                            AS "postId",
                p.profile_id                                                    AS "profileId",
