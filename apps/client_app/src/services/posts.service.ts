@@ -84,7 +84,6 @@ export const fetchPostsOfProfile = async (
 export const fetchPostsOfSubscribedOnProfiles = async (
   lastLoadedPostCreatedAt: string,
 ): Promise<Post[]> => {
-  console.log(`Sending created at: ${lastLoadedPostCreatedAt}`);
   const url = new URL(SERVER.API.GET_POSTS_OF_SUBSCRIBED_ON);
 
   if (lastLoadedPostCreatedAt) {
@@ -96,23 +95,35 @@ export const fetchPostsOfSubscribedOnProfiles = async (
     credentials: 'include',
   });
 
-  if (!response.ok) console.error(await response.json());
+  if (!response.ok) {
+    console.error(await response.json());
+    return [];
+  }
   return response.json();
 };
 
-export const fetchFirstPostOfSubscribedOnProfiles = async (): Promise<Post> => {
-  const url = new URL(SERVER.API.PRELOAD_FIRST_POST_OF_SUBSCRIBED_ON);
+export const fetchFirstPostOfSubscribedOnProfiles =
+  async (): Promise<Post | null> => {
+    const url = new URL(SERVER.API.PRELOAD_FIRST_POST_OF_SUBSCRIBED_ON);
 
-  const response: Response = await fetch(url.toString(), {
-    method: 'GET',
-    credentials: 'include',
-  });
+    const response: Response = await fetch(url.toString(), {
+      method: 'GET',
+      credentials: 'include',
+    });
 
-  if (!response.ok) console.error(await response.json());
-  const receivedPost: Post = await response.json();
-  console.log(`Received post: ${JSON.stringify(receivedPost)}`);
-  return receivedPost;
-};
+    if (!response.ok) {
+      console.error(await response.json());
+      return null;
+    }
+
+    const receivedData = await response.json();
+
+    const receivedPost: Post = Array.isArray(receivedData)
+      ? receivedData[0]
+      : receivedData;
+
+    return receivedPost || null;
+  };
 
 export const updatePost = async (
   postId: string,

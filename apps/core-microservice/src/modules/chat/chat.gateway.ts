@@ -22,7 +22,6 @@ import * as cookie from 'cookie';
 import type {
   MessageReceiver,
   ReceivingMessage,
-  ReturningMessageData,
 } from '../../common/types/message.type';
 import { File as MulterFile } from 'multer';
 import { Logger } from 'nestjs-pino';

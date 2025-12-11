@@ -28,6 +28,7 @@ export default function PostTile({ post }: { post: Post }) {
     }
   };
 
+  if (!post || !post.assets) return null;
   return (
     <div>
       <PostViewModal

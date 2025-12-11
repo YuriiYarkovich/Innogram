@@ -103,8 +103,11 @@ const ChatCreationModal = ({
     <div
       className={`fixed inset-0 z-50 flex justify-center items-center backdrop-blur-xs bg-black/50 min-h-screen`}
     >
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <div className={`flex flex-row items-center w-full min-h-[50px]`}>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className={'bg-[#eaddff] p-4 flex flex-col gap-3 rounded-4xl'}
+      >
+        <div className={`flex flex-row items-center w-full min-h-[50px] `}>
           <button
             onClick={onClose}
             className={`flex justify-center items-center min-w-[47px] min-h-[47px]`}

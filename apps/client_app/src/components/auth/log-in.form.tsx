@@ -25,7 +25,6 @@ export default function LogInForm() {
       data.password,
       (msg: string | null) => {
         if (msg) {
-          console.log(`Errors: ${msg}`);
           setError('root', { message: msg });
         }
       },

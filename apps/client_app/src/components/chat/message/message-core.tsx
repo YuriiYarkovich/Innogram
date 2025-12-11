@@ -64,7 +64,6 @@ const MessageCore = ({
             .map((asset, index) => {
               if (!asset.url) return null;
 
-              // Убираем query параметры для проверки расширения
               const urlWithoutQuery = asset.url.split('?')[0];
               const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(urlWithoutQuery);
               const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(

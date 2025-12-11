@@ -26,9 +26,7 @@ export class CommentsService {
     dto: CreateCommentDto,
     profileId: string,
   ): Promise<Comment> {
-    console.log(`Received dto: ${JSON.stringify(dto)}`);
     await this.checkIfPostExists(dto.postId);
-    console.log(`profile id: ${profileId}`);
     return await this.commentsRepository.createComment(dto, profileId);
   }
 

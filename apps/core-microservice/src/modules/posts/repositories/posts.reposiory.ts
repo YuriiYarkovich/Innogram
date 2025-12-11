@@ -138,9 +138,6 @@ export class PostsRepository {
     subscriptionsProfilesIds: string[],
     lastLoadedPostCreatedAt: string,
   ): Promise<FoundPostData[]> {
-    console.log(
-      `Last loaded post timestamp in repository: ${lastLoadedPostCreatedAt}`,
-    );
     return await this.postRepository.query(
       `
         SELECT p.id                                                            AS "postId",

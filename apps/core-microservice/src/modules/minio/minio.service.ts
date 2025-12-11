@@ -86,7 +86,6 @@ export class MinioService {
     newHashedFilename?: string,
   ): Promise<{ hashedFileName: string; type: string }> {
     let type: string;
-    const fileExtension: string = extname(file.originalname).toLowerCase();
     const mimeType: string = file.mimetype;
 
     const isImage: boolean = mimeType.startsWith('image/');
@@ -105,7 +104,7 @@ export class MinioService {
 
     const hashedFileName: string = newHashedFilename
       ? newHashedFilename
-      : this.generateHashedFileName(fileExtension);
+      : this.generateHashedFileName(file.originalname);
 
     const command = new PutObjectCommand({
       Bucket: this.bucketName,

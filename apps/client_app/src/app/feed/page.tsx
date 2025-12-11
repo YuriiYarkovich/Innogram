@@ -27,8 +27,7 @@ const Page = () => {
         setLoading(true);
         const firstPost = await fetchFirstPostOfSubscribedOnProfiles();
 
-        // Более строгая проверка
-        if (!firstPost || typeof firstPost !== 'object') {
+        if (!firstPost) {
           setHasMore(false);
           setPosts([]);
           return;
@@ -38,7 +37,6 @@ const Page = () => {
           firstPost.createdAt,
         );
 
-        // Добавляем firstPost в начало только если его нет в allPosts
         const postsWithFirst = allPosts.some(
           (p) => p.postId === firstPost.postId,
         )
@@ -94,7 +92,6 @@ const Page = () => {
             <p>There are no posts yet</p>
           ) : (
             posts.map((post, index) => (
-              // Используем комбинацию postId и index для гарантии уникальности
               <PostTile post={post} key={post?.postId || `post-${index}`} />
             ))
           )}
