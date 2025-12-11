@@ -203,6 +203,7 @@ export default function PostViewModal({
                       width={512}
                       height={512}
                       draggable={false}
+                      loading={'eager'}
                       unoptimized
                       className="object-contain max-h-full max-w-full rounded-lg"
                     />
@@ -226,6 +227,7 @@ export default function PostViewModal({
                   height={50}
                   unoptimized
                   className={`rounded-full md:w-15 md:h-15`}
+                  loading={'eager'}
                   draggable={false}
                 />
                 <span className={`font-bold text-[20px]`}>{post.username}</span>

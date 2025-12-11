@@ -264,6 +264,7 @@ const ChatInfoModal = ({
               height={100}
               draggable={false}
               unoptimized
+              loading={'eager'}
               className={'rounded-[inherit] md:w-[100px] md:h-[100px]'}
             />
           )}

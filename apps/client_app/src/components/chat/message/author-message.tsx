@@ -26,6 +26,7 @@ const AuthorMessage = ({ message }: { message: Message }) => {
             height={40}
             width={40}
             unoptimized
+            loading={'eager'}
             draggable={false}
             className={'rounded-[inherit]'}
           />

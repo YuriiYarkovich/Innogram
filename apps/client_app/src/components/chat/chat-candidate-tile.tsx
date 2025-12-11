@@ -24,6 +24,7 @@ const ChatCandidateTile = ({
           height={40}
           draggable={false}
           unoptimized
+          loading={'eager'}
           className={'rounded-[inherit]'}
         />
       </div>

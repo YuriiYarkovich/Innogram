@@ -92,8 +92,6 @@ export const fetchPostsOfSubscribedOnProfiles = async (): Promise<Post[]> => {
   if (!response.ok) console.error(response.json());
   const receivedPosts: Post[] = await response.json();
 
-  receivedPosts.forEach((post) => console.log(JSON.stringify(post)) + '\n');
-
   return receivedPosts;
 };
 

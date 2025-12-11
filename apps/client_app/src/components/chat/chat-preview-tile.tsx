@@ -35,6 +35,7 @@ const ChatPreviewTile = ({
           height={70}
           draggable={false}
           unoptimized
+          loading={'eager'}
           className={`object-cover rounded-[inherit]`}
         />
       </div>

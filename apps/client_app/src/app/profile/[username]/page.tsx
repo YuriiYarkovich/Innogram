@@ -206,6 +206,7 @@ const Page = () => {
                   width={30}
                   height={30}
                   unoptimized
+                  loading={'eager'}
                   draggable={false}
                 />
                 <div className={`flex flex-col mt-20 gap-8`}>
@@ -322,7 +323,6 @@ const Page = () => {
                     </button>
                   </>
                 ) : profile.isSubscribed ? (
-                  // Приватный профиль, но мы подписаны - unfollow и отправка сообщения
                   <>
                     <button
                       className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
@@ -338,7 +338,6 @@ const Page = () => {
                     </button>
                   </>
                 ) : (
-                  // Приватный профиль, не подписаны - запрос подписки или отмена запроса
                   <button
                     className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
                     onClick={isRequested ? handleUnfollow : handleFollowing}

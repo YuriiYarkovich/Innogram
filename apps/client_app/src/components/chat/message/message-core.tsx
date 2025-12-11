@@ -92,6 +92,7 @@ const MessageCore = ({
                       'w-full h-auto rounded-[12px] object-cover max-h-[300px]'
                     }
                     draggable={false}
+                    loading={'eager'}
                     unoptimized
                   />
                 );

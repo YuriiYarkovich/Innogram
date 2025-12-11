@@ -20,6 +20,7 @@ const PostPreviewImage = ({
         width={177}
         height={380}
         draggable={false}
+        loading={'eager'}
         unoptimized
       />
     </button>

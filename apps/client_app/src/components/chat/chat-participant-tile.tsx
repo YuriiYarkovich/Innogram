@@ -27,6 +27,7 @@ const ChatParticipantTile = ({
           height={40}
           draggable={false}
           unoptimized
+          loading={'eager'}
           className={'rounded-[inherit] min-h-[40px] min-w-[40px]'}
         />
       </div>

@@ -47,6 +47,7 @@ export default function PostTile({ post }: { post: Post }) {
             width={512}
             height={512}
             draggable={false}
+            loading={'eager'}
             unoptimized
           />
           <span className={`text-black, text-[18px] ml-[15px]`}>
@@ -83,6 +84,7 @@ export default function PostTile({ post }: { post: Post }) {
                   height={512}
                   draggable={false}
                   unoptimized
+                  loading={'eager'}
                   className="object-contain max-h-full max-w-full rounded-lg"
                 />
               </div>
