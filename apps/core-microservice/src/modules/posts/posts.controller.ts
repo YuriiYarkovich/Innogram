@@ -125,4 +125,24 @@ export class PostsController {
     const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.postsService.archivePost(postId, currentProfileId);
   }
+
+  @ApiOperation({ summary: 'Returns all archives post of current profile' })
+  @ApiResponse({ status: 200, type: Post })
+  @Get(`/allArchived`)
+  @UseGuards(AuthGuard)
+  async getAllArchivedPosts() {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.postsService.getAllArchivedPostsOfProfile(
+      currentProfileId,
+    );
+  }
+
+  @ApiOperation({ summary: 'Restores archived post' })
+  @ApiResponse({ status: 200, type: Post })
+  @Put(`/unarchive/:postId`)
+  @UseGuards(AuthGuard)
+  async unarchivePost(@Param(`postId`) postId: string) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.postsService.unarchivePost(postId, currentProfileId);
+  }
 }

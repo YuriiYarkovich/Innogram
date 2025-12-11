@@ -78,7 +78,8 @@ export class PostsRepository {
                    THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
                  ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
                  END                                                           AS "timePast",
-               (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount"
+               (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount",
+               p.status
         FROM main.posts AS p
                LEFT JOIN main.profiles AS pr ON p.profile_id = pr.id
         WHERE p.id = $1
@@ -98,6 +99,14 @@ export class PostsRepository {
     return await this.findPostById(postId);
   }
 
+  async unarchivePost(postId: string) {
+    await this.postRepository.update(
+      { id: postId },
+      { status: PostStatus.ACTIVE },
+    );
+    return await this.findPostById(postId);
+  }
+
   async getAllOfProfileList(profileIds: string[]): Promise<FoundPostData[]> {
     return await this.postRepository.query(
       `
@@ -111,7 +120,8 @@ export class PostsRepository {
                    THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
                  ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
                  END                                                           AS "timePast",
-               (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount"
+               (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount",
+               p.status
         FROM main.posts AS p
                LEFT JOIN main.profiles AS pr ON p.profile_id = pr.id
         WHERE p.profile_id = ANY ($1)
@@ -119,6 +129,31 @@ export class PostsRepository {
         ORDER BY p.created_at DESC
       `,
       [profileIds, PostStatus.ACTIVE],
+    );
+  }
+
+  async getAllArchivedPosts(profileId: string) {
+    return await this.postRepository.query<FoundPostData[]>(
+      `
+        SELECT p.id                                                            AS "postId",
+               p.profile_id                                                    AS "profileId",
+               pr.username,
+               pr.avatar_filename                                              AS "profileAvatarFilename",
+               p.content,
+               CASE
+                 WHEN EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 < 10
+                   THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
+                 ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
+                 END                                                           AS "timePast",
+               (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount",
+               p.status
+        FROM main.posts AS p
+               LEFT JOIN main.profiles AS pr ON p.profile_id = pr.id
+        WHERE p.profile_id = $1
+          AND status = $2
+        ORDER BY p.created_at DESC
+      `,
+      [profileId, PostStatus.ARCHIVED],
     );
   }
 }

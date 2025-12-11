@@ -7,6 +7,7 @@ import {
   ChatStatus,
 } from '@innogram/core-microservice/dist/common/enums/chat.enum';
 import { FollowAcceptedStatus } from '@innogram/core-microservice/dist/common/enums/profile-follow.enum';
+import { PostStatus } from '@/enums';
 
 export type Post = {
   postId: string;
@@ -18,6 +19,7 @@ export type Post = {
   likesCount: number;
   liked: boolean;
   assets: AssetData[];
+  status: PostStatus;
   isCreator: boolean;
 };
 

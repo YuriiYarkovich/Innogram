@@ -1,5 +1,6 @@
 import { SERVER } from '@/config/apiRoutes';
 import { Post } from '@/types';
+import { responseCookiesToRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 
 export const createPost = async (
   content: string,
@@ -119,12 +120,39 @@ export const updatePost = async (
   return await response.json();
 };
 
-export const archivePost = async (postId: string) => {
-  console.log(`postId: ${postId}`);
+export const archivePost = async (postId: string): Promise<Post> => {
   const response: Response = await fetch(
     `${SERVER.API.ARCHIVE_POST}${postId}`,
     {
       method: 'PUT',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) console.error(response.json());
+
+  return await response.json();
+};
+
+export const unarchivePost = async (postId: string): Promise<Post> => {
+  const response: Response = await fetch(
+    `${SERVER.API.UNARCHIVE_POST}${postId}`,
+    {
+      method: 'PUT',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) console.error(response.json());
+
+  return await response.json();
+};
+
+export const fetchAllArchivedPosts = async (): Promise<Post[]> => {
+  const response: Response = await fetch(
+    `${SERVER.API.GET_ALL_ARCHIVED_POSTS}`,
+    {
+      method: 'GET',
       credentials: 'include',
     },
   );

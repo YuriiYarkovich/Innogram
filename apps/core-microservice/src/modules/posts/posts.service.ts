@@ -368,13 +368,46 @@ export class PostsService {
   }
 
   async archivePost(postId: string, currentProfileId: string) {
-    console.log(`postId: ${postId}, currentProfileId: ${currentProfileId}`);
     const post = await this.postsRepository.findPostById(postId);
-    console.log(`Found post: ${JSON.stringify(post)}`);
 
     if (!post)
       throw new WrongUserException('This user has not got post with this id!');
 
     return await this.postsRepository.archivePost(postId);
+  }
+
+  async getAllArchivedPostsOfProfile(currentProfileId: string) {
+    const foundPostsData =
+      await this.postsRepository.getAllArchivedPosts(currentProfileId);
+
+    const returningPostsData: ReturningPostData[] = [];
+
+    for (const foundPostData of foundPostsData) {
+      const returningPostData = await this.createReturningPostData(
+        foundPostData,
+        currentProfileId,
+        currentProfileId,
+      );
+
+      returningPostsData.push(returningPostData);
+    }
+
+    return returningPostsData;
+  }
+
+  async unarchivePost(postId: string, currentProfileId: string) {
+    let post = await this.postsRepository.findPostById(postId);
+
+    if (!post) throw new BadRequestException('This post does not exist');
+
+    await this.postsRepository.unarchivePost(postId);
+
+    post = await this.postsRepository.findPostById(postId);
+
+    return await this.createReturningPostData(
+      post,
+      currentProfileId,
+      currentProfileId,
+    );
   }
 }

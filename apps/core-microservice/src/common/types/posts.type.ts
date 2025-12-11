@@ -1,3 +1,5 @@
+import { PostStatus } from 'innogram-client/src/enums';
+
 export interface FoundPostData {
   postId: string;
   profileId: string;
@@ -6,6 +8,7 @@ export interface FoundPostData {
   content: string;
   timePast: string;
   likesCount: number;
+  status: PostStatus;
 }
 
 export interface ReturningPostData {
@@ -16,6 +19,7 @@ export interface ReturningPostData {
   content: string;
   timePast: string;
   likesCount: number;
+  status: PostStatus;
   liked: boolean;
   assets: ReturningAssetData[];
   isCreator: boolean;

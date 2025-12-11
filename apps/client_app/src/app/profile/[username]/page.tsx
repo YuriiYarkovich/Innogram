@@ -288,7 +288,6 @@ const Page = () => {
                 className={`flex flex-row w-full justify-center gap-20 mt-10 mb-10`}
               >
                 {profile.isCurrent ? (
-                  // Текущий пользователь - кнопки редактирования
                   <>
                     <button
                       className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
@@ -297,13 +296,17 @@ const Page = () => {
                       Edit profile
                     </button>
                     <button
+                      onClick={() => {
+                        location.replace(
+                          `/profile/${profile.username}/archive`,
+                        );
+                      }}
                       className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
                     >
                       View archive
                     </button>
                   </>
                 ) : profile.isPublic ? (
-                  // Публичный профиль - follow/unfollow и отправка сообщения
                   <>
                     <button
                       className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}

@@ -6,19 +6,20 @@ import PostCommentComponent from '@/components/post/post-comment-component';
 import Line from '@/components/line';
 import {
   archivePost,
-  createPost,
   deletePost,
   likeOrUnlikePost,
+  unarchivePost,
   updatePost,
 } from '@/services/posts.service';
 import { addComment, fetchComments } from '@/services/comment.service';
-import { PostPreviewModalProps, PostComment } from '@/types';
+import { PostComment, PostPreviewModalProps } from '@/types';
 import CrossAngleButton from '@/components/crossAngle.button';
 import Carousel from '@/components/carousel';
 import { useForm } from 'react-hook-form';
 import { PostCreationFormValues } from '@/components/feedPage/postCreationModal';
 import { loadFromS3 } from '@/services/files.service';
 import AddFilePlaceholder from '@/components/add-file-placeholder';
+import { PostStatus } from '@/enums';
 
 export default function PostViewModal({
   post,
@@ -289,24 +290,52 @@ export default function PostViewModal({
                         className={`hover:md:w-[34px] hover:md:h-[34px]`}
                       />
                     </button>
-                    <button
-                      type={'button'}
-                      className={`cursor-pointer flex md:w-[34px] md:h-[34px] justify-center items-center`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        archivePost(post.postId).then(() => location.reload());
-                      }}
-                    >
-                      <Image
-                        src={`/images/icons/archive.svg`}
-                        alt={'archive post icon'}
-                        width={25}
-                        height={25}
-                        draggable={false}
-                        className={`hover:md:w-[34px] hover:md:h-[34px]`}
-                      />
-                    </button>
+                    {post.status === PostStatus.ACTIVE ? (
+                      <button
+                        type={'button'}
+                        className={`cursor-pointer flex md:w-[34px] md:h-[34px] justify-center items-center`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          archivePost(post.postId).then(() =>
+                            location.reload(),
+                          );
+                        }}
+                      >
+                        <Image
+                          src={`/images/icons/archive.svg`}
+                          alt={'archive post icon'}
+                          width={25}
+                          height={25}
+                          draggable={false}
+                          className={`hover:md:w-[34px] hover:md:h-[34px]`}
+                        />
+                      </button>
+                    ) : (
+                      post.status === PostStatus.ARCHIVED && (
+                        <button
+                          type={'button'}
+                          className={`cursor-pointer flex md:w-[34px] md:h-[34px] justify-center items-center`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            unarchivePost(post.postId).then(() =>
+                              location.reload(),
+                            );
+                          }}
+                        >
+                          <Image
+                            src={`/images/icons/unarchive.svg`}
+                            alt={'unarchive post icon'}
+                            width={25}
+                            height={25}
+                            draggable={false}
+                            className={`hover:md:w-[34px] hover:md:h-[34px]`}
+                          />
+                        </button>
+                      )
+                    )}
+
                     <button
                       type={'button'}
                       className={`cursor-pointer flex md:w-[37px] md:h-[37px] justify-center items-center`}
