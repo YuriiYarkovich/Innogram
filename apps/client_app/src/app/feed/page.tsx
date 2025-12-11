@@ -27,8 +27,10 @@ const Page = () => {
         setLoading(true);
         const firstPost = await fetchFirstPostOfSubscribedOnProfiles();
 
-        if (!firstPost) {
+        // Более строгая проверка
+        if (!firstPost || typeof firstPost !== 'object') {
           setHasMore(false);
+          setPosts([]);
           return;
         }
 
@@ -36,10 +38,19 @@ const Page = () => {
           firstPost.createdAt,
         );
 
-        setPosts(allPosts);
-        setHasMore(allPosts.length > 0);
+        // Добавляем firstPost в начало только если его нет в allPosts
+        const postsWithFirst = allPosts.some(
+          (p) => p.postId === firstPost.postId,
+        )
+          ? allPosts
+          : [firstPost, ...allPosts];
+
+        setPosts(postsWithFirst);
+        setHasMore(postsWithFirst.length > 0);
       } catch (error) {
-        console.error(error);
+        console.error('Error loading initial posts:', error);
+        setHasMore(false);
+        setPosts([]);
       } finally {
         setLoading(false);
       }
@@ -48,7 +59,6 @@ const Page = () => {
     loadInitialPosts();
   }, []);
 
-  // Функция для подгрузки следующих постов
   const loadMorePosts = async () => {
     if (loadingMore || !hasMore || posts.length === 0) return;
 
@@ -65,7 +75,7 @@ const Page = () => {
         setPosts((prev) => [...prev, ...newPosts]);
       }
     } catch (error) {
-      console.error(error);
+      console.error('Error loading more posts:', error);
     } finally {
       setLoadingMore(false);
     }
@@ -83,19 +93,27 @@ const Page = () => {
           ) : posts.length === 0 ? (
             <p>There are no posts yet</p>
           ) : (
-            posts.map((post) => <PostTile post={post} key={post.postId} />)
+            posts.map((post, index) => (
+              // Используем комбинацию postId и index для гарантии уникальности
+              <PostTile post={post} key={post?.postId || `post-${index}`} />
+            ))
           )}
         </main>
-        <div className={'flex w-full justify-center m-4'}>
-          <button
-            onClick={loadMorePosts}
-            className={
-              'min-w-[50px] min-h-[20px] bg-[#eaddff] rounded-2xl cursor-pointer hover:bg-[#B282FF] hover:text-white ml-10'
-            }
-          >
-            <span className={'m-3'}>Load more</span>
-          </button>
-        </div>
+        {!loading && posts.length >= 10 && hasMore && (
+          <div className={'flex w-full justify-center m-4'}>
+            <button
+              onClick={loadMorePosts}
+              disabled={loadingMore}
+              className={
+                'min-w-[50px] min-h-[20px] bg-[#eaddff] rounded-2xl cursor-pointer hover:bg-[#B282FF] hover:text-white ml-10 disabled:opacity-50 disabled:cursor-not-allowed'
+              }
+            >
+              <span className={'m-3'}>
+                {loadingMore ? 'Loading...' : 'Load more'}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

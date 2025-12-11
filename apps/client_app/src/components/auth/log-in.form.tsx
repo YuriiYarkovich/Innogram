@@ -75,7 +75,9 @@ export default function LogInForm() {
           placeholder="Password"
           className={`border-2 ${
             errors.root?.message?.startsWith('Password') ||
-            errors.root?.message?.includes(', Password')
+            errors.root?.message?.includes(', Password') ||
+            errors.root?.message?.startsWith('Wrong') ||
+            errors.root?.message?.includes(', Wrong')
               ? 'border-red-600'
               : 'border-[#bcb8b8]'
           } rounded-[6px] px-3 py-2 w-full bg-white`}
@@ -92,7 +94,9 @@ export default function LogInForm() {
           <p className="text-red-600 text-base mt-1">
             {errors.root.message
               .split(',')
-              .find((msg) => msg.startsWith('Password'))}
+              .find(
+                (msg) => msg.startsWith('Password') || msg.startsWith('Wrong'),
+              )}
           </p>
         )}
       </div>

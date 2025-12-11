@@ -154,6 +154,8 @@ export class PostsService {
         followedProfilesIds,
       );
 
+    if (!foundData) return [];
+
     console.log(`Found post: ${JSON.stringify(foundData)}`);
 
     const returningPost = await this.createReturningPostData(

@@ -138,6 +138,9 @@ export class PostsRepository {
     subscriptionsProfilesIds: string[],
     lastLoadedPostCreatedAt: string,
   ): Promise<FoundPostData[]> {
+    console.log(
+      `Last loaded post timestamp in repository: ${lastLoadedPostCreatedAt}`,
+    );
     return await this.postRepository.query(
       `
         SELECT p.id                                                            AS "postId",
@@ -157,7 +160,7 @@ export class PostsRepository {
                LEFT JOIN main.profiles AS pr ON p.profile_id = pr.id
         WHERE p.profile_id = ANY ($1)
           AND status = $2
-          AND p.created_at < $3::timestamp
+          AND date_trunc('milliseconds', p.created_at) < $3
         ORDER BY p.created_at DESC
         LIMIT 10
       `,
