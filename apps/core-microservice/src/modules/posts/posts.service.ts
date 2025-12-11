@@ -410,4 +410,23 @@ export class PostsService {
       currentProfileId,
     );
   }
+
+  async getActivity(currentProfileId: string) {
+    const foundPostsData =
+      await this.postsRepository.findActivity(currentProfileId);
+
+    const returningPostsData: ReturningPostData[] = [];
+
+    for (const foundPostData of foundPostsData) {
+      const returningPostData = await this.createReturningPostData(
+        foundPostData,
+        currentProfileId,
+        currentProfileId,
+      );
+
+      returningPostsData.push(returningPostData);
+    }
+
+    return returningPostsData;
+  }
 }

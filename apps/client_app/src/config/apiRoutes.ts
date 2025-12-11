@@ -46,5 +46,6 @@ export const SERVER = {
     ARCHIVE_POST: `${env.NEXT_PUBLIC_API_URL}/posts/archive/`,
     UNARCHIVE_POST: `${env.NEXT_PUBLIC_API_URL}/posts/unarchive/`,
     GET_ALL_ARCHIVED_POSTS: `${env.NEXT_PUBLIC_API_URL}/posts/allArchived`,
+    GET_ACTIVITY: `${env.NEXT_PUBLIC_API_URL}/posts/activity`,
   },
 };

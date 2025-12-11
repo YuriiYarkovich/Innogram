@@ -156,4 +156,38 @@ export class PostsRepository {
       [profileId, PostStatus.ARCHIVED],
     );
   }
+
+  async findActivity(currentProfileId: string) {
+    return await this.postRepository.query<FoundPostData[]>(
+      `
+        SELECT p.id                                                            AS "postId",
+               p.profile_id                                                    AS "profileId",
+               pr.username,
+               pr.avatar_filename                                              AS "profileAvatarFilename",
+               p.content,
+               CASE
+                 WHEN EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 < 10
+                   THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
+                 ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
+                 END                                                           AS "timePast",
+               (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount",
+               p.status
+        FROM main.posts AS p
+               LEFT JOIN main.profiles AS pr ON p.profile_id = pr.id
+        WHERE p.status = $2
+          AND (
+          EXISTS (
+            SELECT 1 FROM main.post_likes pl
+            WHERE pl.post_id = p.id AND pl.profile_id = $1
+          )
+            OR EXISTS (
+            SELECT 1 FROM main.comments c
+            WHERE c.post_id = p.id AND c.profile_id = $1
+          )
+          )
+        ORDER BY p.created_at DESC
+      `,
+      [currentProfileId, PostStatus.ACTIVE],
+    );
+  }
 }

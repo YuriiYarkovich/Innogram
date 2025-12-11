@@ -161,3 +161,14 @@ export const fetchAllArchivedPosts = async (): Promise<Post[]> => {
 
   return await response.json();
 };
+
+export const fetchActivity = async (): Promise<Post[]> => {
+  const response: Response = await fetch(SERVER.API.GET_ACTIVITY, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) console.error(response.json());
+
+  return await response.json();
+};

@@ -78,6 +78,18 @@ const SidePanel = ({ curProfile }: { curProfile: Profile | null }) => {
               Notifications
             </button>
           </li>
+          <li>
+            <button
+              onClick={() =>
+                location.replace(`/profile/${curProfile?.username}/activity`)
+              }
+              className={
+                'flex hover:bg-[#d0bcff] p-2 rounded w-full text-[#21005d] cursor-pointer'
+              }
+            >
+              Activity
+            </button>
+          </li>
         </ul>
       </aside>
     </div>

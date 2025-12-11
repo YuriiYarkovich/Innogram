@@ -145,4 +145,15 @@ export class PostsController {
     const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.postsService.unarchivePost(postId, currentProfileId);
   }
+
+  @ApiOperation({
+    summary: 'Returns all likes and commented posts by current user',
+  })
+  @ApiResponse({ status: 200, type: Post })
+  @Get(`/activity`)
+  @UseGuards(AuthGuard)
+  async returnActivity() {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.postsService.getActivity(currentProfileId);
+  }
 }
