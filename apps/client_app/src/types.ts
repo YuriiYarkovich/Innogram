@@ -16,6 +16,7 @@ export type Post = {
   username: string;
   content: string;
   timePast: string;
+  createdAt: string;
   likesCount: number;
   liked: boolean;
   assets: AssetData[];

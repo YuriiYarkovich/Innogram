@@ -50,16 +50,16 @@ export class Post {
   })
   status: PostStatus.ACTIVE | PostStatus.ARCHIVED | PostStatus.DELETED;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   archived_at: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz' })
   deleted_at: Date;
 
   // Relations

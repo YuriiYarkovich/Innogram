@@ -47,5 +47,6 @@ export const SERVER = {
     UNARCHIVE_POST: `${env.NEXT_PUBLIC_API_URL}/posts/unarchive/`,
     GET_ALL_ARCHIVED_POSTS: `${env.NEXT_PUBLIC_API_URL}/posts/allArchived`,
     GET_ACTIVITY: `${env.NEXT_PUBLIC_API_URL}/posts/activity`,
+    PRELOAD_FIRST_POST_OF_SUBSCRIBED_ON: `${env.NEXT_PUBLIC_API_URL}/posts/preloadFirstPostOfSubscribedOn`,
   },
 };

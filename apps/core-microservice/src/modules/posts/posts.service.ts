@@ -117,20 +117,53 @@ export class PostsService {
   }
 
   async getAllPostsOfSubscribedOn(
-    profileId: string,
+    currentProfileId: string,
+    lastLoadedPostCreatedAt: string,
   ): Promise<ReturningPostData[]> {
+    console.log(`last loaded timestamp received: ${lastLoadedPostCreatedAt}`);
     const followedProfilesIds: string[] =
-      await this.profileFollowRepository.getAllSubscribedOnUsersIds(profileId);
-    followedProfilesIds.push(profileId);
+      await this.profileFollowRepository.getAllSubscribedOnUsersIds(
+        currentProfileId,
+      );
+    followedProfilesIds.push(currentProfileId);
 
     const foundData: FoundPostData[] =
-      await this.postsRepository.getAllOfProfileList(followedProfilesIds);
+      await this.postsRepository.getAllOfSubscribedOn(
+        followedProfilesIds,
+        lastLoadedPostCreatedAt,
+      );
+
+    console.log(`Found posts: ${JSON.stringify(foundData)}`);
 
     return await this.createReturningPostsArray(
       foundData,
-      profileId,
-      profileId,
+      currentProfileId,
+      currentProfileId,
     );
+  }
+
+  async preloadLastPostOfSubscriptions(currentProfileId: string) {
+    const followedProfilesIds: string[] =
+      await this.profileFollowRepository.getAllSubscribedOnUsersIds(
+        currentProfileId,
+      );
+    followedProfilesIds.push(currentProfileId);
+
+    const foundData =
+      await this.postsRepository.preloadFirstPostOfSubscribedOn(
+        followedProfilesIds,
+      );
+
+    console.log(`Found post: ${JSON.stringify(foundData)}`);
+
+    const returningPost = await this.createReturningPostData(
+      foundData,
+      currentProfileId,
+      currentProfileId,
+    );
+
+    console.log(`Returning post: ${JSON.stringify(returningPost)}`);
+    return returningPost;
   }
 
   async uploadFilesArray(

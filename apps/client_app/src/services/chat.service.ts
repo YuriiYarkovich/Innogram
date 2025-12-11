@@ -197,15 +197,12 @@ export const leaveChat = async (chatId: string) => {
     return { message: finalMessage || 'Failed to leave chat' };
   }
 
-  // Проверяем наличие контента
   const text = await response.text();
 
-  // Если тело пустое - всё ок, возвращаем null
   if (!text || text.trim() === '') {
     return null;
   }
 
-  // Если есть контент - это ошибка с сервера
   try {
     const responseMessage: { message: string } = JSON.parse(text);
     return responseMessage;

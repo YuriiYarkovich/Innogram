@@ -7,6 +7,7 @@ export interface FoundPostData {
   profileAvatarFilename: string;
   content: string;
   timePast: string;
+  createdAt: string;
   likesCount: number;
   status: PostStatus;
 }
@@ -18,6 +19,7 @@ export interface ReturningPostData {
   username: string;
   content: string;
   timePast: string;
+  createdAt: string;
   likesCount: number;
   status: PostStatus;
   liked: boolean;

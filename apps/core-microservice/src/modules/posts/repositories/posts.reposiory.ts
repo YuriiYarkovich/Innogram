@@ -78,6 +78,7 @@ export class PostsRepository {
                    THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
                  ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
                  END                                                           AS "timePast",
+               p.created_at                                                    AS "createdAt",
                (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount",
                p.status
         FROM main.posts AS p
@@ -120,6 +121,7 @@ export class PostsRepository {
                    THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
                  ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
                  END                                                           AS "timePast",
+               p.created_at                                                    AS "createdAt",
                (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount",
                p.status
         FROM main.posts AS p
@@ -130,6 +132,66 @@ export class PostsRepository {
       `,
       [profileIds, PostStatus.ACTIVE],
     );
+  }
+
+  async getAllOfSubscribedOn(
+    subscriptionsProfilesIds: string[],
+    lastLoadedPostCreatedAt: string,
+  ): Promise<FoundPostData[]> {
+    return await this.postRepository.query(
+      `
+        SELECT p.id                                                            AS "postId",
+               p.profile_id                                                    AS "profileId",
+               pr.username,
+               pr.avatar_filename                                              AS "profileAvatarFilename",
+               p.content,
+               CASE
+                 WHEN EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 < 10
+                   THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
+                 ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
+                 END                                                           AS "timePast",
+               p.created_at                                                    AS "createdAt",
+               (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount",
+               p.status
+        FROM main.posts AS p
+               LEFT JOIN main.profiles AS pr ON p.profile_id = pr.id
+        WHERE p.profile_id = ANY ($1)
+          AND status = $2
+          AND p.created_at < $3::timestamp
+        ORDER BY p.created_at DESC
+        LIMIT 10
+      `,
+      [subscriptionsProfilesIds, PostStatus.ACTIVE, lastLoadedPostCreatedAt],
+    );
+  }
+
+  async preloadFirstPostOfSubscribedOn(subscriptionsProfilesIds: string[]) {
+    const rows = await this.postRepository.query<FoundPostData[]>(
+      `
+        SELECT p.id                                                            AS "postId",
+               p.profile_id                                                    AS "profileId",
+               pr.username,
+               pr.avatar_filename                                              AS "profileAvatarFilename",
+               p.content,
+               CASE
+                 WHEN EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600 < 10
+                   THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
+                 ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
+                 END                                                           AS "timePast",
+               p.created_at                                                    AS "createdAt",
+               (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount",
+               p.status
+        FROM main.posts AS p
+               LEFT JOIN main.profiles AS pr ON p.profile_id = pr.id
+        WHERE p.profile_id = ANY ($1)
+          AND status = $2
+        ORDER BY p.created_at DESC
+        LIMIT 1
+      `,
+      [subscriptionsProfilesIds, PostStatus.ACTIVE],
+    );
+
+    return rows[0];
   }
 
   async getAllArchivedPosts(profileId: string) {
@@ -145,6 +207,7 @@ export class PostsRepository {
                    THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
                  ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
                  END                                                           AS "timePast",
+               p.created_at                                                    AS "createdAt",
                (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount",
                p.status
         FROM main.posts AS p
@@ -170,6 +233,7 @@ export class PostsRepository {
                    THEN ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric, 1)
                  ELSE ROUND(EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600::numeric)
                  END                                                           AS "timePast",
+               p.created_at                                                    AS "createdAt",
                (SELECT COUNT(*) FROM main.post_likes l WHERE l.post_id = p.id) AS "likesCount",
                p.status
         FROM main.posts AS p

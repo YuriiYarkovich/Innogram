@@ -9,6 +9,7 @@ import {
   UploadedFiles,
   UseInterceptors,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -58,9 +59,28 @@ export class PostsController {
   @ApiConsumes('multipart/form-data')
   @Get(`/allOfSubscribedOn/`)
   @UseGuards(AuthGuard)
-  async getAllPostsOfSubscribedOnUsers() {
-    const profileId: string = context.get(CONTEXT_KEYS.USER).profileId;
-    return await this.postsService.getAllPostsOfSubscribedOn(profileId);
+  async getAllPostsOfSubscribedOnUsers(
+    @Query('lastLoadedPostCreatedAt') lastLoadedPostCreatedAt: string,
+  ) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.postsService.getAllPostsOfSubscribedOn(
+      currentProfileId,
+      lastLoadedPostCreatedAt,
+    );
+  }
+
+  @ApiOperation({
+    summary: 'Return first post of profiles that user is subscribed on',
+  })
+  @ApiResponse({ status: 200, type: Post })
+  @ApiConsumes('multipart/form-data')
+  @Get(`/preloadFirstPostOfSubscribedOn/`)
+  @UseGuards(AuthGuard)
+  async preloadFirstPostOfSubscribedOnUsers() {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.postsService.preloadLastPostOfSubscriptions(
+      currentProfileId,
+    );
   }
 
   @ApiOperation({ summary: 'Updates posts' })
