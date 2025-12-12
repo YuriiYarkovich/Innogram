@@ -173,14 +173,16 @@ const Page = () => {
         isOpen={isEditProfileModalOpen}
         onClose={() => setIsEditProfileModalOpen(false)}
       />
-      <PostViewModal
-        receivingPostId={postOfPostModal.postId}
-        isOpen={isPostPreviewModalOpen}
-        onClose={async () => {
-          setIsPostPreviewModalOpen(false);
-          await updatePostsArray(profile.id);
-        }}
-      />
+      {postOfPostModal && (
+        <PostViewModal
+          receivingPostId={postOfPostModal.postId}
+          isOpen={isPostPreviewModalOpen}
+          onClose={async () => {
+            setIsPostPreviewModalOpen(false);
+            await updatePostsArray(profile.id);
+          }}
+        />
+      )}
       <MessageWritingModal
         isOpen={isWritingMessageModalOpen}
         onClose={onWritingMessageModalClose}
