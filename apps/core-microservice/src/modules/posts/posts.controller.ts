@@ -55,7 +55,6 @@ export class PostsController {
     summary: 'Return all posts of profiles that user is subscribed on',
   })
   @ApiResponse({ status: 200, type: Post })
-  @ApiConsumes('multipart/form-data')
   @Get(`/allOfSubscribedOn/`)
   @UseGuards(AuthGuard)
   async getAllPostsOfSubscribedOnUsers(
@@ -65,6 +64,20 @@ export class PostsController {
     return await this.postsService.getAllPostsOfSubscribedOn(
       currentProfileId,
       lastLoadedPostCreatedAt,
+    );
+  }
+
+  @ApiOperation({
+    summary: 'Return single post data by given id',
+  })
+  @ApiResponse({ status: 200, type: Post })
+  @Get(`/singlePost/:postId`)
+  @UseGuards(AuthGuard)
+  async getSinglePostInfoById(@Param('postId') postId: string) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.postsService.getFullPostInfoById(
+      postId,
+      currentProfileId,
     );
   }
 

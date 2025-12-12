@@ -32,7 +32,7 @@ export default function PostTile({ post }: { post: Post }) {
   return (
     <div>
       <PostViewModal
-        post={post}
+        receivingPostId={post.postId}
         isOpen={isPostPreviewModalOpen}
         onClose={() => setIsPostPreviewModalOpen(false)}
       />

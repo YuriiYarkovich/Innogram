@@ -174,7 +174,7 @@ const Page = () => {
         onClose={() => setIsEditProfileModalOpen(false)}
       />
       <PostViewModal
-        post={postOfPostModal}
+        receivingPostId={postOfPostModal.postId}
         isOpen={isPostPreviewModalOpen}
         onClose={async () => {
           setIsPostPreviewModalOpen(false);

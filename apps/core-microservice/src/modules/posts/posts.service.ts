@@ -16,6 +16,7 @@ import {
   ReturningPostData,
 } from '../../common/types/posts.type';
 import { PostLike } from '../../common/entities/posts/post-like.entity';
+import { post } from 'axios';
 
 @Injectable()
 export class PostsService {
@@ -456,5 +457,17 @@ export class PostsService {
     }
 
     return returningPostsData;
+  }
+
+  async getFullPostInfoById(postId: string, currentProfileId: string) {
+    const foundPost = await this.postsRepository.findPostById(postId);
+
+    if (!foundPost) throw new BadRequestException('This post does not exists');
+
+    return await this.createReturningPostData(
+      foundPost,
+      currentProfileId,
+      currentProfileId,
+    );
   }
 }

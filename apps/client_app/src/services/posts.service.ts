@@ -27,10 +27,10 @@ export const createPost = async (
   }
 };
 
-export const likeOrUnlikePost = async (liked: boolean, post: Post) => {
+export const likeOrUnlikePost = async (liked: boolean, post: Post | null) => {
   let response: Response;
   if (!liked) {
-    response = await fetch(`${SERVER.API.LIKE_POST}${post.postId}`, {
+    response = await fetch(`${SERVER.API.LIKE_POST}${post?.postId}`, {
       method: 'POST',
       credentials: 'include',
     });
@@ -39,7 +39,7 @@ export const likeOrUnlikePost = async (liked: boolean, post: Post) => {
       throw new Error(`Error: ${response.status}`);
     }
   } else {
-    response = await fetch(`${SERVER.API.UNLIKE_POST}${post.postId}`, {
+    response = await fetch(`${SERVER.API.UNLIKE_POST}${post?.postId}`, {
       method: 'DELETE',
       credentials: 'include',
     });
@@ -195,6 +195,20 @@ export const fetchActivity = async (): Promise<Post[]> => {
     method: 'GET',
     credentials: 'include',
   });
+
+  if (!response.ok) console.error(response.json());
+
+  return await response.json();
+};
+
+export const fetchSinglePost = async (postId: string): Promise<Post> => {
+  const response: Response = await fetch(
+    `${SERVER.API.FETCH_POST_BY_ID}${postId}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+    },
+  );
 
   if (!response.ok) console.error(response.json());
 

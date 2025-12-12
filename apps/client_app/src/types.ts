@@ -41,7 +41,7 @@ export type EditProfileModalProps = {
 };
 
 export type PostPreviewModalProps = {
-  post: Post;
+  receivingPostId: string;
   isOpen: boolean;
   onClose: () => void;
 };

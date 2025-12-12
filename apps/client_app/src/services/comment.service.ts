@@ -1,10 +1,10 @@
 import { SERVER } from '@/config/apiRoutes';
 import returnErrorMessage from '@/utils/showAuthError';
-import { Post, PostComment } from '@/types';
+import { PostComment } from '@/types';
 
 export const addComment = async (
   commentContent: string,
-  post: Post,
+  postId: string,
   respondingComment: PostComment | undefined,
   isRespondingOnComment: boolean,
   setIsRespondingOnComment: (isRespondingOnComment: boolean) => void,
@@ -18,7 +18,7 @@ export const addComment = async (
     },
     body: JSON.stringify({
       content: commentContent,
-      postId: post.postId,
+      postId,
       isAnswer: false,
       parentCommentId: respondingComment?.commentId || '',
     }),
@@ -32,18 +32,18 @@ export const addComment = async (
   }
 
   if (isRespondingOnComment) setIsRespondingOnComment(false);
-  await fetchComments(post, setCommentsLoading, setComments);
+  await fetchComments(postId, setCommentsLoading, setComments);
 };
 
 export const fetchComments = async (
-  post: Post,
+  postId: string,
   setCommentsLoading: (isLoading: boolean) => void,
   setComments: (commentsData: PostComment[]) => void,
 ) => {
   try {
     setCommentsLoading(true);
     const response: Response = await fetch(
-      `${SERVER.API.GET_COMMENTS_OF_POST}${post.postId}`,
+      `${SERVER.API.GET_COMMENTS_OF_POST}${postId}`,
       {
         method: 'GET',
         credentials: 'include',
