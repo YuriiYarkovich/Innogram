@@ -1,8 +1,8 @@
 import React from 'react';
-import { MessageVisibilityStatus } from '@innogram/core-microservice/dist/common/enums/message.enum';
 import { formatTime } from '@/utils/time';
 import { Message } from '@/types';
 import Image from 'next/image';
+import { MessageVisibilityStatus } from '@/enums';
 
 const MessageCore = ({
   message,

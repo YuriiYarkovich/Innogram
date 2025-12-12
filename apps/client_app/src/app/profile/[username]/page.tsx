@@ -21,8 +21,8 @@ import MessageWritingModal from '@/components/profilePage/message-writing.modal'
 import SubscribersListModal from '@/components/profilePage/subscribers-list-modal';
 import SubscriptionsListModal from '@/components/profilePage/subscriptions-list-modal';
 import Line from '@/components/line';
-import { FollowAcceptedStatus } from '@innogram/core-microservice/dist/common/enums/profile-follow.enum';
 import SentRequestsModal from '@/components/profilePage/sent-requests-modal';
+import { FollowAcceptedStatus } from '@/enums';
 
 const Page = () => {
   const router: AppRouterInstance = useRouter();

@@ -1,9 +1,9 @@
 import React from 'react';
 import Image from 'next/image';
-import { MessageReadStatus } from '@innogram/core-microservice/dist/common/enums/message.enum';
 import { formatTime } from '@/utils/time';
 import { Chat } from '@/types';
 import { MouseEvent } from 'react';
+import { MessageReadStatus } from '@/enums';
 
 type ChatPreviewProps = {
   chat: Chat;

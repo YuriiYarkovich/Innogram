@@ -1,6 +1,6 @@
 import { ChatParticipantProfile } from '@/types';
 import Image from 'next/image';
-import { ChatParticipantRole } from '@innogram/core-microservice/dist/common/enums/chat.enum';
+import { ChatParticipantRole } from '@/enums';
 
 type ChatParticipantTileCreationProps = {
   chatParticipant: ChatParticipantProfile;

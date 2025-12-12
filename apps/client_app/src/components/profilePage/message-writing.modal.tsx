@@ -16,22 +16,18 @@ const MessageWritingModal = ({
   currentProfile?: Profile | null;
   receiverProfileId: string;
 }) => {
-  if (!isOpen) return null;
   const {
     register,
     handleSubmit,
-    control,
-    watch,
     formState: { isSubmitting },
   } = useForm<MessageSendFormValues>({
     defaultValues: {
       content: '',
-      file: null,
+      files: [],
     },
   });
-  const file = watch('file');
 
-  const { send } = useSocket();
+  const { send } = useSocket({});
 
   const onSubmit = async (messageData: MessageSendFormValues) => {
     send({
@@ -45,6 +41,7 @@ const MessageWritingModal = ({
     onClose();
   };
 
+  if (!isOpen) return null;
   return (
     <div
       className={`fixed inset-0 z-50 flex justify-center items-center backdrop-blur-xs bg-black/50 min-h-screen`}

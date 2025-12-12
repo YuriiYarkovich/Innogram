@@ -5,7 +5,7 @@ import {
   handleOnProfileFollowing,
   handleProfileUnfollow,
 } from '@/services/profile.service';
-import { FollowAcceptedStatus } from '@innogram/core-microservice/dist/common/enums/profile-follow.enum';
+import { FollowAcceptedStatus } from '@/enums';
 
 type SubscriberTile = {
   subscriber: Profile;

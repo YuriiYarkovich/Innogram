@@ -16,10 +16,6 @@ import {
 } from '@/services/chat.service';
 import { fetchMessagesOfChat } from '@/services/messages.service';
 import { useSocket } from '@/hooks/useSocket';
-import {
-  MessageReadStatus,
-  MessageVisibilityStatus,
-} from '@innogram/core-microservice/dist/common/enums/message.enum';
 import MessageContextMenu from '@/components/chat/message/message-context-menu';
 import ChatContextMenu from '@/components/chat/chat-context-menu';
 import ReplyingMessageHint from '@/components/chat/message/replying-message-hint';
@@ -29,7 +25,7 @@ import AddChatButton from '@/components/chat/addChat.button';
 import ChatInfoModal from '@/components/chat/chat-info-modal';
 import ErrorModal from '@/components/error-modal';
 import Image from 'next/image';
-import { resolveAppleWebApp } from 'next/dist/lib/metadata/resolvers/resolve-basics';
+import { MessageReadStatus, MessageVisibilityStatus } from '@/enums';
 
 export type MessageSendFormValues = {
   content: string;

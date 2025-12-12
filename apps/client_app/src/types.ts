@@ -1,13 +1,11 @@
 import {
-  MessageReadStatus,
-  MessageVisibilityStatus,
-} from '@innogram/core-microservice/dist/common/enums/message.enum';
-import {
   ChatParticipantRole,
   ChatStatus,
-} from '@innogram/core-microservice/dist/common/enums/chat.enum';
-import { FollowAcceptedStatus } from '@innogram/core-microservice/dist/common/enums/profile-follow.enum';
-import { PostStatus } from '@/enums';
+  FollowAcceptedStatus,
+  MessageReadStatus,
+  MessageVisibilityStatus,
+  PostStatus,
+} from '@/enums';
 
 export type Post = {
   postId: string;

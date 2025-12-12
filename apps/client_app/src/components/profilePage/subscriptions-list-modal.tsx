@@ -3,11 +3,7 @@ import Image from 'next/image';
 import { Profile } from '@/types';
 import Line from '@/components/line';
 import ProfileListTile from '@/components/profilePage/profile-list-tile';
-import {
-  deleteSubscriber,
-  fetchAllSubscribers,
-  fetchAllSubscriptions,
-} from '@/services/profile.service';
+import { fetchAllSubscriptions } from '@/services/profile.service';
 
 type SubscriptionsListModalProps = {
   isOpen: boolean;
