@@ -12,14 +12,16 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
 import { LoggerModule } from 'nestjs-pino';
 
+const getEnvFilePath = () => {
+  const env = process.env.NODE_ENV || 'development';
+  return join(__dirname, '..', '..', '..', `.env.${env}`);
+};
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [
-        join(__dirname, '..', '..', '..', '.env'), // path to root dir
-        join(__dirname, '.env.local'),
-      ],
+      envFilePath: getEnvFilePath(),
     }),
     TypeOrmModule.forRootAsync({
       useClass: DatabaseConfig,
