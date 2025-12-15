@@ -26,7 +26,7 @@ export class MessageAsset {
   @Column({ type: 'int', default: 1 })
   order: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
   @ManyToOne(

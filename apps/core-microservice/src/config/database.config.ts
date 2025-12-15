@@ -1,7 +1,7 @@
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Injectable } from '@nestjs/common';
-import path from 'node:path';
+import { createTypeOrmOptions } from './typeorm.config';
 
 @Injectable()
 export class DatabaseConfig implements TypeOrmOptionsFactory {
@@ -9,26 +9,8 @@ export class DatabaseConfig implements TypeOrmOptionsFactory {
 
   createTypeOrmOptions(): TypeOrmModuleOptions {
     return {
-      type: 'postgres',
-      host: this.config.get<string>('POSTGRES_HOST'),
-      port: this.config.get<number>('POSTGRES_PORT'),
-      username: this.config.get<string>('POSTGRES_USER'),
-      password: this.config.get<string>('POSTGRES_PASSWORD'),
-      database: this.config.get<string>('POSTGRES_DB'),
-      entities: [
-        path.join(
-          __dirname,
-          '..',
-          'common',
-          'entities',
-          '**',
-          '*.entity.{ts,js}',
-        ),
-      ],
+      ...createTypeOrmOptions(this.config),
       autoLoadEntities: true,
-      synchronize: true,
-      //logging: ['query', 'error', 'schema'],
-      logging: ['error'],
     };
   }
 }

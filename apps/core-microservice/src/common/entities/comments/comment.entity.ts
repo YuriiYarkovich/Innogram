@@ -60,13 +60,13 @@ export class Comment {
   @Column({ type: 'enum', enum: CommentStatus, default: CommentStatus.ACTIVE })
   status: CommentStatus.ACTIVE | CommentStatus.DELETED;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz', nullable: true })
   updated_at: Date;
 
-  @DeleteDateColumn()
+  @DeleteDateColumn({ type: 'timestamptz', nullable: true })
   deletedAt: Date;
 
   @OneToMany(

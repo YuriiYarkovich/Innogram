@@ -34,17 +34,14 @@ export class User {
   @Column({ type: 'boolean', default: false })
   disabled: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
   @Column({ type: 'uuid', nullable: true })
   created_by: string;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz', nullable: true })
   updated_at: Date;
-
-  @Column({ type: 'uuid', nullable: true })
-  updated_by: string;
 
   // Relations
   @OneToMany(

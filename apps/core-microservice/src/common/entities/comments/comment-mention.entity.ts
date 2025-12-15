@@ -19,7 +19,7 @@ export class CommentMention {
   @Column({ type: 'uuid', name: 'mentioned_profile_id' })
   mentionedProfileId: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   CreatedAt: Date;
 
   @ManyToOne(

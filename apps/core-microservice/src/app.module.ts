@@ -17,7 +17,7 @@ import { LoggerModule } from 'nestjs-pino';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: [
-        join(__dirname, '..', '..', '..', '.env'), // абсолютный путь до корня
+        join(__dirname, '..', '..', '..', '.env'), // path to root dir
         join(__dirname, '.env.local'),
       ],
     }),
@@ -39,7 +39,7 @@ import { LoggerModule } from 'nestjs-pino';
           options: {
             colorize: true,
             translateTime: 'HH:MM:ss.l',
-            ignore: 'pid,hostname,req,res,context,responseTime', // убираем громоздкие поля
+            ignore: 'pid,hostname,req,res,context,responseTime',
             messageFormat:
               '{req.method} {req.url} → {res.statusCode} ({responseTime}ms)',
           },

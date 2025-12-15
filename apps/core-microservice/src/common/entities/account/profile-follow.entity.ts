@@ -50,7 +50,7 @@ export class ProfileFollow {
     | FollowAcceptedStatus.REQUESTED
     | FollowAcceptedStatus.REJECTED;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
   // Relations

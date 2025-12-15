@@ -26,7 +26,7 @@ export class PostAsset {
   @Column({ type: 'int' })
   order: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
   // Relations

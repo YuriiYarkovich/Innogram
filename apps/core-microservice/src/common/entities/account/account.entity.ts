@@ -52,27 +52,17 @@ export class Account {
   @Column({ type: 'varchar', length: 20, default: 'local' })
   provider: string;
 
-  @ApiProperty({
-    example: '444b2df4-d3f6-4dc3-a7e4-5f1bff9ce441',
-    description: 'ID of authentification provider',
-  })
-  @Column({ type: 'varchar', length: 255, nullable: true, name: 'provider_id' })
-  providerId: string;
-
   @Column({ type: 'timestamp', nullable: true, name: 'last_login_at' })
   lastLoginAt: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
   @Column({ type: 'uuid', name: 'created_by' })
   createdBy: string;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz', nullable: true })
   updated_at: Date;
-
-  @Column({ type: 'uuid', nullable: true, name: 'updated_by' })
-  updatedBy: string;
 
   // Relations
   @ManyToOne(
