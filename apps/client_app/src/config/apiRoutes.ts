@@ -49,5 +49,6 @@ export const SERVER = {
     GET_ACTIVITY: `${env.NEXT_PUBLIC_API_URL}/posts/activity`,
     PRELOAD_FIRST_POST_OF_SUBSCRIBED_ON: `${env.NEXT_PUBLIC_API_URL}/posts/preloadFirstPostOfSubscribedOn`,
     FETCH_POST_BY_ID: `${env.NEXT_PUBLIC_API_URL}/posts/singlePost/`,
+    GET_10_RANDOM: `${env.NEXT_PUBLIC_API_URL}/profiles/getTenRandom`,
   },
 };

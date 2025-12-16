@@ -176,4 +176,25 @@ export class ProfilesController {
     const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
     return await this.profilesService.getAllSentRequests(currentProfileId);
   }
+
+  @ApiOperation({ summary: 'Returns 10 random profiles' })
+  @ApiResponse({ status: 200 })
+  @Get('/getTenRandom/')
+  @UseGuards(AuthGuard)
+  async get10Profiles() {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.profilesService.getTenRandomProfiles(currentProfileId);
+  }
+
+  @ApiOperation({ summary: 'Returns search results' })
+  @ApiResponse({ status: 200 })
+  @Get('/search/:username')
+  @UseGuards(AuthGuard)
+  async getSearchResult(@Param('username') username: string) {
+    const currentProfileId: string = context.get(CONTEXT_KEYS.USER).profileId;
+    return await this.profilesService.getSearchResults(
+      username,
+      currentProfileId,
+    );
+  }
 }

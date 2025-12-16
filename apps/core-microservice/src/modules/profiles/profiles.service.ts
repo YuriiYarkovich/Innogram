@@ -339,4 +339,46 @@ export class ProfilesService {
 
     return returningSentRequests;
   }
+
+  async getTenRandomProfiles(currentProfileId: string) {
+    const foundProfiles =
+      await this.profilesRepository.returnTenRandomProfiles(currentProfileId);
+
+    if (!foundProfiles) return null;
+
+    const returningProfilesData: ReturningProfileInfo[] = [];
+
+    for (const foundProfile of foundProfiles) {
+      const returningProfile = await this.createReturningProfileFromFound(
+        foundProfile,
+        currentProfileId,
+      );
+
+      returningProfilesData.push(returningProfile);
+    }
+
+    return returningProfilesData;
+  }
+
+  async getSearchResults(username: string, currentProfileId: string) {
+    const foundProfiles = await this.profilesRepository.getSearchResults(
+      username,
+      currentProfileId,
+    );
+
+    if (!foundProfiles) return null;
+
+    const returningProfilesData: ReturningProfileInfo[] = [];
+
+    for (const foundProfile of foundProfiles) {
+      const returningProfile = await this.createReturningProfileFromFound(
+        foundProfile,
+        currentProfileId,
+      );
+
+      returningProfilesData.push(returningProfile);
+    }
+
+    return returningProfilesData;
+  }
 }

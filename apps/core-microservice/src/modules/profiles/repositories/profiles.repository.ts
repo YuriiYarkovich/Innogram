@@ -225,7 +225,7 @@ export class ProfilesRepository {
                                FROM main.profiles_follows
                                WHERE follower_profile_id = $2
                                  AND followed_profile_id = p.id
-                                 AND status = $4))                                           AS "subscribeStatus",
+                                 AND status = $4))                                           AS "isSubscribed",
                (SELECT status
                 FROM main.profiles_follows
                 WHERE follower_profile_id = $2
@@ -280,5 +280,72 @@ export class ProfilesRepository {
       profile.isPublic = true;
     }
     return profile;
+  }
+
+  async returnTenRandomProfiles(currentProfileId: string) {
+    return await this.profileRepository.query<FindingProfileInfo[]>(
+      `
+      SELECT p.id,
+             p.birthday,
+             p.username,
+             p.bio,
+             p.avatar_filename                                                             AS "avatarFilename",
+             p.is_public                                                                   AS "isPublic",
+             (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id AND status = $2)     AS "postsAmount",
+             (SELECT COUNT(*) FROM main.profiles_follows WHERE follower_profile_id = p.id) AS "subscriptionsAmount",
+             (SELECT COUNT(*) FROM main.profiles_follows WHERE followed_profile_id = p.id) AS "subscribersAmount",
+             (SELECT EXISTS (SELECT 1
+                             FROM main.profiles_follows
+                             WHERE follower_profile_id = $1
+                               AND followed_profile_id = p.id
+                               AND status = $3))                                           AS "subscribeStatus",
+             (SELECT status
+              FROM main.profiles_follows
+              WHERE follower_profile_id = $1
+                AND followed_profile_id = p.id
+              LIMIT 1)                                                                     AS "subscribedStatus"
+      FROM main.profiles_follows AS prf
+             INNER JOIN main.profiles p on prf.follower_profile_id = p.id
+      ORDER BY random()
+      LIMIT 10;
+    `,
+      [currentProfileId, PostStatus.ACTIVE, FollowAcceptedStatus.ACCEPTED],
+    );
+  }
+
+  async getSearchResults(username: string, currentProfileId: string) {
+    return await this.profileRepository.query<FindingProfileInfo[]>(
+      `
+        SELECT p.id,
+               p.birthday,
+               p.username,
+               p.bio,
+               p.avatar_filename                                                             AS "avatarFilename",
+               p.is_public                                                                   AS "isPublic",
+               (SELECT COUNT(*) FROM main.posts WHERE profile_id = p.id AND status = $2)     AS "postsAmount",
+               (SELECT COUNT(*) FROM main.profiles_follows WHERE follower_profile_id = p.id) AS "subscriptionsAmount",
+               (SELECT COUNT(*) FROM main.profiles_follows WHERE followed_profile_id = p.id) AS "subscribersAmount",
+               (SELECT EXISTS (SELECT 1
+                               FROM main.profiles_follows
+                               WHERE follower_profile_id = $1
+                                 AND followed_profile_id = p.id
+                                 AND status = $3))                                           AS "subscribeStatus",
+               (SELECT status
+                FROM main.profiles_follows
+                WHERE follower_profile_id = $1
+                  AND followed_profile_id = p.id
+                LIMIT 1)                                                                     AS "subscribedStatus"
+        FROM main.profiles_follows AS prf
+               INNER JOIN main.profiles p on prf.follower_profile_id = p.id
+        WHERE p.username ILIKE $4
+        LIMIT 10;
+      `,
+      [
+        currentProfileId,
+        PostStatus.ACTIVE,
+        FollowAcceptedStatus.ACCEPTED,
+        `%${username}%`,
+      ],
+    );
   }
 }

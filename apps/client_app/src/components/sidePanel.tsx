@@ -4,6 +4,7 @@ import { Profile } from '@/types';
 import Link from 'next/link';
 import SubscriptionsRequestsModal from '@/components/profilePage/subscriptions-requests-modal';
 import Image from 'next/image';
+import SearchModal from '@/components/feedPage/search-modal';
 
 const SidePanel = ({ curProfile }: { curProfile: Profile | null }) => {
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
@@ -11,6 +12,7 @@ const SidePanel = ({ curProfile }: { curProfile: Profile | null }) => {
     isSubscriptionsRequestsModalOpen,
     setIsSubscriptionsRequestsModalOpen,
   ] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
@@ -33,6 +35,10 @@ const SidePanel = ({ curProfile }: { curProfile: Profile | null }) => {
         username={curProfile?.username}
         userAvatarUrl={curProfile?.avatarUrl}
         onClose={() => setIsCreatePostModalOpen(false)}
+      />
+      <SearchModal
+        isOpened={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
       />
       <aside
         className={`fixed left-0 top-1/2 -translate-y-1/2 bg-[#eaddff] rounded-3xl p-4 transition-all duration-300 ease-in-out ${
@@ -61,6 +67,26 @@ const SidePanel = ({ curProfile }: { curProfile: Profile | null }) => {
                 Feed
               </span>
             </Link>
+          </li>
+          <li>
+            <button
+              onClick={() => setIsSearchModalOpen(true)}
+              className="flex w-full items-center hover:bg-[#d0bcff] p-2 rounded text-[#21005d] whitespace-nowrap"
+            >
+              <Image
+                src="/images/icons/search.svg"
+                alt="Feed"
+                width={50}
+                height={50}
+                draggable={false}
+                className="w-6 h-6"
+              />
+              <span
+                className={`ml-3 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0 w-0'}`}
+              >
+                Search
+              </span>
+            </button>
           </li>
           <li>
             <Link

@@ -236,3 +236,8 @@ export const getAllSentRequests = async (): Promise<SubscriptionRequest[]> => {
 
   return await response.json();
 };
+
+export const search = async (query: string) => {
+  if (query.length === 0) {
+  }
+};
