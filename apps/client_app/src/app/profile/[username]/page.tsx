@@ -41,6 +41,7 @@ const Page = () => {
     isSubscribed: false,
   });
   const [curProfile, setCurProfile] = useState<Profile | null>(null);
+  const [isProfileNotFound, setIsProfileNotFound] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
@@ -54,9 +55,7 @@ const Page = () => {
   const [isPostPreviewModalOpen, setIsPostPreviewModalOpen] = useState(false);
   const [isFollowed, setIsFollowed] = useState(profile.isSubscribed);
   const [isRequested, setIsRequested] = useState(false);
-  const [followersAmount, setFollowersAmount] = useState<number>(
-    Number(profile.subscribersAmount),
-  );
+  const [followersAmount, setFollowersAmount] = useState<number>(0);
   const [isWritingMessageModalOpen, setIsWritingMessageModalOpen] =
     useState(false);
 
@@ -107,7 +106,7 @@ const Page = () => {
   useEffect(() => {
     fetchFullProfileData(username)
       .then((profileData: Profile) => {
-        setFollowersAmount(profileData.subscribersAmount);
+        setFollowersAmount(Number(profileData.subscribersAmount));
         setIsFollowed(profileData.isSubscribed);
         setProfile(profileData);
         updatePostsArray(profileData?.id);
@@ -118,6 +117,10 @@ const Page = () => {
         ) {
           setIsRequested(true);
         }
+      })
+      .catch(() => {
+        console.log('Setting the user not found page');
+        setIsProfileNotFound(true);
       })
       .finally(() => {
         setProfileLoading(false);
@@ -193,211 +196,237 @@ const Page = () => {
         className={`flex flex-row min-h-screen w-full justify-center items-center`}
       >
         <SidePanel curProfile={curProfile} />
-        <main className={`flex flex-col min-h-screen md:w-[900px]`}>
-          {profileLoading ? (
-            <p>loading...</p>
-          ) : profile === null ? (
-            <p>Error while loading profile info</p>
-          ) : (
-            <div className={`flex flex-col w-full`}>
-              <div className={`flex flex-row w-full gap-10 items-center`}>
-                <Image
-                  className={`rounded-[270px] md:w-[155px] md:h-[155px] mt-15 ml-15`}
-                  src={profile.avatarUrl || `/images/avaTest.png`}
-                  alt={'User avatar'}
-                  width={30}
-                  height={30}
-                  unoptimized
-                  loading={'eager'}
-                  draggable={false}
-                />
-                <div className={`flex flex-col mt-20 gap-8`}>
-                  <span className={`font-bold text-[32px]`}>
-                    {profile.username}
-                  </span>
-                  <div className={`flex flex-row gap-3`}>
-                    <div className={`flex flex-row gap-1`} /*posts count text*/>
-                      <span className={`font-bold text-[20px]`}>
-                        {profile.postsAmount}
-                      </span>
-                      <span className={`text-[20px]`}>posts</span>
-                    </div>
-                    <div
-                      className={`flex flex-row gap-1`} /*subscribers count text*/
-                    >
-                      <span className={`font-bold text-[20px]`}>
-                        {followersAmount}
-                      </span>
-                      <span
-                        onClick={() => setIsSubscribersListModalOpen(true)}
-                        className={`text-[20px] cursor-pointer`}
+        {!isProfileNotFound ? (
+          <main className={`flex flex-col min-h-screen md:w-[900px]`}>
+            {profileLoading ? (
+              <p>loading...</p>
+            ) : profile === null ? (
+              <p>Error while loading profile info</p>
+            ) : (
+              <div className={`flex flex-col w-full`}>
+                <div className={`flex flex-row w-full gap-10 items-center`}>
+                  <Image
+                    className={`rounded-[270px] md:w-[155px] md:h-[155px] mt-15 ml-15`}
+                    src={profile.avatarUrl || `/images/avaTest.png`}
+                    alt={'User avatar'}
+                    width={30}
+                    height={30}
+                    unoptimized
+                    loading={'eager'}
+                    draggable={false}
+                  />
+                  <div className={`flex flex-col mt-20 gap-8`}>
+                    <span className={`font-bold text-[32px]`}>
+                      {profile.username}
+                    </span>
+                    <div className={`flex flex-row gap-3`}>
+                      <div
+                        className={`flex flex-row gap-1`} /*posts count text*/
                       >
-                        subscribers
-                      </span>
-                    </div>
-                    <div
-                      className={`flex flex-row gap-1`} /*subscriptions count text*/
-                    >
-                      <span className={`font-bold text-[20px] cursor-pointer`}>
-                        {profile.subscriptionsAmount}
-                      </span>
-                      <span
-                        onClick={() => setIsSubscriptionsListModalOpen(true)}
-                        className={`text-[20px] cursor-pointer`}
+                        <span className={`font-bold text-[20px]`}>
+                          {profile.postsAmount}
+                        </span>
+                        <span className={`text-[20px]`}>posts</span>
+                      </div>
+                      <div
+                        className={`flex flex-row gap-1`} /*subscribers count text*/
                       >
-                        subscriptions
-                      </span>
+                        <span className={`font-bold text-[20px]`}>
+                          {followersAmount}
+                        </span>
+                        <span
+                          onClick={() => setIsSubscribersListModalOpen(true)}
+                          className={`text-[20px] cursor-pointer`}
+                        >
+                          subscribers
+                        </span>
+                      </div>
+                      <div
+                        className={`flex flex-row gap-1`} /*subscriptions count text*/
+                      >
+                        <span
+                          className={`font-bold text-[20px] cursor-pointer`}
+                        >
+                          {profile.subscriptionsAmount}
+                        </span>
+                        <span
+                          onClick={() => setIsSubscriptionsListModalOpen(true)}
+                          className={`text-[20px] cursor-pointer`}
+                        >
+                          subscriptions
+                        </span>
+                      </div>
                     </div>
+                    <span className={`text-[#79747e]`}>{profile.bio}</span>
                   </div>
-                  <span className={`text-[#79747e]`}>{profile.bio}</span>
-                </div>
-                {profile.isCurrent && (
-                  <div
-                    className={
-                      'flex flex-col items-center justify-center gap-2 ml-auto'
-                    }
-                  >
-                    <button
-                      className={`flex md:w-[47px] md:h-[47px] items-center justify-center`}
-                      onClick={() => handleLogout(router)}
+                  {profile.isCurrent && (
+                    <div
+                      className={
+                        'flex flex-col items-center justify-center gap-2 ml-auto'
+                      }
                     >
-                      <Image
-                        src={`/images/icons/logout.svg`}
-                        alt={`logout button`}
-                        height={40}
-                        width={40}
-                        draggable={false}
-                        className={`md:w-[40px] md:h-[40px] hover:md:w-[47px] hover:md:h-[47px] cursor-pointer`}
-                      />
-                    </button>
+                      <button
+                        className={`flex md:w-[47px] md:h-[47px] items-center justify-center`}
+                        onClick={() => handleLogout(router)}
+                      >
+                        <Image
+                          src={`/images/icons/logout.svg`}
+                          alt={`logout button`}
+                          height={40}
+                          width={40}
+                          draggable={false}
+                          className={`md:w-[40px] md:h-[40px] hover:md:w-[47px] hover:md:h-[47px] cursor-pointer`}
+                        />
+                      </button>
 
-                    <button
-                      className={`flex ml-auto md:w-[47px] md:h-[47px] items-center justify-center`}
-                      onClick={() => setIsSentRequestsModalOpen(true)}
-                    >
-                      <Image
-                        src={`/images/icons/sentRequests.svg`}
-                        alt={`Sent requests button`}
-                        height={40}
-                        width={40}
-                        draggable={false}
-                        className={`md:w-[40px] md:h-[40px] hover:md:w-[47px] hover:md:h-[47px] cursor-pointer`}
-                      />
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div
-                className={`flex flex-row w-full justify-center gap-20 mt-10 mb-10`}
-              >
-                {profile.isCurrent ? (
-                  <>
-                    <button
-                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                      onClick={() => setIsEditProfileModalOpen(true)}
-                    >
-                      Edit profile
-                    </button>
-                    <button
-                      onClick={() => {
-                        location.replace(
-                          `/profile/${profile.username}/archive`,
-                        );
-                      }}
-                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                    >
-                      View archive
-                    </button>
-                  </>
-                ) : profile.isPublic ? (
-                  <>
-                    <button
-                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                      onClick={isFollowed ? handleUnfollow : handleFollowing}
-                    >
-                      {isFollowed ? 'Unfollow' : 'Follow'}
-                    </button>
-                    <button
-                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                      onClick={() => setIsWritingMessageModalOpen(true)}
-                    >
-                      Send message
-                    </button>
-                  </>
-                ) : profile.isSubscribed ? (
-                  <>
-                    <button
-                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                      onClick={handleUnfollow}
-                    >
-                      Unfollow
-                    </button>
-                    <button
-                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                      onClick={() => setIsWritingMessageModalOpen(true)}
-                    >
-                      Send message
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                    onClick={isRequested ? handleUnfollow : handleFollowing}
-                  >
-                    {isRequested ? 'Cancel request' : 'Request subscription'}
-                  </button>
-                )}
-              </div>
-              <Line color={'#79747e'} />
-              {profile.isPublic ||
-              profile.isCurrent ||
-              (!profile.isPublic && profile.isSubscribed) ? (
-                <div className={'grid grid-cols-5 md:w-[900px] mt-7 gap-1'}>
-                  {postsLoading ? (
-                    <p>loading</p>
-                  ) : posts.length === 0 ? (
-                    <p>There are no posts</p>
-                  ) : (
-                    posts.map((post) => (
-                      <PostPreviewImage
-                        imageUrl={post.assets[0].url}
-                        onClick={() => openPostPreviewModal(post.postId)}
-                        key={post.postId}
-                      />
-                    ))
+                      <button
+                        className={`flex ml-auto md:w-[47px] md:h-[47px] items-center justify-center`}
+                        onClick={() => setIsSentRequestsModalOpen(true)}
+                      >
+                        <Image
+                          src={`/images/icons/sentRequests.svg`}
+                          alt={`Sent requests button`}
+                          height={40}
+                          width={40}
+                          draggable={false}
+                          className={`md:w-[40px] md:h-[40px] hover:md:w-[47px] hover:md:h-[47px] cursor-pointer`}
+                        />
+                      </button>
+                    </div>
                   )}
                 </div>
-              ) : (
-                !profile.isPublic &&
-                !profile.isSubscribed && (
-                  <div
-                    className={
-                      'flex flex-row items-center justify-center my-20'
-                    }
-                  >
-                    <Image
-                      src={'/images/icons/locked.svg'}
-                      alt={'Lock icon'}
-                      height={130}
-                      width={130}
-                      draggable={false}
-                    />
-                    <div
-                      className={'flex flex-col items-center justify-center'}
+                <div
+                  className={`flex flex-row w-full justify-center gap-20 mt-10 mb-10`}
+                >
+                  {profile.isCurrent ? (
+                    <>
+                      <button
+                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                        onClick={() => setIsEditProfileModalOpen(true)}
+                      >
+                        Edit profile
+                      </button>
+                      <button
+                        onClick={() => {
+                          location.replace(
+                            `/profile/${profile.username}/archive`,
+                          );
+                        }}
+                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                      >
+                        View archive
+                      </button>
+                    </>
+                  ) : profile.isPublic ? (
+                    <>
+                      <button
+                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                        onClick={isFollowed ? handleUnfollow : handleFollowing}
+                      >
+                        {isFollowed ? 'Unfollow' : 'Follow'}
+                      </button>
+                      <button
+                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                        onClick={() => setIsWritingMessageModalOpen(true)}
+                      >
+                        Send message
+                      </button>
+                    </>
+                  ) : profile.isSubscribed ? (
+                    <>
+                      <button
+                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                        onClick={handleUnfollow}
+                      >
+                        Unfollow
+                      </button>
+                      <button
+                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                        onClick={() => setIsWritingMessageModalOpen(true)}
+                      >
+                        Send message
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                      onClick={isRequested ? handleUnfollow : handleFollowing}
                     >
-                      <span className={'text-[30px] font-bold'}>
-                        This account is private
-                      </span>
-                      <span className={'text-[20px] text-[#79747e]'}>
-                        Follow this account to see posts
-                      </span>
-                    </div>
+                      {isRequested ? 'Cancel request' : 'Request subscription'}
+                    </button>
+                  )}
+                </div>
+                <Line color={'#79747e'} />
+                {profile.isPublic ||
+                profile.isCurrent ||
+                (!profile.isPublic && profile.isSubscribed) ? (
+                  <div className={'grid grid-cols-5 md:w-[900px] mt-7 gap-1'}>
+                    {postsLoading ? (
+                      <p>loading</p>
+                    ) : posts.length === 0 ? (
+                      <p>There are no posts</p>
+                    ) : (
+                      posts.map((post) => (
+                        <PostPreviewImage
+                          imageUrl={post.assets[0].url}
+                          onClick={() => openPostPreviewModal(post.postId)}
+                          key={post.postId}
+                        />
+                      ))
+                    )}
                   </div>
-                )
-              )}
+                ) : (
+                  !profile.isPublic &&
+                  !profile.isSubscribed && (
+                    <div
+                      className={
+                        'flex flex-row items-center justify-center my-20'
+                      }
+                    >
+                      <Image
+                        src={'/images/icons/locked.svg'}
+                        alt={'Lock icon'}
+                        height={130}
+                        width={130}
+                        draggable={false}
+                      />
+                      <div
+                        className={'flex flex-col items-center justify-center'}
+                      >
+                        <span className={'text-[30px] font-bold'}>
+                          This account is private
+                        </span>
+                        <span className={'text-[20px] text-[#79747e]'}>
+                          Follow this account to see posts
+                        </span>
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+            )}
+          </main>
+        ) : (
+          <div
+            className={`flex flex-col items-center justify-center min-h-screen md:w-[900px]`}
+          >
+            <div className={'flex flex-col items-center justify-center gap-5'}>
+              <span className={'text-[30px] font-bold'}>
+                Profile with this username does not exist!
+              </span>
+              <button
+                onClick={() => {
+                  location.replace(`/profile/${curProfile?.username}`);
+                }}
+                className={
+                  'flex p-3.5 items-center justify-center bg-[#4f378a] text-white cursor-pointer rounded-3xl text-[18px] hover:bg-[#d0bcff] hover:text-black'
+                }
+              >
+                <span>Return to your page</span>
+              </button>
             </div>
-          )}
-        </main>
+          </div>
+        )}
       </div>
     </div>
   );

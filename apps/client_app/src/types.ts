@@ -130,3 +130,9 @@ export type ReplyingMessage = {
   content: string;
   visibleStatus: MessageVisibilityStatus;
 };
+
+export type ErrorResponse = {
+  message: string;
+  error: string;
+  statusCode: number;
+};

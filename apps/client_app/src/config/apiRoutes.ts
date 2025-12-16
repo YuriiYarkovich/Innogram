@@ -22,7 +22,7 @@ export const SERVER = {
     ADD_COMMENT: `${env.NEXT_PUBLIC_API_URL}/comments/add`,
     GET_COMMENTS_OF_POST: `${env.NEXT_PUBLIC_API_URL}/comments/allOfPost/`,
     LIKE_COMMENT: `${env.NEXT_PUBLIC_API_URL}/comments/like/`,
-    UNLIKE_COMMENT: `${env.NEXT_PUBLIC_API_URL}i/comments/unlike/`,
+    UNLIKE_COMMENT: `${env.NEXT_PUBLIC_API_URL}/comments/unlike/`,
     DELETE_COMMENT: `${env.NEXT_PUBLIC_API_URL}/comments/delete/`,
     GET_ALL_COMMENT_RESPONSES: `${env.NEXT_PUBLIC_API_URL}/comments/allResponses/`,
     FETCH_ALL_CHATS_OF_PROFILE: `${env.NEXT_PUBLIC_API_URL}/chat/allChatsOfProfile`,

@@ -1,5 +1,5 @@
 import { SERVER } from '@/config/apiRoutes';
-import { Post } from '@/types';
+import { ErrorResponse, Post } from '@/types';
 
 export const createPost = async (
   content: string,
@@ -19,7 +19,10 @@ export const createPost = async (
     body: formData,
   });
 
-  if (!response.ok) console.error(response.json());
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    throw new Error(errorData.message);
+  }
 
   if (response.status === 201) {
     onClose();
@@ -36,7 +39,9 @@ export const likeOrUnlikePost = async (liked: boolean, post: Post | null) => {
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
+      const errorData: ErrorResponse = await response.json();
+      console.error(`Error message: ${errorData.message}`);
+      throw new Error(errorData.message);
     }
   } else {
     response = await fetch(`${SERVER.API.UNLIKE_POST}${post?.postId}`, {
@@ -44,7 +49,11 @@ export const likeOrUnlikePost = async (liked: boolean, post: Post | null) => {
       credentials: 'include',
     });
 
-    if (!response.ok) console.error(response.json());
+    if (!response.ok) {
+      const errorData: ErrorResponse = await response.json();
+      console.error(`Error message: ${errorData.message}`);
+      throw new Error(errorData.message);
+    }
   }
   return response;
 };
@@ -58,7 +67,11 @@ export const deletePost = async (post: Post, onClose: () => void) => {
     },
   );
 
-  if (!response.ok) console.error(response.json());
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
+  }
 
   if (response.ok) {
     onClose();
@@ -76,7 +89,12 @@ export const fetchPostsOfProfile = async (
     },
   );
 
-  if (!response.ok) console.error(response.json());
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
+  }
+
   return await response.json();
 };
 
@@ -95,7 +113,8 @@ export const fetchPostsOfSubscribedOnProfiles = async (
   });
 
   if (!response.ok) {
-    console.error(await response.json());
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
     return [];
   }
 
@@ -112,7 +131,8 @@ export const fetchFirstPostOfSubscribedOnProfiles =
     });
 
     if (!response.ok) {
-      console.error(await response.json());
+      const errorData: ErrorResponse = await response.json();
+      console.error(`Error message: ${errorData.message}`);
       return null;
     }
 
@@ -143,7 +163,11 @@ export const updatePost = async (
     body: formData,
   });
 
-  if (!response.ok) console.error(response.json());
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
+  }
 
   return await response.json();
 };
@@ -157,7 +181,11 @@ export const archivePost = async (postId: string): Promise<Post> => {
     },
   );
 
-  if (!response.ok) console.error(response.json());
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
+  }
 
   return await response.json();
 };
@@ -171,7 +199,11 @@ export const unarchivePost = async (postId: string): Promise<Post> => {
     },
   );
 
-  if (!response.ok) console.error(response.json());
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
+  }
 
   return await response.json();
 };
@@ -185,7 +217,11 @@ export const fetchAllArchivedPosts = async (): Promise<Post[]> => {
     },
   );
 
-  if (!response.ok) console.error(response.json());
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
+  }
 
   return await response.json();
 };
@@ -196,7 +232,11 @@ export const fetchActivity = async (): Promise<Post[]> => {
     credentials: 'include',
   });
 
-  if (!response.ok) console.error(response.json());
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
+  }
 
   return await response.json();
 };
@@ -210,7 +250,11 @@ export const fetchSinglePost = async (postId: string): Promise<Post> => {
     },
   );
 
-  if (!response.ok) console.error(response.json());
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
+  }
 
   return await response.json();
 };

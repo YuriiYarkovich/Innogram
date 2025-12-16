@@ -80,8 +80,7 @@ const CommentContent = ({
         </span>
 
         <span className="text-[13px] sm:text-[14px] break-words leading-relaxed">
-          {postComment?.commentContent ||
-            `Comment content sdfhasdfhal ksdfhalskdjfh alskdjfhalskdjfh`}
+          {postComment?.commentContent || `Comment content`}
         </span>
 
         <div className="flex flex-row items-center gap-3 sm:gap-4 mt-1">
@@ -100,6 +99,7 @@ const CommentContent = ({
           )}
 
           <button
+            type={'button'}
             className="text-[11px] sm:text-[12px] text-gray-600 hover:text-gray-900 font-medium transition-colors"
             onClick={() => {
               if (postComment) onResponseClick(postComment);
@@ -112,6 +112,7 @@ const CommentContent = ({
 
       <div className="flex-shrink-0 flex flex-col gap-3 sm:gap-4 items-center">
         <button
+          type={'button'}
           className="transition-transform hover:scale-110 active:scale-95"
           onClick={() => likeOrUnlikeComment(postComment.commentId)}
         >
@@ -131,6 +132,7 @@ const CommentContent = ({
 
         {postComment?.isAuthor && (
           <button
+            type={'button'}
             className="transition-transform hover:scale-110 active:scale-95"
             onClick={() => deleteComment(postComment.commentId)}
           >
