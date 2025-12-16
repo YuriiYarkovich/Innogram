@@ -75,10 +75,10 @@ const SubscribersListModal = ({
             <span className={'text-[20px] font-bold'}>{profile?.username}</span>
           </div>
         </div>
-        <Line />
+        <Line thickness={1} marginTop={1} />
         <div
           className={
-            'flex flex-col outline-1 w-full min-h-[200px] max-h-[500px] overflow-y-auto pl-1 pr-1 pt-0.5'
+            'flex flex-col w-full min-h-[200px] max-h-[500px] overflow-y-auto pl-1 pr-1 pt-0.5'
           }
         >
           {subscribersLoading ? (

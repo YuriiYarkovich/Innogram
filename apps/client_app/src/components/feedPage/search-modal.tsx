@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { Profile } from '@/types';
+import { search, useDebounce } from '@/services/profile.service';
+import ProfileListTile from '@/components/profilePage/profile-list-tile';
 
 type SearchModalProps = {
   isOpened: boolean;
@@ -7,6 +10,21 @@ type SearchModalProps = {
 };
 
 const SearchModal = ({ isOpened, onClose }: SearchModalProps) => {
+  const [foundProfiles, setFoundProfiles] = useState<Profile[] | null>(null);
+  const [isProfilesLoading, setIsProfilesLoading] = useState(false);
+  const [query, setQuery] = useState<string>('');
+
+  const debouncedQuery = useDebounce(query, 500);
+
+  useEffect(() => {
+    setIsProfilesLoading(true);
+    if (isOpened) {
+      search(debouncedQuery)
+        .then(setFoundProfiles)
+        .finally(() => setIsProfilesLoading(false));
+    }
+  }, [isOpened, debouncedQuery]);
+
   if (!isOpened) return null;
   return (
     <div
@@ -32,7 +50,9 @@ const SearchModal = ({ isOpened, onClose }: SearchModalProps) => {
 
         <div className={'w-full px-7'}>
           <input
-            className={'bg-white w-full pl-3 rounded-2xl'}
+            onChange={(e) => setQuery(e.target.value)}
+            value={query}
+            className={'bg-white w-full pl-3 rounded-2xl outline-1'}
             placeholder={'Username'}
           />
         </div>
@@ -41,9 +61,24 @@ const SearchModal = ({ isOpened, onClose }: SearchModalProps) => {
         >
           <div
             className={
-              'flex flex-col outline-1 w-full min-h-[200px] max-h-[500px] overflow-y-auto pl-1 pr-1 pt-0.5'
+              'flex flex-col w-full min-h-[200px] max-h-[500px] overflow-y-auto pl-1 pr-1 pt-0.5'
             }
-          ></div>
+          >
+            {isProfilesLoading ? (
+              <p>Profiles loading...</p>
+            ) : foundProfiles && foundProfiles?.length > 0 ? (
+              foundProfiles.map((profile) => (
+                <div key={profile.id}>
+                  <ProfileListTile
+                    subscriber={profile}
+                    isCurrentProfile={profile.isCurrent}
+                  />
+                </div>
+              ))
+            ) : (
+              <p>No results!</p>
+            )}
+          </div>
         </div>
       </div>
     </div>

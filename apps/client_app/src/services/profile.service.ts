@@ -1,6 +1,7 @@
 import { SERVER } from '@/config/apiRoutes';
 import returnErrorMessage from '@/utils/showAuthError';
 import { ErrorResponse, Profile, SubscriptionRequest } from '@/types';
+import { useEffect, useState } from 'react';
 
 export const handleOnProfileFollowing = async (profile: Profile) => {
   const response: Response = await fetch(`${SERVER.API.FOLLOW}${profile.id}`, {
@@ -237,7 +238,48 @@ export const getAllSentRequests = async (): Promise<SubscriptionRequest[]> => {
   return await response.json();
 };
 
-export const search = async (query: string) => {
+export const search = async (query: string): Promise<Profile[]> => {
   if (query.length === 0) {
+    const response: Response = await fetch(SERVER.API.GET_10_RANDOM, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData: ErrorResponse = await response.json();
+      console.error(`Error message: ${errorData.message}`);
+      throw new Error(errorData.message || 'Profile not found!');
+    }
+
+    return await response.json();
+  } else {
+    const response: Response = await fetch(
+      `${SERVER.API.SEARCH_PROFILES}${query}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+      },
+    );
+    if (!response.ok) {
+      const errorData: ErrorResponse = await response.json();
+      console.error(`Error message: ${errorData.message}`);
+      throw new Error(errorData.message || 'Profile not found!');
+    }
+
+    return await response.json();
   }
 };
+
+export function useDebounce<T>(value: T, delay: number = 500): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
