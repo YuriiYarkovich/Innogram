@@ -47,7 +47,7 @@ const ProfileListTile = ({
   return (
     <div className={'flex flex-row items-center w-full min-h-[55px] gap-6'}>
       <div
-        className={'flex rounded-full ml-3 outline-1 max-h-[40px] max-w-[40px]'}
+        className={'flex rounded-full ml-3 outline-1 md:h-[40px] md:w-[40px]'}
       >
         <Image
           src={subscriber.avatarUrl}
