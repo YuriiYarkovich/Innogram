@@ -1,14 +1,14 @@
 import express, { Express } from 'express';
-import router from './routes/index.ts';
+import router from './routes/index';
 import session from 'express-session';
 import passport from 'passport';
-import { errorHandlingMiddleware } from './middleware/error-handling.middleware.ts';
-import './config/load-env.config.ts';
-import { initRedis } from './config/redis.init.ts';
+import { errorHandlingMiddleware } from './middleware/error-handling.middleware';
+import './config/load-env.config';
+import { initRedis } from './config/redis.init';
 import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import { requireEnv } from './validation/env.validation.ts';
+import { requireEnv } from './validation/env.validation';
 import morgan from 'morgan';
 
 const PORT: string = requireEnv(`AUTH_SERVICE_PORT`);

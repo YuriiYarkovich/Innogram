@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import '../config/load-env.config.ts';
+import '../config/load-env.config';
 
 export class JwtService {
   generateAccessJwt = (profileId: string, role: string): string => {

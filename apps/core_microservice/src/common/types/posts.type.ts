@@ -1,4 +1,4 @@
-import { PostStatus } from 'innogram-client/src/enums';
+import { PostStatus } from '../enums/post.enum';
 
 export interface FoundPostData {
   postId: string;

@@ -12,6 +12,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.2.3",
     "next": "16.1.0-canary.19",
     "react": "19.2.0",
     "react-dom": "19.2.0",

@@ -1,8 +1,8 @@
-import redisClient from '../config/redis.init.ts';
-import { RedisNote, RedisSessionData } from '../types/redis.type.ts';
-import { RefreshTokenObj } from '../types/tokens.type.ts';
-import { JwtService } from './jwt.service.ts';
-import { requireEnv } from '../validation/env.validation.ts';
+import redisClient from '../config/redis.init';
+import { RedisNote, RedisSessionData } from '../types/redis.type';
+import { RefreshTokenObj } from '../types/tokens.type';
+import { JwtService } from './jwt.service';
+import { requireEnv } from '../validation/env.validation';
 
 export class RedisService {
   readonly jwtService: JwtService = new JwtService();

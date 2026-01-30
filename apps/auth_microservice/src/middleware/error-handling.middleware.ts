@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { ApiError } from '../error/api.error.ts';
+import { ApiError } from '../error/api.error';
 
 export function errorHandlingMiddleware(
   err: unknown,

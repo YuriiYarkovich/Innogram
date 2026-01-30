@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreateAccountDto } from '../dto/create-account.dto.ts';
-import { AuthService } from '../services/auth.service.ts';
-import { LoginDto } from '../dto/login.dto.ts';
-import '../config/load-env.config.ts';
-import { ApiError } from '../error/api.error.ts';
-import { requireEnv } from '../validation/env.validation.ts';
+import { CreateAccountDto } from '../dto/create-account.dto';
+import { AuthService } from '../services/auth.service';
+import { LoginDto } from '../dto/login.dto';
+import '../config/load-env.config';
+import { ApiError } from '../error/api.error';
+import { requireEnv } from '../validation/env.validation';
 
 export class AuthController {
   readonly authService: AuthService;

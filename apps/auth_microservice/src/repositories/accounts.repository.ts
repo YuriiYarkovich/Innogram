@@ -1,8 +1,8 @@
-import pool from '../config/db.config.ts';
-import { User } from '../types/user.types.ts';
-import { Account, AccountWithProfileId } from '../types/account.types.ts';
+import pool from '../config/db.config';
+import { User } from '../types/user.types';
+import { Account, AccountWithProfileId } from '../types/account.types';
 import { QueryResult } from 'pg';
-import { Profile } from '../types/profile.type.ts';
+import { Profile } from '../types/profile.type';
 
 export class AccountsRepository {
   async createUser(): Promise<User> {

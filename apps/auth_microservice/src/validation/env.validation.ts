@@ -1,4 +1,4 @@
-import '../config/load-env.config.ts';
+import '../config/load-env.config';
 
 export function requireEnv(name: string): string {
   const value: string | undefined = process.env[name];

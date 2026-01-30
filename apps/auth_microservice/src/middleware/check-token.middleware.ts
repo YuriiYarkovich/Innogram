@@ -1,5 +1,5 @@
-import { ApiError } from '../error/api.error.ts';
-import { JwtService } from '../services/jwt.service.ts';
+import { ApiError } from '../error/api.error';
+import { JwtService } from '../services/jwt.service';
 import { Request, Response, NextFunction } from 'express';
 
 const jwtService: JwtService = new JwtService();

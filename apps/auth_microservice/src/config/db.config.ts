@@ -1,6 +1,6 @@
 import { Pool, PoolConfig } from 'pg';
 
-import { requireEnv } from '../validation/env.validation.ts';
+import { requireEnv } from '../validation/env.validation';
 
 const config: PoolConfig = {
   user: requireEnv(`POSTGRES_USER`),

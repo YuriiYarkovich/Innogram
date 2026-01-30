@@ -1,20 +1,20 @@
-import pool from '../config/db.config.ts';
+import pool from '../config/db.config';
 import bcrypt from 'bcrypt';
-import { AccountsRepository } from '../repositories/accounts.repository.ts';
-import { ApiError } from '../error/api.error.ts';
-import '../config/load-env.config.ts';
-import redisClient from '../config/redis.init.ts';
-import { JwtService } from './jwt.service.ts';
+import { AccountsRepository } from '../repositories/accounts.repository';
+import { ApiError } from '../error/api.error';
+import '../config/load-env.config';
+import redisClient from '../config/redis.init';
+import { JwtService } from './jwt.service';
 import {
   Account,
   AccountWithProfileId,
   ExistingAccount,
-} from '../types/account.types.ts';
-import { User } from '../types/user.types.ts';
-import { Profile } from '../types/profile.type.ts';
-import { RefreshTokenObj } from '../types/tokens.type.ts';
-import { RedisNote } from '../types/redis.type.ts';
-import { RedisService } from './redis.service.ts';
+} from '../types/account.types';
+import { User } from '../types/user.types';
+import { Profile } from '../types/profile.type';
+import { RefreshTokenObj } from '../types/tokens.type';
+import { RedisNote } from '../types/redis.type';
+import { RedisService } from './redis.service';
 
 export class AuthService {
   readonly accountsRepository: AccountsRepository = new AccountsRepository();
