@@ -7,7 +7,7 @@ const env = process.env.NODE_ENV || 'development';
 const envFile = `.env.${env}`;
 
 dotenv.config({
-  path: path.resolve(process.cwd(), '../../', envFile),
+  path: path.resolve(__dirname, '../../', envFile),
 });
 
 export const createTypeOrmOptions = (

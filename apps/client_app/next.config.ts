@@ -1,11 +1,4 @@
 import type { NextConfig } from 'next';
-import dotenv from 'dotenv';
-import path from 'path';
-
-const env = process.env.NODE_ENV || 'development';
-const envFileName = `.env.${env}`;
-console.log(`Env filename: ${envFileName}`);
-dotenv.config({ path: path.resolve(__dirname, `../../${envFileName}`) });
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -24,6 +17,12 @@ const nextConfig: NextConfig = {
         hostname: '**',
       },
     ],
+  },
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_AUTH_URL: process.env.NEXT_PUBLIC_AUTH_URL,
+    NEXT_PUBLIC_CHAT_SOCKET_SERVER_URL:
+      process.env.NEXT_PUBLIC_CHAT_SOCKET_SERVER_URL,
   },
 };
 
