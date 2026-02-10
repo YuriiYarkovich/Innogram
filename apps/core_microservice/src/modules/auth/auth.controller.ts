@@ -127,14 +127,17 @@ export class AuthController {
       },
     },
   })
-  @Get('/google')
+  @Get('/googleAuthEndpoint')
   authenticateGoogleUser(@Res() res: Response) {
-    const authUrl = `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/google`;
+    const isProd = this.configService.get<string>('NODE_ENV') === 'production';
+    const authUrl = isProd
+      ? 'http://localhost/api/auth/google'
+      : `${this.configService.get<string>('AUTH_SERVICE_URL')}/api/auth/google`;
     return res.redirect(authUrl);
   }
 
   @ApiExcludeEndpoint()
-  @Get('/google/success')
+  @Get('/googleSuccess')
   googleSuccessCallback(@Req() req: Request, @Res() res: Response) {
     const accessToken: string = req.cookies['accessToken'];
 
@@ -182,7 +185,7 @@ export class AuthController {
   }
 
   @ApiExcludeEndpoint()
-  @Get('/google/failure')
+  @Get('/googleFailure')
   googleFailureCallback(@Res() res: Response) {
     res.send('Something went wrong!');
   }

@@ -80,9 +80,12 @@ export class AuthController {
       maxAge: parseInt(requireEnv(`JWT_REFRESH_EXPIRES_IN`), 10) * 60 * 1000,
     });
 
-    return res.redirect(
-      `${requireEnv(`CORE_SERVICE_URL`)}/api/auth/google/success`,
-    );
+    const isProd = requireEnv('NODE_ENV') === 'production';
+    const redirectUrl: string = isProd
+      ? 'http://localhost/api/auth/googleSuccess'
+      : `${requireEnv(`CORE_SERVICE_URL`)}/api/auth/googleSuccess`;
+
+    return res.redirect(redirectUrl);
   }
 
   loginUsingEmailPassword = async (

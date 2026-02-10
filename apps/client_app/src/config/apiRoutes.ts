@@ -3,7 +3,7 @@ import { env } from '@/env';
 
 export const SERVER = {
   API: {
-    GOOGLE_AUTH: `${env.NEXT_PUBLIC_API_URL}/auth/google`,
+    GOOGLE_AUTH: `${env.NEXT_PUBLIC_API_URL}/auth/googleAuthEndpoint`,
     LOG_IN: `${env.NEXT_PUBLIC_API_URL}/auth/login`,
     LOG_OUT: `${env.NEXT_PUBLIC_API_URL}/auth/logout`,
     REGISTRATION: `${env.NEXT_PUBLIC_API_URL}/auth/registration`,
