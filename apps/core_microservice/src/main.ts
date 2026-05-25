@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { ContextMiddleware } from './common/middleware/context.middleware';
 import { helmetConfig } from './config/helmet.config';
@@ -12,6 +12,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const PORT = configService.get<number>('CORE_SERVICE_PORT') ?? 3001;
   const frontendUrl = configService.get<string>('CLIENT_URL');
+  Logger.log(`Client URL: ${frontendUrl}`);
   const isDev = configService.get<string>('NODE_ENV') === 'development';
 
   app.use(helmetConfig);
@@ -52,7 +53,7 @@ async function bootstrap() {
   SwaggerModule.setup('/api/docs', app, document);
 
   await app.listen(PORT, () => {
-    console.log(`Server is listening on port ${PORT}`);
+    Logger.log(`Server is listening on port ${PORT}`);
   });
 }
 
