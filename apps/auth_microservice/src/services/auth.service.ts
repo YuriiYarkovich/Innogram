@@ -12,7 +12,7 @@ import {
 } from '../types/account.types';
 import { User } from '../types/user.types';
 import { Profile } from '../types/profile.type';
-import { RefreshTokenObj } from '../types/tokens.type';
+import { AccessTokenObj, RefreshTokenObj } from '../types/tokens.type';
 import { RedisNote } from '../types/redis.type';
 import { RedisService } from './redis.service';
 
@@ -195,15 +195,16 @@ export class AuthService {
   }
 
   async refreshAccessToken(refreshToken: string) {
+    const decoded: RefreshTokenObj | null =
+      this.jwtService.decodeRefreshTokenPayload(refreshToken);
+    if (!decoded) {
+      throw ApiError.unauthorized('Invalid or expired refresh token');
+    }
     const redisNote: RedisNote | undefined =
       await this.redisService.findRedisNote(refreshToken);
-
     if (!redisNote) {
-      throw ApiError.forbidden('Invalid refresh token');
+      throw ApiError.unauthorized('Invalid or expired refresh token');
     }
-
-    const decoded: RefreshTokenObj = this.jwtService.verifyToken(refreshToken);
-
     const foundProfileIdObject: { profileId: string } =
       await this.accountsRepository.findProfileIdByAccountId(decoded.accountId);
 
@@ -222,19 +223,42 @@ export class AuthService {
     return { user, newAccessToken };
   }
 
-  validateToken(token: string): string {
-    if (!token) throw ApiError.unauthorized('No access token!');
-
-    let decoded: string = '';
+  validateAccessToken(token: string): AccessTokenObj {
     try {
-      decoded = this.jwtService.verifyToken(token);
+      const decoded = this.jwtService.verifyToken(token) as AccessTokenObj;
+      return { profileId: decoded.profileId, role: decoded.role };
     } catch (e) {
       if (e.name === 'TokenExpiredError') {
         throw ApiError.unauthorized('Access token expired!');
       }
       throw ApiError.unauthorized('Invalid access token!');
     }
+  }
 
-    return decoded;
+  async validateOrRefreshTokens(
+    accessToken?: string,
+    refreshToken?: string,
+  ): Promise<{ user: AccessTokenObj; newAccessToken?: string }> {
+    if (!accessToken && !refreshToken) {
+      throw ApiError.unauthorized('No tokens provided');
+    }
+    if (accessToken) {
+      try {
+        const user: AccessTokenObj = this.validateAccessToken(accessToken);
+        return { user };
+      } catch {
+        if (!refreshToken) {
+          throw ApiError.unauthorized('Invalid or expired access token');
+        }
+      }
+    }
+    if (!refreshToken) {
+      throw ApiError.unauthorized('Invalid or expired tokens');
+    }
+    const refreshData = await this.refreshAccessToken(refreshToken);
+    return {
+      user: refreshData.user,
+      newAccessToken: refreshData.newAccessToken,
+    };
   }
 }

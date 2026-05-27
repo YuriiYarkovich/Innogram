@@ -10,6 +10,7 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { Readable } from 'stream';
@@ -32,6 +33,7 @@ interface VideoWorkerMessage {
 @Injectable()
 export class MinioService {
   private readonly s3Client: S3Client;
+  private readonly s3PublicClient: S3Client;
 
   private readonly bucketName: string | undefined;
   private readonly s3BaseUrl: string | undefined;
@@ -49,8 +51,22 @@ export class MinioService {
 
       forcePathStyle: true,
     });
+
+    // Separate client for public signed URLs
+    this.s3PublicClient = new S3Client({
+      region: this.config.get<string>('MINIO_REGION'),
+      endpoint: this.config.get<string>('S3_URL'),
+      credentials: {
+        accessKeyId:
+          this.config.get<string>('MINIO_ROOT_USER') ?? 'innogram_user',
+        secretAccessKey:
+          this.config.get<string>('MINIO_ROOT_PASSWORD') ?? 'innogram_admin',
+      },
+      forcePathStyle: true,
+    });
+
     this.bucketName = this.config.get<string>('S3_BUCKET');
-    this.s3BaseUrl = this.config.get<string>('S3_ENDPOINT');
+    this.s3BaseUrl = this.config.get<string>('S3_URL');
   }
 
   getVideoDuration(buffer: Buffer): Promise<number> {
@@ -85,36 +101,39 @@ export class MinioService {
     file: MulterFile,
     newHashedFilename?: string,
   ): Promise<{ hashedFileName: string; type: string }> {
+    Logger.log(1);
     let type: string;
     const mimeType: string = file.mimetype;
 
     const isImage: boolean = mimeType.startsWith('image/');
     const isVideo: boolean = mimeType.startsWith('video/');
-
+    Logger.log(2);
     if (!isImage && !isVideo)
       throw new BadRequestException('Unknown file type');
-
+    Logger.log(3);
     if (isVideo) {
+      Logger.log('Video');
       const duration: number = await this.getVideoDuration(file.buffer);
       type = 'video';
       if (duration > 60) {
         throw new BadRequestException('Video is longer then one minute');
       }
     } else type = 'image';
-
+    Logger.log(4);
     const hashedFileName: string = newHashedFilename
       ? newHashedFilename
       : this.generateHashedFileName(file.originalname);
-
+    Logger.log(5);
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
       Key: hashedFileName,
       Body: file.buffer,
       ContentType: file.mimetype,
     });
+    Logger.log(6);
 
     await this.s3Client.send(command);
-
+    Logger.log(7);
     return { hashedFileName, type };
   }
 
@@ -125,12 +144,17 @@ export class MinioService {
       Key: fileKey,
     });
 
-    const url: string | null = await getSignedUrl(this.s3Client, command, {
-      expiresIn: 600,
-    });
+    const url: string | null = await getSignedUrl(
+      this.s3PublicClient,
+      command,
+      {
+        expiresIn: 600,
+      },
+    );
 
     if (!url) return undefined;
 
+    Logger.log(`Public url: ${url}`);
     return url;
   }
 
