@@ -1,10 +1,25 @@
-import { Request, Response, NextFunction } from 'express';
+import { CookieOptions, Request, Response, NextFunction } from 'express';
 import { CreateAccountDto } from '../dto/create-account.dto';
 import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dto/login.dto';
 import '../config/load-env.config';
 import { ApiError } from '../error/api.error';
 import { requireEnv } from '../validation/env.validation';
+
+function getCookieOptions(
+  maxAge: number,
+  sameSite: CookieOptions['sameSite'] = 'strict',
+  includeDomain = false,
+): CookieOptions {
+  const secure = requireEnv('CLIENT_URL').startsWith('https://');
+  return {
+    httpOnly: true,
+    secure,
+    sameSite: secure ? sameSite : 'lax',
+    ...(secure && includeDomain ? { domain: requireEnv('DOMAIN') } : {}),
+    maxAge,
+  };
+}
 
 export class AuthController {
   readonly authService: AuthService;
@@ -43,19 +58,21 @@ export class AuthController {
           bio,
           deviceId,
         );
-      res.cookie('accessToken', tokens.accessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        maxAge: parseInt(requireEnv(`JWT_ACCESS_EXPIRES_IN`), 10) * 60 * 1000,
-      });
+      res.cookie(
+        'accessToken',
+        tokens.accessToken,
+        getCookieOptions(
+          parseInt(requireEnv(`JWT_ACCESS_EXPIRES_IN`), 10) * 60 * 1000,
+        ),
+      );
 
-      res.cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        maxAge: parseInt(requireEnv(`JWT_REFRESH_EXPIRES_IN`), 10) * 60 * 1000,
-      });
+      res.cookie(
+        'refreshToken',
+        tokens.refreshToken,
+        getCookieOptions(
+          parseInt(requireEnv(`JWT_REFRESH_EXPIRES_IN`), 10) * 60 * 1000,
+        ),
+      );
       return res.json(tokens);
     } catch (e) {
       next(e);
@@ -65,20 +82,24 @@ export class AuthController {
   googleSuccess(req, res) {
     const { accessToken, refreshToken } = req.user;
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      domain: requireEnv('DOMAIN'),
-      maxAge: parseInt(requireEnv(`JWT_ACCESS_EXPIRES_IN`), 10) * 60 * 1000,
-    });
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      domain: requireEnv('DOMAIN'),
-      maxAge: parseInt(requireEnv(`JWT_REFRESH_EXPIRES_IN`), 10) * 60 * 1000,
-    });
+    res.cookie(
+      'accessToken',
+      accessToken,
+      getCookieOptions(
+        parseInt(requireEnv(`JWT_ACCESS_EXPIRES_IN`), 10) * 60 * 1000,
+        'none',
+        true,
+      ),
+    );
+    res.cookie(
+      'refreshToken',
+      refreshToken,
+      getCookieOptions(
+        parseInt(requireEnv(`JWT_REFRESH_EXPIRES_IN`), 10) * 60 * 1000,
+        'none',
+        true,
+      ),
+    );
 
     const isProd = requireEnv('NODE_ENV') === 'production';
     const redirectUrl: string = isProd
@@ -104,19 +125,21 @@ export class AuthController {
 
       const tokens = await this.authService.login(email, password, deviceId);
 
-      res.cookie('accessToken', tokens.accessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        maxAge: parseInt(requireEnv(`JWT_ACCESS_EXPIRES_IN`), 10) * 60 * 1000,
-      });
+      res.cookie(
+        'accessToken',
+        tokens.accessToken,
+        getCookieOptions(
+          parseInt(requireEnv(`JWT_ACCESS_EXPIRES_IN`), 10) * 60 * 1000,
+        ),
+      );
 
-      res.cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        maxAge: parseInt(requireEnv(`JWT_REFRESH_EXPIRES_IN`), 10) * 60 * 1000,
-      });
+      res.cookie(
+        'refreshToken',
+        tokens.refreshToken,
+        getCookieOptions(
+          parseInt(requireEnv(`JWT_REFRESH_EXPIRES_IN`), 10) * 60 * 1000,
+        ),
+      );
       return res.json(tokens);
     } catch (e) {
       next(e);
@@ -150,12 +173,11 @@ export class AuthController {
       }
       const refreshData =
         await this.authService.refreshAccessToken(refreshToken);
-      res.cookie('accessToken', refreshData.newAccessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        maxAge: 15 * 60 * 1000,
-      });
+      res.cookie(
+        'accessToken',
+        refreshData.newAccessToken,
+        getCookieOptions(15 * 60 * 1000),
+      );
       return res.json(refreshData);
     } catch (e) {
       next(e);
@@ -171,13 +193,13 @@ export class AuthController {
         refreshToken,
       );
       if (result.newAccessToken) {
-        res.cookie('accessToken', result.newAccessToken, {
-          httpOnly: true,
-          secure: true,
-          sameSite: 'strict',
-          maxAge:
+        res.cookie(
+          'accessToken',
+          result.newAccessToken,
+          getCookieOptions(
             parseInt(requireEnv(`JWT_ACCESS_EXPIRES_IN`), 10) * 60 * 1000,
-        });
+          ),
+        );
       }
       return res.json({
         valid: true,

@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+set -eu
+
+docker compose run --rm --no-deps core_microservice npm run migration:run:prod

@@ -20,55 +20,59 @@ passport.use(
       passReqToCallback: true,
     },
     async function (request, accessToken, refreshToken, profile, done) {
-      const foundData = await authService.checkIfAccountExist(profile.email);
-      console.log(`Received google profile: ${JSON.stringify(profile)}`);
-      let newAccessToken: string = '';
-      let newRefreshToken: string = '';
+      try {
+        const foundData = await authService.checkIfAccountExist(profile.email);
+        console.log(`Received google profile: ${JSON.stringify(profile)}`);
+        let newAccessToken: string = '';
+        let newRefreshToken: string = '';
 
-      if (foundData.isExist) {
-        console.log('Account exists, returning token');
-      } else {
-        console.log(`New account. Registration operation started!`);
-        await authService.registerGoogleUser(
-          profile.email,
-          profile.displayName,
-          'google',
+        if (foundData.isExist) {
+          console.log('Account exists, returning token');
+        } else {
+          console.log(`New account. Registration operation started!`);
+          await authService.registerGoogleUser(
+            profile.email,
+            profile.displayName,
+            'google',
+          );
+        }
+
+        const account: AccountWithProfileId | undefined = foundData.isExist
+          ? foundData.account
+          : (await authService.checkIfAccountExist(profile.email)).account;
+
+        if (!account) {
+          throw ApiError.internal();
+        }
+
+        newAccessToken = jwtService.generateAccessJwt(
+          account.profileId,
+          account.role,
         );
+        newRefreshToken = jwtService.generateRefreshJwt(account.id);
+
+        const deviceId: string =
+          (request.query.deviceId as string) || 'unknown-device';
+
+        const sessionKey: string = authService.getSessionKey(
+          account.id,
+          deviceId,
+        );
+        await redisService.setDataToRedis(
+          sessionKey,
+          newRefreshToken,
+          profile.email,
+          account.role,
+        );
+
+        return done(null, {
+          ...profile,
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+        });
+      } catch (error) {
+        return done(error);
       }
-
-      const account: AccountWithProfileId | undefined = foundData.isExist
-        ? foundData.account
-        : (await authService.checkIfAccountExist(profile.email)).account;
-
-      if (!account) {
-        throw ApiError.internal();
-      }
-
-      newAccessToken = jwtService.generateAccessJwt(
-        account.profileId,
-        account.role,
-      );
-      newRefreshToken = jwtService.generateRefreshJwt(account.id);
-
-      const deviceId: string =
-        (request.query.deviceId as string) || 'unknown-device';
-
-      const sessionKey: string = authService.getSessionKey(
-        account?.id,
-        deviceId,
-      );
-      await redisService.setDataToRedis(
-        sessionKey,
-        newRefreshToken,
-        profile.email,
-        account.role,
-      );
-
-      return done(null, {
-        ...profile,
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
-      });
     },
   ),
 );

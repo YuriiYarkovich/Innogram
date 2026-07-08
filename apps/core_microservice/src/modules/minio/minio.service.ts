@@ -20,7 +20,7 @@ import { ConfigService } from '@nestjs/config';
 import * as ffmpeg from 'fluent-ffmpeg';
 import * as ffprobeStatic from 'ffprobe-static';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { Worker } from 'worker_threads';
+import { Worker, WorkerOptions } from 'worker_threads';
 import path from 'node:path';
 
 ffmpeg.setFfprobePath(ffprobeStatic.path);
@@ -71,12 +71,17 @@ export class MinioService {
 
   getVideoDuration(buffer: Buffer): Promise<number> {
     return new Promise((resolve, reject) => {
+      const isCompiled = __filename.endsWith('.js');
+      const workerOptions: WorkerOptions = {
+        workerData: { buffer },
+        ...(isCompiled ? {} : { execArgv: ['-r', 'ts-node/register'] }),
+      };
       const worker = new Worker(
-        path.resolve(__dirname, 'video_duration.worker.ts'),
-        {
-          workerData: { buffer },
-          execArgv: ['-r', 'ts-node/register'],
-        },
+        path.resolve(
+          __dirname,
+          isCompiled ? 'video_duration.worker.js' : 'video_duration.worker.ts',
+        ),
+        workerOptions,
       );
 
       worker.on('message', (msg: VideoWorkerMessage) => {

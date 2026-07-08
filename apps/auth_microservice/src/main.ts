@@ -57,7 +57,8 @@ const start = async () => {
       );
     });
   } catch (e) {
-    console.log(e);
+    console.error('Failed to start auth service:', e);
+    process.exit(1);
   }
 };
 

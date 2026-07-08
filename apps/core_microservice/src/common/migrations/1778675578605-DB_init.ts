@@ -4,6 +4,9 @@ export class DBInit1778675578605 implements MigrationInterface {
   name = 'DBInit1778675578605';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`);
+    await queryRunner.query(`CREATE SCHEMA IF NOT EXISTS "auth"`);
+    await queryRunner.query(`CREATE SCHEMA IF NOT EXISTS "main"`);
     await queryRunner.query(
       `CREATE TABLE "auth"."accounts" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "user_id" uuid NOT NULL, "email" character varying(255) NOT NULL, "password_hash" character varying(255), "provider" character varying(20) NOT NULL DEFAULT 'local', "last_login_at" TIMESTAMP, "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "created_by" uuid NOT NULL, "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT now(), CONSTRAINT "UQ_ee66de6cdc53993296d1ceb8aa0" UNIQUE ("email"), CONSTRAINT "PK_5a7a02c20412299d198e097a8fe" PRIMARY KEY ("id"))`,
     );
@@ -233,5 +236,7 @@ export class DBInit1778675578605 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "auth"."users"`);
     await queryRunner.query(`DROP TYPE "auth"."users_role_enum"`);
     await queryRunner.query(`DROP TABLE "auth"."accounts"`);
+    await queryRunner.query(`DROP SCHEMA IF EXISTS "main"`);
+    await queryRunner.query(`DROP SCHEMA IF EXISTS "auth"`);
   }
 }
