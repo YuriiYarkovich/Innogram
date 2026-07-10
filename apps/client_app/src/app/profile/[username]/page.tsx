@@ -6,9 +6,8 @@ import React, { useEffect, useState } from 'react';
 import PostPreviewImage from '@/components/post/post-preview-image';
 import EditProfileModal from '@/components/profilePage/edit-profile.modal';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { useRouter } from 'next/navigation';
-import { useParams } from 'next/navigation';
-import PostPreviewModal from '@/components/post/post-preview.modal';
+import { useParams, useRouter } from 'next/navigation';
+import PostViewModal from '@/components/post/post-view.modal';
 import { handleLogout } from '@/services/auth.service';
 import {
   fetchFullProfileData,
@@ -17,12 +16,19 @@ import {
   handleProfileUnfollow,
 } from '@/services/profile.service';
 import { fetchPostsOfProfile } from '@/services/posts.service';
+import { Post, Profile } from '@/types';
+import MessageWritingModal from '@/components/profilePage/message-writing.modal';
+import SubscribersListModal from '@/components/profilePage/subscribers-list-modal';
+import SubscriptionsListModal from '@/components/profilePage/subscriptions-list-modal';
+import Line from '@/components/line';
+import SentRequestsModal from '@/components/profilePage/sent-requests-modal';
+import { FollowAcceptedStatus } from '@/enums';
 
 const Page = () => {
   const router: AppRouterInstance = useRouter();
 
   const [profile, setProfile] = useState<Profile>({
-    profileId: '',
+    id: '',
     username: '',
     bio: '',
     birthday: '',
@@ -35,21 +41,32 @@ const Page = () => {
     isSubscribed: false,
   });
   const [curProfile, setCurProfile] = useState<Profile | null>(null);
+  const [isProfileNotFound, setIsProfileNotFound] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [isSubscribersListModalOpen, setIsSubscribersListModalOpen] =
+    useState(false);
+  const [isSubscriptionsListModalOpen, setIsSubscriptionsListModalOpen] =
+    useState(false);
+  const [isSentRequestsModalOpen, setIsSentRequestsModalOpen] = useState(false);
   const [postOfPostModal, setPostOfPostModal] = useState(posts[0]);
   const [isPostPreviewModalOpen, setIsPostPreviewModalOpen] = useState(false);
   const [isFollowed, setIsFollowed] = useState(profile.isSubscribed);
-  const [followersAmount, setFollowersAmount] = useState<number>(
-    Number(profile.subscribersAmount),
-  );
+  const [isRequested, setIsRequested] = useState(false);
+  const [followersAmount, setFollowersAmount] = useState<number>(0);
+  const [isWritingMessageModalOpen, setIsWritingMessageModalOpen] =
+    useState(false);
 
   const { username } = useParams<{ username?: string }>();
 
+  const onWritingMessageModalClose = () => {
+    setIsWritingMessageModalOpen(false);
+  };
+
   useEffect(() => {
-    fetchProfile().then((data: Profile) => setCurProfile(data));
+    fetchProfile().then(setCurProfile);
   }, []);
 
   const openPostPreviewModal = (postId: string) => {
@@ -81,16 +98,29 @@ const Page = () => {
   }, [isEditProfileModalOpen]);
 
   const updatePostsArray = async (profileId: string) => {
-    fetchPostsOfProfile(profileId).then((data: Post[]) => setPosts(data));
+    fetchPostsOfProfile(profileId).then((data: Post[]) => {
+      setPosts(data);
+    });
   };
 
   useEffect(() => {
     fetchFullProfileData(username)
       .then((profileData: Profile) => {
-        setFollowersAmount(profileData.subscribersAmount);
+        setFollowersAmount(Number(profileData.subscribersAmount));
         setIsFollowed(profileData.isSubscribed);
         setProfile(profileData);
-        updatePostsArray(profileData?.profileId);
+        updatePostsArray(profileData?.id);
+        if (
+          profileData.subscribedStatus &&
+          (profileData.subscribedStatus === FollowAcceptedStatus.REQUESTED ||
+            profileData.subscribedStatus === FollowAcceptedStatus.REJECTED)
+        ) {
+          setIsRequested(true);
+        }
+      })
+      .catch(() => {
+        console.log('Setting the user not found page');
+        setIsProfileNotFound(true);
       })
       .finally(() => {
         setProfileLoading(false);
@@ -101,163 +131,302 @@ const Page = () => {
   const handleFollowing = async () => {
     await handleOnProfileFollowing(profile);
     setFollowersAmount((prev: number): number => prev + 1);
-    setIsFollowed(true);
+    if (!profile.isPublic && !isRequested) {
+      setIsRequested(true);
+    } else {
+      setIsFollowed(true);
+    }
   };
 
   const handleUnfollow = async () => {
-    await handleProfileUnfollow(profile);
+    await handleProfileUnfollow(profile.id);
 
     setFollowersAmount((prev: number): number => prev - 1);
-    setIsFollowed(false);
+    if (!profile.isPublic && isRequested) {
+      setIsRequested(false);
+    } else if (
+      (!profile.isPublic && isFollowed) ||
+      (profile.isPublic && isFollowed)
+    ) {
+      setIsFollowed(false);
+    }
+    location.reload();
   };
 
   return (
     <div>
+      <SentRequestsModal
+        isOpen={isSentRequestsModalOpen}
+        onClose={() => setIsSentRequestsModalOpen(false)}
+      />
+      <SubscriptionsListModal
+        isOpen={isSubscriptionsListModalOpen}
+        onClose={() => setIsSubscriptionsListModalOpen(false)}
+        currentProfile={curProfile}
+        profile={profile}
+      />
+      <SubscribersListModal
+        isOpen={isSubscribersListModalOpen}
+        onClose={() => setIsSubscribersListModalOpen(false)}
+        currentProfile={curProfile}
+        profile={profile}
+      />
       <EditProfileModal
         profile={profile}
         isOpen={isEditProfileModalOpen}
         onClose={() => setIsEditProfileModalOpen(false)}
       />
-      <PostPreviewModal
-        post={postOfPostModal}
-        isOpen={isPostPreviewModalOpen}
-        onClose={async () => {
-          await updatePostsArray(profile.profileId);
-          setIsPostPreviewModalOpen(false);
-        }}
+      {postOfPostModal && (
+        <PostViewModal
+          receivingPostId={postOfPostModal.postId}
+          isOpen={isPostPreviewModalOpen}
+          onClose={async () => {
+            setIsPostPreviewModalOpen(false);
+            await updatePostsArray(profile.id);
+          }}
+        />
+      )}
+      <MessageWritingModal
+        isOpen={isWritingMessageModalOpen}
+        onClose={onWritingMessageModalClose}
+        currentProfile={curProfile}
+        receiverProfileId={profile.id}
       />
       <div
         className={`flex flex-row min-h-screen w-full justify-center items-center`}
       >
         <SidePanel curProfile={curProfile} />
-        <main
-          className={`flex flex-col min-h-screen md:w-[900px] {/*bg-red-600*/}`}
-        >
-          {profileLoading ? (
-            <p>loading...</p>
-          ) : profile === null ? (
-            <p>Error while loading profile info</p>
-          ) : (
-            <div className={`flex flex-col w-full`}>
-              <div className={`flex flex-row w-full gap-10`}>
-                <Image
-                  className={`rounded-[270px] md:w-[155px] md:h-[155px] mt-15 ml-15`}
-                  src={profile.avatarUrl || `/images/avaTest.png`}
-                  alt={'User avatar'}
-                  width={30}
-                  height={30}
-                  unoptimized
-                  draggable={false}
-                />
-                <div className={`flex flex-col mt-20 gap-8`}>
-                  <span className={`font-bold text-[32px]`}>
-                    {profile.username}
-                  </span>
-                  <div className={`flex flex-row gap-3`}>
-                    <div className={`flex flex-row gap-1`} /*posts count text*/>
-                      <span className={`font-bold text-[20px]`}>
-                        {profile.postsAmount}
-                      </span>
-                      <span className={`text-[20px]`}>posts</span>
+        {!isProfileNotFound ? (
+          <main className={`flex flex-col min-h-screen md:w-[900px]`}>
+            {profileLoading ? (
+              <p>loading...</p>
+            ) : profile === null ? (
+              <p>Error while loading profile info</p>
+            ) : (
+              <div className={`flex flex-col w-full`}>
+                <div className={`flex flex-row w-full gap-10 items-center`}>
+                  <Image
+                    className={`rounded-[270px] md:w-[155px] md:h-[155px] mt-15 ml-15`}
+                    src={profile.avatarUrl || `/images/avaTest.png`}
+                    alt={'User avatar'}
+                    width={30}
+                    height={30}
+                    unoptimized
+                    loading={'eager'}
+                    draggable={false}
+                  />
+                  <div className={`flex flex-col mt-20 gap-8`}>
+                    <span className={`font-bold text-[32px]`}>
+                      {profile.username}
+                    </span>
+                    <div className={`flex flex-row gap-3`}>
+                      <div
+                        className={`flex flex-row gap-1`} /*posts count text*/
+                      >
+                        <span className={`font-bold text-[20px]`}>
+                          {profile.postsAmount}
+                        </span>
+                        <span className={`text-[20px]`}>posts</span>
+                      </div>
+                      <div
+                        className={`flex flex-row gap-1`} /*subscribers count text*/
+                      >
+                        <span className={`font-bold text-[20px]`}>
+                          {followersAmount}
+                        </span>
+                        <span
+                          onClick={() => setIsSubscribersListModalOpen(true)}
+                          className={`text-[20px] cursor-pointer`}
+                        >
+                          subscribers
+                        </span>
+                      </div>
+                      <div
+                        className={`flex flex-row gap-1`} /*subscriptions count text*/
+                      >
+                        <span
+                          className={`font-bold text-[20px] cursor-pointer`}
+                        >
+                          {profile.subscriptionsAmount}
+                        </span>
+                        <span
+                          onClick={() => setIsSubscriptionsListModalOpen(true)}
+                          className={`text-[20px] cursor-pointer`}
+                        >
+                          subscriptions
+                        </span>
+                      </div>
                     </div>
-                    <div
-                      className={`flex flex-row gap-1`} /*subscribers count text*/
-                    >
-                      <span className={`font-bold text-[20px]`}>
-                        {followersAmount}
-                      </span>
-                      <span className={`text-[20px]`}>subscribers</span>
-                    </div>
-                    <div
-                      className={`flex flex-row gap-1`} /*subscriptions count text*/
-                    >
-                      <span className={`font-bold text-[20px]`}>
-                        {profile.subscriptionsAmount}
-                      </span>
-                      <span className={`text-[20px]`}>subscriptions</span>
-                    </div>
+                    <span className={`text-[#79747e]`}>{profile.bio}</span>
                   </div>
-                  <span className={`text-[#79747e]`}>{profile.bio}</span>
-                </div>
-                {profile.isCurrent ? (
-                  <button
-                    className={`ml-50`}
-                    onClick={() => handleLogout(router)}
-                  >
-                    <Image
-                      src={`/images/icons/logout.svg`}
-                      alt={`logout button`}
-                      height={40}
-                      width={40}
-                      draggable={false}
-                      className={`md:w-[40px] md:h-[40px] hover:md:w-[47px] hover:md:h-[47px] cursor-pointer`}
-                    />
-                  </button>
-                ) : (
-                  <div />
-                )}
-              </div>
-              <div
-                className={`flex flex-row w-full justify-center gap-20 mt-10 mb-10`}
-              >
-                {profile.isCurrent ? (
-                  <>
-                    <button
-                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                      onClick={() => setIsEditProfileModalOpen(true)}
-                    >
-                      Edit profile
-                    </button>
-                    <button
-                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                    >
-                      View archive
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
-                      onClick={
-                        isFollowed
-                          ? () => handleUnfollow()
-                          : () => handleFollowing()
+                  {profile.isCurrent && (
+                    <div
+                      className={
+                        'flex flex-col items-center justify-center gap-2 ml-auto'
                       }
                     >
-                      {isFollowed ? 'Unfollow' : 'Follow'}
-                    </button>
+                      <button
+                        className={`flex md:w-[47px] md:h-[47px] items-center justify-center`}
+                        onClick={() => handleLogout(router)}
+                      >
+                        <Image
+                          src={`/images/icons/logout.svg`}
+                          alt={`logout button`}
+                          height={40}
+                          width={40}
+                          draggable={false}
+                          className={`md:w-[40px] md:h-[40px] hover:md:w-[47px] hover:md:h-[47px] cursor-pointer`}
+                        />
+                      </button>
+
+                      <button
+                        className={`flex ml-auto md:w-[47px] md:h-[47px] items-center justify-center`}
+                        onClick={() => setIsSentRequestsModalOpen(true)}
+                      >
+                        <Image
+                          src={`/images/icons/sentRequests.svg`}
+                          alt={`Sent requests button`}
+                          height={40}
+                          width={40}
+                          draggable={false}
+                          className={`md:w-[40px] md:h-[40px] hover:md:w-[47px] hover:md:h-[47px] cursor-pointer`}
+                        />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div
+                  className={`flex flex-row w-full justify-center gap-20 mt-10 mb-10`}
+                >
+                  {profile.isCurrent ? (
+                    <>
+                      <button
+                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                        onClick={() => setIsEditProfileModalOpen(true)}
+                      >
+                        Edit profile
+                      </button>
+                      <button
+                        onClick={() => {
+                          location.replace(
+                            `/profile/${profile.username}/archive`,
+                          );
+                        }}
+                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                      >
+                        View archive
+                      </button>
+                    </>
+                  ) : profile.isPublic ? (
+                    <>
+                      <button
+                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                        onClick={isFollowed ? handleUnfollow : handleFollowing}
+                      >
+                        {isFollowed ? 'Unfollow' : 'Follow'}
+                      </button>
+                      <button
+                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                        onClick={() => setIsWritingMessageModalOpen(true)}
+                      >
+                        Send message
+                      </button>
+                    </>
+                  ) : profile.isSubscribed ? (
+                    <>
+                      <button
+                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                        onClick={handleUnfollow}
+                      >
+                        Unfollow
+                      </button>
+                      <button
+                        className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                        onClick={() => setIsWritingMessageModalOpen(true)}
+                      >
+                        Send message
+                      </button>
+                    </>
+                  ) : (
                     <button
                       className={`flex md:w-[280px] md:h-[35px] bg-[#eaddff] rounded-[10px] items-center justify-center text-[20px] cursor-pointer hover:bg-[#ffd8e4]`}
+                      onClick={isRequested ? handleUnfollow : handleFollowing}
                     >
-                      Send message
+                      {isRequested ? 'Cancel request' : 'Request subscription'}
                     </button>
-                  </>
+                  )}
+                </div>
+                <Line color={'#79747e'} />
+                {profile.isPublic ||
+                profile.isCurrent ||
+                (!profile.isPublic && profile.isSubscribed) ? (
+                  <div className={'grid grid-cols-5 md:w-[900px] mt-7 gap-1'}>
+                    {postsLoading ? (
+                      <p>loading</p>
+                    ) : posts.length === 0 ? (
+                      <p>There are no posts</p>
+                    ) : (
+                      posts.map((post) => (
+                        <PostPreviewImage
+                          imageUrl={post.assets[0].url}
+                          onClick={() => openPostPreviewModal(post.postId)}
+                          key={post.postId}
+                        />
+                      ))
+                    )}
+                  </div>
+                ) : (
+                  !profile.isPublic &&
+                  !profile.isSubscribed && (
+                    <div
+                      className={
+                        'flex flex-row items-center justify-center my-20'
+                      }
+                    >
+                      <Image
+                        src={'/images/icons/locked.svg'}
+                        alt={'Lock icon'}
+                        height={130}
+                        width={130}
+                        draggable={false}
+                      />
+                      <div
+                        className={'flex flex-col items-center justify-center'}
+                      >
+                        <span className={'text-[30px] font-bold'}>
+                          This account is private
+                        </span>
+                        <span className={'text-[20px] text-[#79747e]'}>
+                          Follow this account to see posts
+                        </span>
+                      </div>
+                    </div>
+                  )
                 )}
               </div>
-            </div>
-          )}
-
-          <div className="flex items-center mt-3 w-full">
-            <div className={`flex-grow h-[2px] bg-[#624b98]`}></div>
-          </div>
-          <div
-            className={`{/*bg-blue-600*/} grid grid-cols-5 md:w-[900px] mt-7 gap-1`}
-          >
-            {postsLoading ? (
-              <p>loading</p>
-            ) : posts.length === 0 ? (
-              <p>There are no posts</p>
-            ) : (
-              posts.map((post) => (
-                <PostPreviewImage
-                  imageUrl={post.assets[0].url}
-                  onClick={() => openPostPreviewModal(post.postId)}
-                  key={post.postId}
-                />
-              ))
             )}
+          </main>
+        ) : (
+          <div
+            className={`flex flex-col items-center justify-center min-h-screen md:w-[900px]`}
+          >
+            <div className={'flex flex-col items-center justify-center gap-5'}>
+              <span className={'text-[30px] font-bold'}>
+                Profile with this username does not exist!
+              </span>
+              <button
+                onClick={() => {
+                  location.replace(`/profile/${curProfile?.username}`);
+                }}
+                className={
+                  'flex p-3.5 items-center justify-center bg-[#4f378a] text-white cursor-pointer rounded-3xl text-[18px] hover:bg-[#d0bcff] hover:text-black'
+                }
+              >
+                <span>Return to your page</span>
+              </button>
+            </div>
           </div>
-        </main>
+        )}
       </div>
     </div>
   );

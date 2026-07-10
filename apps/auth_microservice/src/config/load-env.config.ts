@@ -1,13 +1,17 @@
-import * as path from 'path';
-import * as fs from 'fs';
 import * as dotenv from 'dotenv';
+import * as fs from 'fs';
+import * as path from 'path';
 
 function findRootEnv(startDir: string): string | null {
+  const env = process.env.NODE_ENV || 'development';
+  const envFileName = `.env.${env}`;
+
   let dir: string = startDir;
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    const envPath: string = path.join(dir, '.env');
+    // finding specific env file
+    const envPath: string = path.join(dir, envFileName);
     if (fs.existsSync(envPath)) {
       return envPath;
     }
@@ -25,7 +29,11 @@ const envPath: string | null = findRootEnv(__dirname);
 
 if (envPath) {
   dotenv.config({ path: envPath });
-  console.log(`[dotenv] Loaded .env from ${envPath}`);
+  console.log(`[dotenv] Loaded environment from ${envPath}`);
+  console.log(
+    `[dotenv] Running in ${process.env.NODE_ENV || 'development'} mode`,
+  );
 } else {
-  console.warn('[dotenv] No .env file found');
+  const env = process.env.NODE_ENV || 'development';
+  console.warn(`[dotenv] No .env.${env} or .env file found`);
 }

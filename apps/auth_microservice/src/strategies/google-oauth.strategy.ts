@@ -1,11 +1,11 @@
 import { Strategy as GoogleStrategy } from 'passport-google-oauth2';
 import passport from 'passport';
-import { AuthService } from '../services/auth.service.ts';
-import '../config/load-env.config.ts';
-import { JwtService } from '../services/jwt.service.ts';
-import { ApiError } from '../error/api.error.ts';
-import { RedisService } from '../services/redis.service.ts';
-import { AccountWithProfileId } from '../types/account.types.ts';
+import { AuthService } from '../services/auth.service';
+import '../config/load-env.config';
+import { JwtService } from '../services/jwt.service';
+import { ApiError } from '../error/api.error';
+import { RedisService } from '../services/redis.service';
+import { AccountWithProfileId } from '../types/account.types';
 
 const authService: AuthService = new AuthService();
 const redisService: RedisService = new RedisService();

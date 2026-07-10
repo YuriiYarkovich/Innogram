@@ -1,8 +1,7 @@
-import redisClient from '../config/redis.init.ts';
-import { RedisNote, RedisSessionData } from '../types/redis.type.ts';
-import { RefreshTokenObj } from '../types/tokens.type.ts';
-import { JwtService } from './jwt.service.ts';
-import { requireEnv } from '../validation/env.validation.ts';
+import redisClient from '../config/redis.init';
+import { RedisNote, RedisSessionData } from '../types/redis.type';
+import { JwtService } from './jwt.service';
+import { requireEnv } from '../validation/env.validation';
 
 export class RedisService {
   readonly jwtService: JwtService = new JwtService();
@@ -21,7 +20,10 @@ export class RedisService {
   }
 
   async findRedisNote(refreshToken: string): Promise<undefined | RedisNote> {
-    const payload: RefreshTokenObj = this.jwtService.verifyToken(refreshToken);
+    const payload = this.jwtService.decodeRefreshTokenPayload(refreshToken);
+    if (!payload) {
+      return undefined;
+    }
     const accountId: string = payload.accountId;
 
     const keys: string[] = await redisClient.keys(`session:${accountId}:*`);

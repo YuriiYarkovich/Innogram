@@ -1,9 +1,9 @@
 import { Router } from 'express';
 const router: Router = Router();
-import { AuthController } from '../controllers/auth.controller.ts';
+import { AuthController } from '../controllers/auth.controller';
 import passport from 'passport';
-import '../strategies/google-oauth.strategy.ts';
-import '../config/load-env.config.ts';
+import '../strategies/google-oauth.strategy';
+import '../config/load-env.config';
 
 const authController = new AuthController();
 router.post(`/registration`, authController.registerUsingEmailPassword);

@@ -1,4 +1,4 @@
-import errorList from './error-list.ts';
+import errorList from './error-list';
 
 export class ApiError extends Error {
   readonly statusCode: number;

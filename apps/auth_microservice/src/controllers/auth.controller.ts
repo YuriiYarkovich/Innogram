@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { CreateAccountDto } from '../dto/create-account.dto.ts';
-import { AuthService } from '../services/auth.service.ts';
-import { LoginDto } from '../dto/login.dto.ts';
-import '../config/load-env.config.ts';
-import { ApiError } from '../error/api.error.ts';
-import { requireEnv } from '../validation/env.validation.ts';
+import { CreateAccountDto } from '../dto/create-account.dto';
+import { AuthService } from '../services/auth.service';
+import { LoginDto } from '../dto/login.dto';
+import '../config/load-env.config';
+import { ApiError } from '../error/api.error';
+import { requireEnv } from '../validation/env.validation';
 
 export class AuthController {
   readonly authService: AuthService;
@@ -14,7 +14,12 @@ export class AuthController {
   }
 
   registerUsingEmailPassword = async (
-    req: Request<object, object, CreateAccountDto>,
+    req: Request<
+      Record<string, unknown>,
+      Record<string, unknown>,
+      CreateAccountDto
+    >,
+
     res: Response,
     next: NextFunction,
   ) => {
@@ -75,13 +80,16 @@ export class AuthController {
       maxAge: parseInt(requireEnv(`JWT_REFRESH_EXPIRES_IN`), 10) * 60 * 1000,
     });
 
-    return res.redirect(
-      `${requireEnv(`CORE_SERVICE_URL`)}/api/auth/google/success`,
-    );
+    const isProd = requireEnv('NODE_ENV') === 'production';
+    const redirectUrl: string = isProd
+      ? 'http://localhost/api/auth/googleSuccess'
+      : `${requireEnv(`CORE_SERVICE_URL`)}/api/auth/googleSuccess`;
+
+    return res.redirect(redirectUrl);
   }
 
   loginUsingEmailPassword = async (
-    req: Request<object, object, LoginDto>,
+    req: Request<Record<string, unknown>, Record<string, unknown>, LoginDto>,
     res: Response,
     next: NextFunction,
   ) => {
@@ -130,31 +138,59 @@ export class AuthController {
     );
   };
 
-  refreshToken = async (req: Request, res: Response) => {
-    const refreshToken: string = req.body.refreshToken;
-    if (!refreshToken) {
-      throw ApiError.unauthorized('No refresh token');
+  refreshToken = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const refreshToken: string = req.body.refreshToken;
+      if (!refreshToken) {
+        throw ApiError.unauthorized('No refresh token');
+      }
+      const refreshData =
+        await this.authService.refreshAccessToken(refreshToken);
+      res.cookie('accessToken', refreshData.newAccessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        maxAge: 15 * 60 * 1000,
+      });
+      return res.json(refreshData);
+    } catch (e) {
+      next(e);
     }
-
-    const refreshData = await this.authService.refreshAccessToken(refreshToken);
-
-    res.cookie('accessToken', refreshData.newAccessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 15 * 60 * 1000,
-    });
-
-    res.json(refreshData);
   };
 
   validateToken = async (req: Request, res: Response) => {
     try {
-      const token: string = req.body?.accessToken;
-      const user = await this.authService.validateToken(token);
-      return res.json({ valid: true, user });
+      const accessToken: string | undefined = req.body?.accessToken;
+      const refreshToken: string | undefined = req.body?.refreshToken;
+      const result = await this.authService.validateOrRefreshTokens(
+        accessToken,
+        refreshToken,
+      );
+      if (result.newAccessToken) {
+        res.cookie('accessToken', result.newAccessToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'strict',
+          maxAge:
+            parseInt(requireEnv(`JWT_ACCESS_EXPIRES_IN`), 10) * 60 * 1000,
+        });
+      }
+      return res.json({
+        valid: true,
+        user: result.user,
+        ...(result.newAccessToken && {
+          newAccessToken: result.newAccessToken,
+        }),
+      });
     } catch (e) {
-      return res.status(401).json({ valid: false, message: e.message });
+      const statusCode: number =
+        e instanceof ApiError ? e.statusCode : 401;
+      const message: string = e instanceof Error ? e.message : 'Unauthorized';
+      return res.status(statusCode).json({ valid: false, message });
     }
   };
 }

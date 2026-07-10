@@ -3,17 +3,24 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "build:dev": "cross-env NODE_ENV=development next build",
+    "build:prod": "cross-env NODE_ENV=production next build",
+    "start": "cross-env NODE_ENV=production next start",
+    "start:dev": "cross-env NODE_ENV=development next dev",
+    "start:prod": "cross-env NODE_ENV=production next start",
     "lint": "eslint"
   },
   "dependencies": {
-    "next": "16.0.1",
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.2.3",
+    "next": "16.1.0-canary.19",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.66.1",
-    "uuid": "^13.0.0"
+    "socket.io-client": "^4.8.1",
+    "uuid": "^13.0.0",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

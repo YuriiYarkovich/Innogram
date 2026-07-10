@@ -1,35 +1,38 @@
 import { SERVER } from '@/config/apiRoutes';
 import returnErrorMessage from '@/utils/showAuthError';
+import { ErrorResponse, Profile, SubscriptionRequest } from '@/types';
+import { useEffect, useState } from 'react';
 
 export const handleOnProfileFollowing = async (profile: Profile) => {
-  const response: Response = await fetch(
-    `${SERVER.API.FOLLOW}${profile.profileId}`,
-    {
-      method: 'POST',
-      credentials: 'include',
-    },
-  );
+  const response: Response = await fetch(`${SERVER.API.FOLLOW}${profile.id}`, {
+    method: 'POST',
+    credentials: 'include',
+  });
 
-  if (!response.ok) console.error(response.json());
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    throw new Error(errorData.message || 'Profile not found!');
+  }
 };
 
-export const handleProfileUnfollow = async (profile: Profile) => {
-  const response: Response = await fetch(
-    `${SERVER.API.UNFOLLOW}${profile.profileId}`,
-    {
-      method: 'DELETE',
-      credentials: 'include',
-    },
-  );
+export const handleProfileUnfollow = async (profileId: string) => {
+  const response: Response = await fetch(`${SERVER.API.UNFOLLOW}${profileId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
 
-  if (!response.ok) console.error(response.json());
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message || 'Profile not found!');
+  }
 };
 
 export const editProfile = async (
   username: string,
   bio: string,
   birthday: string,
-  avatar: File | null,
+  avatar: File | string | null | undefined,
   setError: (message: string) => void,
   onClose: () => void,
 ) => {
@@ -39,7 +42,6 @@ export const editProfile = async (
   formData.append('birthday', birthday);
 
   if (avatar) {
-    console.log(`Sending file`);
     formData.append('file', avatar);
   }
 
@@ -53,7 +55,7 @@ export const editProfile = async (
     const finalMessage: string | undefined = await returnErrorMessage(res);
     if (finalMessage) {
       setError(finalMessage);
-      console.log(`Error message: ${finalMessage}`);
+      console.error(`Error message: ${finalMessage}`);
     }
     return;
   }
@@ -64,7 +66,7 @@ export const editProfile = async (
   }
 };
 
-export const fetchProfile = async () => {
+export const fetchProfile = async (): Promise<Profile> => {
   const res: Response = await fetch(SERVER.API.GET_CURRENT_PROFILE_INFO, {
     credentials: 'include',
   });
@@ -72,23 +74,212 @@ export const fetchProfile = async () => {
 };
 
 export const fetchFullProfileData = async (username: string | undefined) => {
-  let profileData: Profile;
-  if (!username) {
-    const resProfile: Response = await fetch(
-      SERVER.API.GET_CURRENT_PROFILE_INFO,
-      {
-        credentials: 'include',
-      },
-    );
-    profileData = await resProfile.json();
-  } else {
-    const resProfile: Response = await fetch(
-      `${SERVER.API.GET_CURRENT_PROFILE_INFO}/${username}`,
-      {
-        credentials: 'include',
-      },
-    );
-    profileData = await resProfile.json();
+  const url = username
+    ? `${SERVER.API.GET_CURRENT_PROFILE_INFO}/${username}`
+    : SERVER.API.GET_CURRENT_PROFILE_INFO;
+
+  const resProfile: Response = await fetch(url, {
+    credentials: 'include',
+  });
+
+  if (!resProfile.ok) {
+    const errorData: ErrorResponse = await resProfile.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message || 'Profile not found!');
   }
+
+  const profileData: Profile = await resProfile.json();
+
   return profileData;
 };
+
+export const fetchAllSubscriptions = async (
+  profileId: string,
+): Promise<Profile[]> => {
+  const response: Response = await fetch(
+    `${SERVER.API.GET_ALL_SUBSCRIPTIONS}${profileId}`,
+    {
+      credentials: 'include',
+      method: 'GET',
+    },
+  );
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message || 'Profile not found!');
+  }
+
+  const receivedSubscriptions: Profile[] = await response.json();
+
+  return receivedSubscriptions;
+};
+
+export const fetchAllSubscribers = async (
+  profileId: string,
+): Promise<Profile[]> => {
+  const response: Response = await fetch(
+    `${SERVER.API.GET_ALL_SUBSCRIBERS}${profileId}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message || 'Profile not found!');
+  }
+
+  return await response.json();
+};
+
+export const deleteSubscriber = async (deletingSubscriberProfileId: string) => {
+  const response: Response = await fetch(
+    `${SERVER.API.DELETE_SUBSCRIBER}${deletingSubscriberProfileId}`,
+    {
+      method: 'DELETE',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message || 'Profile not found!');
+  }
+};
+
+export const changeProfileVisibilityStatus = async (): Promise<Profile> => {
+  const response: Response = await fetch(
+    `${SERVER.API.CHANGE_VISIBILITY_OF_PROFILE_STATUS}`,
+    {
+      method: 'PUT',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message || 'Profile not found!');
+  }
+
+  return await response.json();
+};
+
+export const fetchAllSubscriptionsRequests = async (): Promise<
+  SubscriptionRequest[]
+> => {
+  const response: Response = await fetch(
+    `${SERVER.API.GET_ALL_SUBSCRIPTIONS_REQUESTS}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message || 'Profile not found!');
+  }
+
+  const receivedRequests: SubscriptionRequest[] = await response.json();
+
+  return receivedRequests;
+};
+
+export const acceptRequest = async (subscriptionId: string) => {
+  const response: Response = await fetch(
+    `${SERVER.API.ACCEPT_REQUEST}${subscriptionId}`,
+    {
+      method: 'PUT',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message || 'Profile not found!');
+  }
+};
+
+export const rejectRequest = async (subscriptionId: string) => {
+  const response: Response = await fetch(
+    `${SERVER.API.REJECT_REQUEST}${subscriptionId}`,
+    {
+      method: 'PUT',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message || 'Profile not found!');
+  }
+};
+
+export const getAllSentRequests = async (): Promise<SubscriptionRequest[]> => {
+  const response: Response = await fetch(SERVER.API.GET_ALL_SENT_REQUESTS, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message || 'Profile not found!');
+  }
+
+  return await response.json();
+};
+
+export const search = async (query: string): Promise<Profile[]> => {
+  if (query.length === 0) {
+    const response: Response = await fetch(SERVER.API.GET_10_RANDOM, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData: ErrorResponse = await response.json();
+      console.error(`Error message: ${errorData.message}`);
+      throw new Error(errorData.message || 'Profile not found!');
+    }
+
+    return await response.json();
+  } else {
+    const response: Response = await fetch(
+      `${SERVER.API.SEARCH_PROFILES}${query}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+      },
+    );
+    if (!response.ok) {
+      const errorData: ErrorResponse = await response.json();
+      console.error(`Error message: ${errorData.message}`);
+      throw new Error(errorData.message || 'Profile not found!');
+    }
+
+    return await response.json();
+  }
+};
+
+export function useDebounce<T>(value: T, delay: number = 500): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debouncedValue;
+}

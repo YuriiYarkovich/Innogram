@@ -7,9 +7,9 @@ import { NextRequest } from 'next/server';
 
 export default function Home(req: NextRequest) {
   return (
-    <div className="flex flex-row min-h-screen justify-center gap-[220px]">
-      <div className="flex md:w-[450px] flex-col items-center justify-center min-h-screen">
-        <div className="w-full md:h-[350px] rounded-[36px] flex flex-col justify-center items-center bg-[#eaddff] pr-[30px] pl-[30px]">
+    <div className="flex flex-row min-h-screen justify-center">
+      <div className="flex min-w-[450px] flex-col items-center justify-center min-h-screen">
+        <div className="w-full min-h-[350px] rounded-[36px] flex flex-col justify-center items-center bg-[#eaddff] pr-[30px] pl-[30px]">
           <div className="mb-6">
             <Image
               src={'/images/logo.png'}

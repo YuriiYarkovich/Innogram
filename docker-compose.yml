@@ -1,19 +1,18 @@
-version: '3.8'
-
 services:
   postgres:
-    image: postgres:15
+    image: postgres:15-alpine
     container_name: innogram-postgres
     environment:
-      POSTGRES_DB: innogram
-      POSTGRES_USER: innogram_user
-      POSTGRES_PASSWORD: innogram_password
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - innogram-network
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -24,32 +23,102 @@ services:
       - redis_data:/data
     networks:
       - innogram-network
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: innogram-rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: innogram
-      RABBITMQ_DEFAULT_PASS: innogram_password
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    networks:
-      - innogram-network
+    restart: unless-stopped
 
   minio:
     image: minio/minio:latest
-    container_name: minio
+    container_name: innogram-minio
     ports:
-      - "9000:9000"   # Web-интерфейс и S3 API
-      - "9001:9001"   # Панель управления MinIO
+      - "9000:9000"
+      - "9001:9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
+    networks:
+      - innogram-network
+    restart: unless-stopped
 
+  core_microservice:
+    build:
+      context: ./apps/core_microservice
+      dockerfile: Dockerfile
+    container_name: core_microservice
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${NESTJS_PORT:-3001}
+      SOCKET_PORT: 3004
+      DATABASE_URL: postgresql://postgres:5432/innogram
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "${NESTJS_PORT:-3001}:${NESTJS_PORT:-3001}"
+      - "3004:3004"
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    networks:
+      - innogram-network
+    restart: unless-stopped
+
+  auth_microservice:
+    build:
+      context: ./apps/auth_microservice
+      dockerfile: Dockerfile
+    container_name: auth_microservice
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${AUTH_SERVICE_PORT:-3002}
+      DATABASE_URL: postgresql://postgres:5432/innogram
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "${AUTH_SERVICE_PORT:-3002}:${AUTH_SERVICE_PORT:-3002}"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - innogram-network
+    restart: unless-stopped
+
+  client_app:
+    build:
+      context: ./apps/client_app
+      dockerfile: Dockerfile
+    container_name: client_app
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost/api
+      NEXT_PUBLIC_CHAT_SOCKET_SERVER_URL: http://localhost:3004
+      CORE_SERVICE_URL: http://localhost:3001
+      AUTH_SERVICE_URL: http://localhost:3002
+    ports:
+      - "${NEXTJS_PORT:-3000}:3000"
+    depends_on:
+      - core_microservice
+    networks:
+      - innogram-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: innogram-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - core_microservice
+      - auth_microservice
+      - client_app
+    networks:
+      - innogram-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:

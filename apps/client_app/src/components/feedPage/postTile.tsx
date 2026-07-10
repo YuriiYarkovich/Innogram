@@ -2,14 +2,18 @@
 
 import Image from 'next/image';
 import React, { useState } from 'react';
-import PostPreviewModal from '@/components/post/post-preview.modal';
+import PostViewModal from '@/components/post/post-view.modal';
 import { likeOrUnlikePost } from '@/services/posts.service';
+import { Post } from '@/types';
+import Link from 'next/link';
+import Carousel from '@/components/carousel';
 
 export default function PostTile({ post }: { post: Post }) {
   const [liked, setLiked] = useState(post.liked);
   const [likesCount, setLikesCount] = useState<number>(Number(post.likesCount));
   const [isPostPreviewModalOpen, setIsPostPreviewModalOpen] =
     useState<boolean>(false);
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
 
   const handleLikeOrUnlikePost = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,30 +21,34 @@ export default function PostTile({ post }: { post: Post }) {
     const response: Response = await likeOrUnlikePost(liked, post);
 
     if (response.ok) {
+      if (liked) setLikesCount((prev) => prev - 1);
+      else setLikesCount((prev) => prev + 1);
+
       setLiked((prev) => !prev);
-      setLikesCount((prev) => prev - 1);
     }
   };
 
+  if (!post || !post.assets) return null;
   return (
     <div>
-      <PostPreviewModal
-        post={post}
+      <PostViewModal
+        receivingPostId={post.postId}
         isOpen={isPostPreviewModalOpen}
         onClose={() => setIsPostPreviewModalOpen(false)}
       />
       <div className={`flex flex-col md:w-[470px] bg-[#e7e0ec]`}>
-        <a
+        <Link
           className={`flex flex-row items-center md:w-full md:h-[40px] mt-[15px] ml-[15px] cursor-pointer`}
-          href={`profile/${post.username}`}
+          href={`/profile/${post.username}`}
         >
           <Image
-            className={`rounded-[210px] md:w-[40px] md:h-[40px]`}
+            className={`rounded-full md:w-[40px] md:h-[40px]`}
             src={post?.profileAvatarUrl || `/images/avaTest.png`}
             alt="User avatar"
             width={512}
             height={512}
             draggable={false}
+            loading={'eager'}
             unoptimized
           />
           <span className={`text-black, text-[18px] ml-[15px]`}>
@@ -51,17 +59,38 @@ export default function PostTile({ post }: { post: Post }) {
               ? `${Math.floor(Number(post.timePast) / 24)} d`
               : `${post.timePast} h`}
           </span>
-        </a>
-        <div className={`flex flex-row justify-center w-full mt-5`}>
-          <Image
-            src={post.assets[0].url} //TODO add possibility to view multiple files
-            alt="post picture"
-            width={512}
-            height={512}
-            draggable={false}
-            className={`md:w-[440px] md:h-[440px]`}
-            unoptimized
-          />
+        </Link>
+        <div className="flex flex-col justify-center items-center w-full mt-4 px-3">
+          <Carousel
+            currentIndex={currentFileIndex}
+            totalItems={post.assets.length}
+            onPrev={() => setCurrentFileIndex((prev) => Math.max(0, prev - 1))}
+            onNext={() =>
+              setCurrentFileIndex((prev) =>
+                Math.min(post.assets.length - 1, prev + 1),
+              )
+            }
+            onSelectIndex={setCurrentFileIndex}
+            className={'min-w-[450px] min-h-[450px]'}
+          >
+            {post.assets.map((asset) => (
+              <div
+                key={asset.order}
+                className="w-full h-full flex items-center justify-center"
+              >
+                <Image
+                  src={asset.url}
+                  alt="post picture"
+                  width={512}
+                  height={512}
+                  draggable={false}
+                  unoptimized
+                  loading={'eager'}
+                  className="object-contain max-h-full max-w-full rounded-lg"
+                />
+              </div>
+            ))}
+          </Carousel>
         </div>
         <div className={`flex flex-row ml-[15px] mt-[10px]`}>
           <div

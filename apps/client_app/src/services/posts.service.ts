@@ -1,15 +1,17 @@
 import { SERVER } from '@/config/apiRoutes';
+import { ErrorResponse, Post } from '@/types';
 
 export const createPost = async (
   content: string,
-  file: File | null,
+  files: File[],
   onClose: () => void,
 ) => {
   const formData = new FormData();
   formData.append('content', content);
-  if (file) {
+
+  files.forEach((file) => {
     formData.append('files', file);
-  }
+  });
 
   const response: Response = await fetch(SERVER.API.CREATE_POST, {
     method: 'POST',
@@ -18,7 +20,8 @@ export const createPost = async (
   });
 
   if (!response.ok) {
-    throw new Error(`Error: ${response.status}`);
+    const errorData: ErrorResponse = await response.json();
+    throw new Error(errorData.message);
   }
 
   if (response.status === 201) {
@@ -27,25 +30,29 @@ export const createPost = async (
   }
 };
 
-export const likeOrUnlikePost = async (liked: boolean, post: Post) => {
+export const likeOrUnlikePost = async (liked: boolean, post: Post | null) => {
   let response: Response;
   if (!liked) {
-    response = await fetch(`${SERVER.API.LIKE_POST}${post.postId}`, {
+    response = await fetch(`${SERVER.API.LIKE_POST}${post?.postId}`, {
       method: 'POST',
       credentials: 'include',
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
+      const errorData: ErrorResponse = await response.json();
+      console.error(`Error message: ${errorData.message}`);
+      throw new Error(errorData.message);
     }
   } else {
-    response = await fetch(`${SERVER.API.UNLIKE_POST}${post.postId}`, {
+    response = await fetch(`${SERVER.API.UNLIKE_POST}${post?.postId}`, {
       method: 'DELETE',
       credentials: 'include',
     });
 
     if (!response.ok) {
-      throw new Error(`Error: ${response.status}`);
+      const errorData: ErrorResponse = await response.json();
+      console.error(`Error message: ${errorData.message}`);
+      throw new Error(errorData.message);
     }
   }
   return response;
@@ -61,7 +68,9 @@ export const deletePost = async (post: Post, onClose: () => void) => {
   );
 
   if (!response.ok) {
-    throw new Error(`Error: ${response.status}`);
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
   }
 
   if (response.ok) {
@@ -70,19 +79,182 @@ export const deletePost = async (post: Post, onClose: () => void) => {
   }
 };
 
-export const fetchPostsOfProfile = async (profileId: string) => {
-  const resPosts: Response = await fetch(
+export const fetchPostsOfProfile = async (
+  profileId: string,
+): Promise<Post[]> => {
+  const response: Response = await fetch(
     `${SERVER.API.GEL_ALL_POSTS_OF_PROFILE}${profileId}`,
     {
       credentials: 'include',
     },
   );
-  return await resPosts.json();
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
+  }
+
+  return await response.json();
 };
 
-export const fetchPostsOfSubscribedOnProfiles = async () => {
-  const res: Response = await fetch(SERVER.API.GET_POSTS_OF_SUBSCRIBED_ON, {
+export const fetchPostsOfSubscribedOnProfiles = async (
+  lastLoadedPostCreatedAt: string,
+): Promise<Post[]> => {
+  const url = new URL(SERVER.API.GET_POSTS_OF_SUBSCRIBED_ON);
+
+  if (lastLoadedPostCreatedAt) {
+    url.searchParams.set('lastLoadedPostCreatedAt', lastLoadedPostCreatedAt);
+  }
+
+  const response: Response = await fetch(url.toString(), {
+    method: 'GET',
     credentials: 'include',
   });
-  return await res.json();
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    return [];
+  }
+
+  return await response.json();
+};
+
+export const fetchFirstPostOfSubscribedOnProfiles =
+  async (): Promise<Post | null> => {
+    const url = new URL(SERVER.API.PRELOAD_FIRST_POST_OF_SUBSCRIBED_ON);
+
+    const response: Response = await fetch(url.toString(), {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData: ErrorResponse = await response.json();
+      console.error(`Error message: ${errorData.message}`);
+      return null;
+    }
+
+    const receivedData = await response.json();
+
+    const receivedPost: Post = Array.isArray(receivedData)
+      ? receivedData[0]
+      : receivedData;
+
+    return receivedPost || null;
+  };
+
+export const updatePost = async (
+  postId: string,
+  content: string,
+  files: File[],
+): Promise<Post> => {
+  const formData = new FormData();
+  formData.append('content', content);
+
+  files.forEach((file) => {
+    formData.append('files', file);
+  });
+
+  const response: Response = await fetch(`${SERVER.API.UPDATE_POST}${postId}`, {
+    method: 'PUT',
+    credentials: 'include',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
+  }
+
+  return await response.json();
+};
+
+export const archivePost = async (postId: string): Promise<Post> => {
+  const response: Response = await fetch(
+    `${SERVER.API.ARCHIVE_POST}${postId}`,
+    {
+      method: 'PUT',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
+  }
+
+  return await response.json();
+};
+
+export const unarchivePost = async (postId: string): Promise<Post> => {
+  const response: Response = await fetch(
+    `${SERVER.API.UNARCHIVE_POST}${postId}`,
+    {
+      method: 'PUT',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
+  }
+
+  return await response.json();
+};
+
+export const fetchAllArchivedPosts = async (): Promise<Post[]> => {
+  const response: Response = await fetch(
+    `${SERVER.API.GET_ALL_ARCHIVED_POSTS}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
+  }
+
+  return await response.json();
+};
+
+export const fetchActivity = async (): Promise<Post[]> => {
+  const response: Response = await fetch(SERVER.API.GET_ACTIVITY, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
+  }
+
+  return await response.json();
+};
+
+export const fetchSinglePost = async (postId: string): Promise<Post> => {
+  const response: Response = await fetch(
+    `${SERVER.API.FETCH_POST_BY_ID}${postId}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+    },
+  );
+
+  if (!response.ok) {
+    const errorData: ErrorResponse = await response.json();
+    console.error(`Error message: ${errorData.message}`);
+    throw new Error(errorData.message);
+  }
+
+  return await response.json();
 };

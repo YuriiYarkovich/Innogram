@@ -1,6 +1,10 @@
 import { createClient } from 'redis';
+import { requireEnv } from '../validation/env.validation';
 
-const redisClient = createClient();
+const redisUrl: string | undefined = requireEnv('REDIS_URL');
+const redisClient = createClient({
+  url: redisUrl ? redisUrl : 'redis://localhost:6379',
+});
 
 redisClient.on('error', (err) => {
   console.error('Redis client error:', err);

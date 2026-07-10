@@ -1,16 +1,21 @@
 'use client';
 
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import AddFilePlaceholder from '@/components/add-file-placeholder';
-import { editProfile } from '@/services/profile.service';
+import {
+  changeProfileVisibilityStatus,
+  editProfile,
+} from '@/services/profile.service';
+import { EditProfileModalProps, Profile } from '@/types';
+import { loadFromS3 } from '@/services/files.service';
 
 type ProfileEditFormValues = {
   username: string;
   bio: string;
   birthday: string;
-  file: File | null;
+  file?: File | string | null;
 };
 
 export default function EditProfileModal({
@@ -18,23 +23,32 @@ export default function EditProfileModal({
   isOpen,
   onClose,
 }: EditProfileModalProps) {
-  const {
-    register,
-    handleSubmit,
-    control,
-    watch,
-    formState: { isSubmitting },
-  } = useForm<ProfileEditFormValues>({
-    defaultValues: {
-      username: '',
-      bio: '',
-      birthday: '',
-      file: null,
-    },
-  });
+  const [currentProfile, setCurrentProfile] = useState<Profile | null>(null);
+  const { register, handleSubmit, control, setValue, watch, reset } =
+    useForm<ProfileEditFormValues>({
+      defaultValues: {
+        username: profile.username,
+        bio: profile.bio,
+        birthday: profile.birthday,
+        file: profile?.avatarUrl || null,
+      },
+    });
 
   const file = watch('file');
-  const selectedFile = file as File | null;
+
+  useEffect(() => {
+    if (profile && isOpen) {
+      setCurrentProfile(profile);
+      setValue('username', profile.username || '');
+      setValue('bio', profile.bio || '');
+      setValue('birthday', profile.birthday || '');
+      if (profile.avatarUrl) {
+        loadFromS3(profile.avatarUrl).then((file) => {
+          setValue('file', file);
+        });
+      } else setValue('file', null);
+    }
+  }, [profile, reset, setValue, isOpen]);
 
   const [error, setError] = useState<string | null>(null);
 
@@ -78,7 +92,9 @@ export default function EditProfileModal({
             >
               <AddFilePlaceholder
                 control={control}
-                name={`file`}
+                name={'file'}
+                isIcon={true}
+                iconSize={100}
                 label={'Upload file'}
               />
             </div>
@@ -86,7 +102,6 @@ export default function EditProfileModal({
           <input
             type="username"
             placeholder="Username"
-            defaultValue={profile.username}
             {...register('username')}
             className="border-2 border-[#bcb8b8] rounded-[6px] px-3 py-2 w-full bg-white"
           />
@@ -94,22 +109,31 @@ export default function EditProfileModal({
           <input
             type="date"
             title="Birthday"
-            defaultValue={profile.birthday}
             {...register('birthday')}
             className="border-2 border-[#bcb8b8] rounded-[6px] px-3 py-2 w-full bg-white"
           />
           <textarea
             placeholder="Bio"
-            defaultValue={profile.bio}
-            {...register('birthday')}
-            className="border-2 border-[#bcb8b8] rounded-[6px] md:h-[100px] px-3 py-2 w-full bg-white"
+            {...register('bio')}
+            className="border-2 border-[#bcb8b8] rounded-[6px] md:h-[100px] px-3 w-full bg-white"
           />
-          <button
-            type="submit"
-            className="bg-[#4f378a] text-white hover:text-black rounded-[20px] my-[25px] md:h-[45px] hover:bg-[#d0bcff] w-full"
-          >
-            Submit
-          </button>
+          <div className={'flex flex-col w-full gap-2.5 mt-6'}>
+            <button
+              type="button"
+              onClick={() => {
+                changeProfileVisibilityStatus().then(setCurrentProfile);
+              }}
+              className="bg-[#4f378a] text-white text-[18px] hover:text-black rounded-[20px] md:h-[45px] hover:bg-[#d0bcff] w-full cursor-pointer"
+            >
+              {currentProfile?.isPublic ? 'Make private' : 'Make public'}
+            </button>
+            <button
+              type="submit"
+              className="bg-[#4f378a] text-white text-[18px] hover:text-black rounded-[20px] md:h-[45px] hover:bg-[#d0bcff] w-full cursor-pointer"
+            >
+              Submit
+            </button>
+          </div>
           {error && (
             <div className={`text-red-600 text-sm mt-2 mb-7`}>{error}</div>
           )}
