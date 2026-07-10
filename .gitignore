@@ -94,4 +94,3 @@ temp/
 *.sqlite
 
 # Docker
-.dockerignore

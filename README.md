@@ -24,35 +24,86 @@ innogram/
 - Node.js (v18 or higher)
 - PostgreSQL (v13 or higher)
 - Redis (v6 or higher)
-- Docker (optional)
+- Docker and Docker Compose
+
+## Environment Setup
+
+Create a local environment file before starting containers:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and set real values for secrets and OAuth:
+
+- `JWT_SECRET`
+- `SESSION_SECRET`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_CALLBACK_URL`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_DB`
+- `MINIO_ROOT_USER`
+- `MINIO_ROOT_PASSWORD`
+
+For local Google OAuth through nginx, `GOOGLE_CALLBACK_URL` must match the URL configured in Google Cloud, usually:
+
+```bash
+GOOGLE_CALLBACK_URL=http://localhost/api/auth/google/callback
+```
 
 ## Quick Start
 
 1. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 2. **Start infrastructure services:**
+
    ```bash
-   npm run docker:up
+   npm run docker:infra
    ```
 
-3. **Set up environment variables:**
+   This starts only PostgreSQL, Redis, and MinIO. Wait until they are healthy:
+
    ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
+   docker compose ps
    ```
 
-4. **Run database migrations:**
+3. **Run database migrations manually:**
+
    ```bash
-   npm run db:migrate
+   npm run db:migrate:docker
    ```
 
-5. **Start development servers:**
+   This uses the `core_microservice` image to execute TypeORM migrations against the running PostgreSQL container. Run this after infrastructure is healthy and before starting the app services.
+
+4. **Initialize the MinIO bucket manually:**
+
    ```bash
-   npm run dev
+   npm run minio:init
    ```
+
+   This runs a temporary `minio/mc` container on the Compose network and creates `S3_BUCKET` if it does not already exist.
+
+5. **Start application services:**
+
+   ```bash
+   npm run docker:app
+   ```
+
+   This starts `core_microservice`, `auth_microservice`, `client_app`, and `nginx`.
+
+6. **Open the application:**
+
+   ```text
+   http://localhost
+   ```
+
+   If `HTTP_PORT` is changed in `.env`, use that port instead.
 
 ## Available Scripts
 
@@ -61,8 +112,53 @@ innogram/
 - `npm run test` - Run tests for all services
 - `npm run lint` - Lint all services
 - `npm run type-check` - Type check all services
-- `npm run docker:up` - Start infrastructure services
-- `npm run docker:down` - Stop infrastructure services
+- `npm run docker:infra` - Start PostgreSQL, Redis, and MinIO
+- `npm run db:migrate:docker` - Run database migrations inside a temporary core service container
+- `npm run minio:init` - Create the configured MinIO bucket using a temporary MinIO client container
+- `npm run docker:app` - Start backend, frontend, and nginx services
+- `npm run docker:up` - Start every Compose service
+- `npm run docker:down` - Stop all Compose services
+
+## Docker Startup Details
+
+The database migration and MinIO bucket setup are manual steps, not Compose services:
+
+- Database migrations are run by `scripts/run-db-migrations.sh`.
+- MinIO bucket initialization is run by `scripts/init-minio.sh`.
+
+Do not run these operations during Docker image builds. Image builds do not have access to the runtime PostgreSQL and MinIO containers, and builds should not mutate environment-specific infrastructure.
+
+Recommended full startup sequence:
+
+```bash
+npm install
+cp .env.example .env
+# edit .env
+npm run docker:infra
+docker compose ps
+npm run db:migrate:docker
+npm run minio:init
+npm run docker:app
+```
+
+To rebuild app images after code changes:
+
+```bash
+docker compose build core_microservice auth_microservice client_app
+npm run docker:app
+```
+
+To stop all containers:
+
+```bash
+npm run docker:down
+```
+
+To remove persisted PostgreSQL, Redis, and MinIO data as well:
+
+```bash
+docker compose down -v
+```
 
 ## Services
 
